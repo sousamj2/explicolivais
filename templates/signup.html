@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="title-box">
+            <h1>{{ title }}</h1>
+        </div>
+        <div class="columns">
+            <nav class="menu">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/signin">Entrar</a></li>
+                    <li><a href="/maps">Mapa</a></li>
+                    <li><a href="/prices">Preçário</a></li>
+                    <li><a href="/terms">Termos do serviço</a></li>
+                </ul>
+            </nav>
+            <main class="main-content"><h1>Register</h1>
+
+                <form action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
+                    Address: <input name="address"><br>
+                    Zip Code: <input name="zip_code"><br>
+                    Cell Phone: <input name="cell_phone"><br>
+                    <input type="submit" value="Submit">
+                  </form>
+
+                <script>
+                    function openGoogleCalendar() {
+                        window.open('http://localhost:8080/calendar', '_blank');
+                    }
+                </script>
+
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>
