@@ -5,3 +5,4 @@ runFlask.sh
 venv/
 startup.sh
 shutdown.sh
+*scratch*
