@@ -8,7 +8,6 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from connectDB import insert_user, fetch_user_by_email
 
-
 load_dotenv()
 
 def get_db_connection():
@@ -38,8 +37,6 @@ REDIRECT_URI = 'http://localhost:8080/oauth2callback'  # Your redirect URI
 AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 TOKEN_URL = 'https://oauth2.googleapis.com/token'
 SCOPE = 'openid email profile'  # Scopes for user info
-
-
 
 @app.route('/')
 def index():
@@ -279,5 +276,6 @@ def logout():
     return redirect(url_for('signin'))  # or your login route        
     
             
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     # app.run(debug=True)
+#     pass
