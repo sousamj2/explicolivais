@@ -43,10 +43,18 @@ SCOPE = 'openid email profile'  # Scopes for user info
 
 @app.route('/')
 def index():
+    menu_bar_file= 'templates/content/menu.html'
+    if session and 'user' in session:
+        menu_bar_file= 'templates/content/menu-profile.html'
     with open('templates/content/home.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
+        # pprint(user)
+        # pprint(session.get('userinfo'))
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        user=user,
+        menu_bar = Markup(open(menu_bar_file, 'r', encoding='utf-8').read()),
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
@@ -55,18 +63,25 @@ def index():
 def maps():
     with open('templates/content/maps.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
 
 @app.route('/prices')
 def prices():
+    menu_bar_file= 'templates/content/menu.html'
+    if session and 'user' in session:
+        menu_bar_file= 'templates/content/menu-profile.html'
     with open('templates/content/prices.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
@@ -75,8 +90,10 @@ def prices():
 def calendar():
     with open('templates/content/calendar.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
@@ -86,8 +103,10 @@ def calendar():
 def terms():
     with open('templates/content/terms.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
@@ -98,8 +117,10 @@ def signin():
     with open('templates/content/signin.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
         main_content_html = main_content_html.replace('STATIC_GOOGLE_LOGO', logo_url)
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
@@ -185,14 +206,15 @@ def check_user():
 def profile():
     if not session:
         return redirect(url_for('signin'))
-    print("session data:", session)
+    # print("session data:", session)
     user = session.get('user') or session.get('userinfo')
-    pprint(f'User session data: {user}')
+    # pprint(f'User session data: {user}')
     if user:
         pprint('Rendering profile page...')
         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
             main_content_html = Markup(file.read())
-        return render_template('profile.html',
+
+        return render_template('index.html',
                                user=user,
                                page_title="Explicações em Lisboa",
                                title="Explicações em Lisboa",
@@ -203,8 +225,10 @@ def profile():
 @app.route('/signup')
 def signup():
     pprint('Rendering signup page...')
+    user = session.get('user') or session.get('userinfo')
     return render_template(
         'signup.html',
+        user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa")
 
