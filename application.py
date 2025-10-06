@@ -40,18 +40,12 @@ SCOPE = 'openid email profile'  # Scopes for user info
 
 @app.route('/')
 def index():
-    menu_bar_file= 'templates/content/menu.html'
-    if session and 'user' in session:
-        menu_bar_file= 'templates/content/menu-profile.html'
     with open('templates/content/home.html', 'r', encoding='utf-8') as file:
         main_content_html = Markup(file.read())
-        # pprint(user)
-        # pprint(session.get('userinfo'))
     user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
         user=user,
-        menu_bar = Markup(open(menu_bar_file, 'r', encoding='utf-8').read()),
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
         main_content=main_content_html)
