@@ -16,11 +16,11 @@
         <div class="columns">
             <nav class="menu">
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/signin">Entrar</a></li>
-                    <li><a href="/maps">Mapa</a></li>
-                    <li><a href="/prices">Preçário</a></li>
-                    <li><a href="/terms">Termos do serviço</a></li>
+                    {% if user %}
+                    {% include 'content/menu-profile.html' %}
+                    {% else %}
+                    {% include 'content/menu.html' %}
+                    {% endif %}
                 </ul>
             </nav>
             <main class="main-content">
