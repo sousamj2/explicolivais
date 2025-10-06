@@ -38,69 +38,35 @@ AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 TOKEN_URL = 'https://oauth2.googleapis.com/token'
 SCOPE = 'openid email profile'  # Scopes for user info
 
-@app.route('/')
-def index():
-    with open('templates/content/home.html', 'r', encoding='utf-8') as file:
-        main_content_html = Markup(file.read())
-    user = session.get('user') or session.get('userinfo')
-    return render_template(
-        'index.html',
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=main_content_html)
+def render_page(route="/", template_name="home", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata=None):
+    def view_func():
+        with open(f'templates/content/{template_name}.html', 'r', encoding='utf-8') as file:
+            main_content_html = Markup(file.read())
+        user = session.get('user') or session.get('userinfo')
+        return render_template(
+            'index.html',
+            user=user,
+            metadata=metadata,
+            page_title=page_title,
+            title=title,
+            main_content=main_content_html
+            )
+    view_func.__name__ = f'view_func_{template_name.replace("-", "_").replace("/", "_")}'
+    app.route(route)(view_func)
+    return view_func
 
-@app.route('/maps')
-def maps():
-    with open('templates/content/maps.html', 'r', encoding='utf-8') as file:
-        main_content_html = Markup(file.read())
-    user = session.get('user') or session.get('userinfo')
-    return render_template(
-        'index.html',
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=main_content_html)
+render_page(route="/"        , template_name="home"     , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/maps"    , template_name="maps"     , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/prices"  , template_name="prices"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/calendar", template_name="calendar" , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/terms"   , template_name="terms"    , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+# render_page(route="/signin"  , template_name="signin"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+# render_page(route="/signup"  , template_name="signup"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/profile" , template_name="profile"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+# render_page(route="/logout"  , template_name="logout"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+# The above function creates routes dynamically, so the below individual route definitions are commented out.
+# They can be removed if the dynamic function works as intended.
 
-@app.route('/prices')
-def prices():
-    menu_bar_file= 'templates/content/menu.html'
-    if session and 'user' in session:
-        menu_bar_file= 'templates/content/menu-profile.html'
-    with open('templates/content/prices.html', 'r', encoding='utf-8') as file:
-        main_content_html = Markup(file.read())
-    user = session.get('user') or session.get('userinfo')
-    return render_template(
-        'index.html',
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=main_content_html)
-
-@app.route('/calendar')
-def calendar():
-    with open('templates/content/calendar.html', 'r', encoding='utf-8') as file:
-        main_content_html = Markup(file.read())
-    user = session.get('user') or session.get('userinfo')
-    return render_template(
-        'index.html',
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=main_content_html)
-
-
-@app.route('/terms')
-def terms():
-    with open('templates/content/terms.html', 'r', encoding='utf-8') as file:
-        main_content_html = Markup(file.read())
-    user = session.get('user') or session.get('userinfo')
-    return render_template(
-        'index.html',
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=main_content_html)
 
 @app.route('/signin')
 def signin():
@@ -233,9 +199,6 @@ def updateDB():
     zip_code = request.form.get('zip_code')
     cell_phone = request.form.get('cell_phone')
     register_ip = request.remote_addr
-
-    # if not all([name, email]):
-    #     return "Name and Email are required!", 400
 
     success = insert_user(name, email, address, zip_code, cell_phone, register_ip)
     if success:
