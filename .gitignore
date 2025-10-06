@@ -1,4 +1,5 @@
 .env
+webappenv/
 __pycache__/
 runFlask.sh
 venv/
