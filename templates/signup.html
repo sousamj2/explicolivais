@@ -23,20 +23,26 @@
                     {% endif %}
                 </ul>
             </nav>
-            <main class="main-content"><h1>Register</h1>
+            <h1>Registo na base de dados</h1>
 
-                <form action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
-                    Address: <input name="address"><br>
-                    Zip Code: <input name="zip_code"><br>
-                    Cell Phone: <input name="cell_phone"><br>
-                    <input type="submit" value="Submit">
-                  </form>
+            <form id="signupForm" action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
 
-                <script>
-                    function openGoogleCalendar() {
-                        window.open('http://localhost:8080/calendar', '_blank');
-                    }
-                </script>
+            <!-- <form method="post"> -->
+                Morada: <input name="address"><br>
+                Código Postal: <input name="zip_code"><br>
+                Telemóvel: <input name="cell_phone"><br>
+                <input type="submit" value="Submit">
+            </form>
+
+            <p> Nenhum dado será partilhado com o Google. O telemóvel serve apenas para poder contactar. A morada é
+                necessária pois é um serviço que faço a ir a casa. </p>
+
+            <script>
+                function openGoogleCalendar() {
+                    window.open('http://localhost:8080/calendar', '_blank');
+                    return true; // Allow form submission to proceed
+                }
+            </script>
 
             </main>
         </div>
