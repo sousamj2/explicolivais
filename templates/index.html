@@ -16,7 +16,9 @@
         <div class="columns">
             <nav class="menu">
                 <ul>
-                    {% if user %}
+                    {% if user['email'] == admin_email %}
+                    {% include 'content/menu-admin.html' %}
+                    {% elif user %}
                     {% include 'content/menu-profile.html' %}
                     {% else %}
                     {% include 'content/menu.html' %}

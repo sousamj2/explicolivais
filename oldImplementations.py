@@ -60,3 +60,15 @@
 #         title="Explicações em Lisboa",
 #         main_content=main_content_html)
 
+
+# @app.route('/adminDB')
+# def adminDB():
+#     with open('templates/content/admindb.html', 'r', encoding='utf-8') as file:
+#         main_content_html = Markup(file.read())
+#     user = session.get('user') or session.get('userinfo')
+#     return render_template(
+#         'index.html',
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=main_content_html)

@@ -1,12 +1,12 @@
 import os
 import requests
-from flask import Flask, redirect, request, session, render_template, url_for
+from flask import Flask, redirect, request, session, render_template, url_for, jsonify
 from markupsafe import Markup
 from dotenv import load_dotenv
 from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from connectDB import insert_user, fetch_user_by_email
+from connectDB import insert_user, submit_query, results_to_html_table
 
 load_dotenv()
 
@@ -43,8 +43,18 @@ def render_page(route="/", template_name="home", page_title="Explicações em Li
         with open(f'templates/content/{template_name}.html', 'r', encoding='utf-8') as file:
             main_content_html = Markup(file.read())
         user = session.get('user') or session.get('userinfo')
+        pprint(user)
+        if not user and template_name == "profile":
+            return redirect(url_for('signin'))
+        elif (not user or user['email'].lower() != os.getenv('ADMINDB_EMAIL').lower()) and template_name == "adminDB":
+            return redirect(url_for('signin'))
+
+        # if template_name == "adminDB":
+
+
         return render_template(
             'index.html',
+            admin_email=os.getenv('ADMINDB_EMAIL').lower(),
             user=user,
             metadata=metadata,
             page_title=page_title,
@@ -52,7 +62,7 @@ def render_page(route="/", template_name="home", page_title="Explicações em Li
             main_content=main_content_html
             )
     view_func.__name__ = f'view_func_{template_name.replace("-", "_").replace("/", "_")}'
-    app.route(route)(view_func)
+    app.route(route, methods=['GET'])(view_func)
     return view_func
 
 render_page(route="/"        , template_name="home"     , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
@@ -60,13 +70,36 @@ render_page(route="/maps"    , template_name="maps"     , page_title="Explicaç�
 render_page(route="/prices"  , template_name="prices"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 render_page(route="/calendar", template_name="calendar" , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 render_page(route="/terms"   , template_name="terms"    , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/adminDB" , template_name="adminDB"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+render_page(route="/profile" , template_name="profile"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # render_page(route="/signin"  , template_name="signin"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # render_page(route="/signup"  , template_name="signup"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(route="/profile" , template_name="profile"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # render_page(route="/logout"  , template_name="logout"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # The above function creates routes dynamically, so the below individual route definitions are commented out.
 # They can be removed if the dynamic function works as intended.
 
+@app.route('/adminDB', methods=['POST'])
+def admin_db():
+    data = request.json
+    query = data.get('query')
+    if not query:
+        return jsonify({'error': 'No SQL query provided'}), 400
+
+    result = submit_query(query)
+    if isinstance(result, str):  # Indicates an error message
+        return jsonify({'error': result}), 400
+    
+    if isinstance(result, list):
+        if len(result) > 0 and isinstance(result[0],str):
+            result = " ("+",".join(result[1:]) + ") "
+            return jsonify(result)
+        
+        html_table = results_to_html_table(result)
+        # pprint(html_table)
+        
+        result = {'html_table': html_table}
+
+    return jsonify(result)
 
 @app.route('/signin')
 def signin():
@@ -77,6 +110,7 @@ def signin():
     user = session.get('user') or session.get('userinfo')
     return render_template(
         'index.html',
+        admin_email=os.getenv('ADMINDB_EMAIL').lower(),
         user=user,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa",
@@ -172,6 +206,7 @@ def profile():
             main_content_html = Markup(file.read())
 
         return render_template('index.html',
+                               admin_email=os.getenv('ADMINDB_EMAIL').lower(),
                                user=user,
                                page_title="Explicações em Lisboa",
                                title="Explicações em Lisboa",
@@ -179,13 +214,14 @@ def profile():
     else:
         return redirect(url_for('/'))        
         
-@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
     pprint('Rendering signup page...')
     user = session.get('user') or session.get('userinfo')
     return render_template(
         'signup.html',
         user=user,
+        admin_email=os.getenv('ADMINDB_EMAIL').lower(),
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa")
 
