@@ -2,26 +2,177 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from datetime import datetime
+
 from pprint import pprint
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+def dictify_real_dict_row(row):
+    def convert_value(val):
+        if isinstance(val, datetime):
+            return val.isoformat()
+        if isinstance(val, list):
+            return [convert_value(i) for i in val]
+        if isinstance(val, dict):
+            return {k: convert_value(v) for k, v in val.items()}
+        return val
+
+    return {k: convert_value(v) for k, v in row.items()}
+
+def convert_datetimes(obj):
+    if isinstance(obj, dict):
+        return {k: convert_datetimes(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_datetimes(elem) for elem in obj]
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return obj
+    
+
+def get_user_profile(email):
+    conn = get_db_connection()
+    if not conn:
+        print("No DB connection")
+        return None
+    
+    pprint(f"Retrieving profile data for {email}.")
+
+    try:
+        with conn.cursor() as cursor:
+            sql = """
+                SELECT nome, email, lastlogin, morada, codigopostal, telemovel, vpn_check, first_contact_complete, first_session_complete,
+                    documents->'files' AS files
+                FROM users
+                WHERE email = %s
+                LIMIT 1;
+            """
+            cursor.execute(sql, (email,))
+            result = cursor.fetchone()
 
 
-conn_params = {
-    'dbname': os.getenv('POSTGRES_DB'),
-    'user': os.getenv('POSTGRES_USER'),
-    'password': os.getenv('POSTGRES_PASSWORD'),
-    'host': os.getenv('POSTGRES_HOST'),
-    'port': os.getenv('POSTGRES_PORT')
-}
+            if not result:
+                return None
 
-# print("Connection parameters:", conn_params )
+            return dictify_real_dict_row(result)
+            
+    except Exception as e:
+        print(f"Error retrieving user profile: {e}")
+        return None
+    finally:
+        conn.close()
+
+
+def insert_user(name, email, address, zip_code, cell_phone, register_ip):
+    conn = get_db_connection()
+    if conn is None:
+        print("No DB connection")
+        return False
+    try:
+        with conn.cursor() as cursor:
+            sql = """
+            INSERT INTO users (
+                nome, email, morada, codigopostal, telemovel,
+                ipcreated, thislogin, lastlogin, createdat, iplastlogin,
+                documents, logincount,
+                vpn_check, vpn_valid, first_contact_complete, first_session_complete
+            ) VALUES (
+                %s, %s, %s, %s, %s,
+                %s, NOW(), NOW(), NOW(), %s,
+                '{"files": [], "know_ip": [], "block_ip": {}, "preferences": {}}'::jsonb,
+                1,
+                FALSE, FALSE, FALSE, FALSE
+            )
+            """
+            cursor.execute(sql, (
+                name, email, address, zip_code, cell_phone,
+                register_ip, register_ip
+            ))
+            conn.commit()
+
+            # Add register_ip to the know_ip array in documents
+            sql_update = """
+            UPDATE users
+            SET documents = jsonb_set(
+                documents,
+                '{know_ip}',
+                CASE
+                    WHEN %s = ANY (SELECT jsonb_array_elements_text(documents->'know_ip'))
+                    THEN documents->'know_ip'
+                    ELSE documents->'know_ip' || to_jsonb(%s::text)
+                END,
+                true
+            )
+            WHERE email = %s;
+            """
+            cursor.execute(sql_update, (register_ip, register_ip, email))
+            conn.commit()
+
+
+        return True
+    except Exception as e:
+        print(f"Error inserting user: {e}")
+        return False
+    finally:
+        conn.close()
+
+def check_existing_user(register_ip, cell_phone):
+    conn = get_db_connection()
+    if not conn:
+        return None
+    try:
+        cur = conn.cursor()
+        query = """
+        SELECT email, createdat FROM users WHERE ipcreated = %s OR telemovel = %s LIMIT 1
+        """
+        cur.execute(query, (register_ip, cell_phone))
+        user = cur.fetchone()
+        cur.close()
+        return user
+    finally:
+        conn.close()
+
+def mask_email(email):
+    # Mask email username partially e.g. ma***@email.com
+    parts = email.split('@')
+    if len(parts[0]) <= 2:
+        return "***@" + parts[1]
+    return parts[0][:2] + "*****@" + parts[1]
+
+
+def check_ip_in_portugal(ip):
+    import requests
+    try:
+        # No token used here, but recommended to add your token as ?token=YOUR_TOKEN if needed
+        url = f"https://ipinfo.io/{ip}/json"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("bogon", True):
+                pprint(f"Bogon IP detected: {ip}")
+                return True  # Bogon IPs are treated as local/trusted
+
+            country_code = data.get("country", "").upper()
+            region = data.get("region", "").lower()
+            # Check country PT and region Lisboa or Lisbon (case insensitive)
+            if country_code == "PT" and region in ["lisboa", "lisbon"]:
+                return True
+    except Exception as e:
+        print(f"IP geolocation failed: {e}")
+    return False
 
 def get_db_connection():
     try:
-        conn = psycopg2.connect(**conn_params, cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(
+            dbname=os.getenv('POSTGRES_DB'),
+            user=os.getenv('POSTGRES_USER'),
+            password=os.getenv('POSTGRES_PASSWORD'),
+            host=os.getenv('POSTGRES_HOST'),
+            port=os.getenv('POSTGRES_PORT'),
+            cursor_factory=RealDictCursor
+        )
         return conn
     except Exception as e:
         print(f"Error connecting to the database: {e}")
@@ -55,37 +206,6 @@ def submit_query(query, params=None):
     except Exception as e:
         conn.rollback()
         return f"Error executing query: {e}"
-    finally:
-        conn.close()
-
-
-
-
-def insert_user(name, email, address, zip_code, cell_phone, register_ip):
-    conn = get_db_connection()
-    pprint(f"DB Connection: {conn}")
-    if conn is None:
-        pprint("No DB connection")
-        return False
-    try:
-        with conn.cursor() as cursor:
-            sql="""
-                INSERT INTO users (name, email, address, zip_code, cell_phone, register_ip, last_login)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
-                ON CONFLICT (email) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    address = EXCLUDED.address,
-                    zip_code = EXCLUDED.zip_code,
-                    cell_phone = EXCLUDED.cell_phone;
-            """
-            cursor.execute(sql, (name, email, address, zip_code, cell_phone, register_ip))
-            conn.commit()
-            cursor.close()
-            conn.close()
-        return True
-    except Exception as e:
-        print(f"Error inserting user: {e}")
-        return False
     finally:
         conn.close()
 
@@ -140,3 +260,54 @@ def results_to_html_table(results):
     table_html += '</tbody></table>'
     
     return table_html
+
+
+def check_and_create_users_table():
+    conn = get_db_connection()
+    if not conn:
+        print("Database connection failed.")
+        return False
+
+    pprint("Database connection established.")
+
+    pprint("Checking/Creating users table...")
+
+    try:
+        cur = conn.cursor()
+
+        # Create table only if it does not exist
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL DEFAULT 'Unknown',
+            email VARCHAR(255) NOT NULL UNIQUE,
+            morada VARCHAR(255) NOT NULL DEFAULT 'Unknown',
+            codigopostal VARCHAR(10) NOT NULL DEFAULT '0000-000',
+            telemovel BIGINT NOT NULL UNIQUE DEFAULT floor(random() * 100000000) + 900000000,
+            nif BIGINT NOT NULL UNIQUE DEFAULT floor(random() * 1000000000) + 9000000000,
+            ipcreated INET NOT NULL,
+            thislogin TIMESTAMP DEFAULT NOW(),
+            lastlogin TIMESTAMP DEFAULT NOW(),
+            createdat TIMESTAMP DEFAULT NOW(),
+            iplastlogin INET NOT NULL,
+            documents JSONB NOT NULL DEFAULT '{"files": [], "knowip": [], "blockip": {}, "preferences": {}}',
+            logincount INTEGER NOT NULL DEFAULT 1,
+            vpn_check boolean NOT NULL DEFAULT false,
+            vpn_valid boolean NOT NULL DEFAULT false,
+            first_contact_complete boolean NOT NULL DEFAULT false,
+            first_session_complete boolean NOT NULL DEFAULT false
+        );
+        """)
+        conn.commit()
+        cur.close()
+        print("Users table is ready.")
+        return True
+
+    except Exception as e:
+        print(f"Error creating users table: {e}")
+        conn.rollback()
+        return False
+
+    finally:
+        conn.close()
+
