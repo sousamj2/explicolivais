@@ -1,32 +1,29 @@
+import locale
 import os
 import requests
-from flask import Flask, redirect, request, session, render_template, url_for, jsonify
+from flask import Flask, redirect, request, session, render_template, url_for, jsonify, g
 from markupsafe import Markup
 from dotenv import load_dotenv
 from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from connectDB import insert_user, submit_query, results_to_html_table
-
+from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile
+from datetime import datetime
 load_dotenv()
-
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(
-            dbname=os.getenv('POSTGRES_DB'),
-            user=os.getenv('POSTGRES_USER'),
-            password=os.getenv('POSTGRES_PASSWORD'),
-            host=os.getenv('POSTGRES_HOST'),
-            port=os.getenv('POSTGRES_PORT'),
-            cursor_factory=RealDictCursor
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to the database: {e}")
-        return None
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
+
+# @app.before_request
+# def initialize():
+#     from connectDB import check_and_create_users_table
+#     if not getattr(g, 'db_initialized', False):
+#         check_and_create_users_table()
+#         g.db_initialized = True
+
+with app.app_context():
+    from connectDB import check_and_create_users_table
+    check_and_create_users_table()
 
 # Load client secrets from environment variables or a safe storage
 CLIENT_ID = os.getenv('SECRET_CLIENT_KEY')
@@ -43,14 +40,16 @@ def render_page(route="/", template_name="home", page_title="Explicações em Li
         with open(f'templates/content/{template_name}.html', 'r', encoding='utf-8') as file:
             main_content_html = Markup(file.read())
         user = session.get('user') or session.get('userinfo')
-        pprint(user)
+        # pprint(user)
         if not user and template_name == "profile":
             return redirect(url_for('signin'))
         elif (not user or user['email'].lower() != os.getenv('ADMINDB_EMAIL').lower()) and template_name == "adminDB":
             return redirect(url_for('signin'))
 
-        # if template_name == "adminDB":
+        if route == "/profile":
+            pprint(metadata)
 
+        # if template_name == "adminDB":
 
         return render_template(
             'index.html',
@@ -71,7 +70,7 @@ render_page(route="/prices"  , template_name="prices"   , page_title="Explicaç�
 render_page(route="/calendar", template_name="calendar" , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 render_page(route="/terms"   , template_name="terms"    , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 render_page(route="/adminDB" , template_name="adminDB"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(route="/profile" , template_name="profile"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+# render_page(route="/profile" , template_name="profile"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={session["metadata"]})
 # render_page(route="/signin"  , template_name="signin"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # render_page(route="/signup"  , template_name="signup"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # render_page(route="/logout"  , template_name="logout"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
@@ -182,7 +181,8 @@ def check_user():
 
         if user:
             pprint('User found in the database.')
-            
+            session["metadata"] = get_user_profile(email)
+    
             return redirect(url_for('profile'))
         else:
             pprint('User not found, redirecting to signup.')
@@ -200,17 +200,24 @@ def profile():
     # print("session data:", session)
     user = session.get('user') or session.get('userinfo')
     # pprint(f'User session data: {user}')
+    pprint(session.get('userinfo'))
     if user:
         pprint('Rendering profile page...')
+
         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
-            main_content_html = Markup(file.read())
+            
+            main_content_html = Markup(render_profile_template(file.read()))
+
+        print("-----------------------------------")
 
         return render_template('index.html',
-                               admin_email=os.getenv('ADMINDB_EMAIL').lower(),
-                               user=user,
-                               page_title="Explicações em Lisboa",
-                               title="Explicações em Lisboa",
-                               main_content=main_content_html)
+                                admin_email=os.getenv('ADMINDB_EMAIL').lower(),
+                                #    user=user,
+                                user = session.get("userinfo"),
+                                metadata=session.get("metadata"),
+                                page_title="Explicações em Lisboa",
+                                title="Explicações em Lisboa",
+                                main_content=main_content_html)
     else:
         return redirect(url_for('/'))        
         
@@ -235,6 +242,10 @@ def updateDB():
     zip_code = request.form.get('zip_code')
     cell_phone = request.form.get('cell_phone')
     register_ip = request.remote_addr
+
+    if not check_ip_in_portugal(register_ip):
+        pprint(f"IP {register_ip} is not from Lisboa/Portugal.")
+        return f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. Nota: só é necessário para o registro não para o acesso.", 400
 
     success = insert_user(name, email, address, zip_code, cell_phone, register_ip)
     if success:
@@ -266,9 +277,43 @@ def logout():
     session.clear()
 
     # Redirect to sign-in or homepage
-    return redirect(url_for('signin'))  # or your login route        
+    return redirect(url_for('signin'))  # or your login route
     
-            
-# if __name__ == '__main__':
-#     # app.run(debug=True)
-#     pass
+
+
+def format_data(timestampUTC):
+    try:
+        # Set locale to Portuguese (Portugal)
+        locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
+        dt = datetime.fromisoformat(timestampUTC)
+        # Format: day de MonthName de Year às HH:MM (24h)
+        formatted = dt.strftime('%-d de %B de %Y às %H:%M')
+        return formatted
+    except Exception as e:
+        print(f"Error formatting date: {e}")
+        return timestampUTC  # fallback
+
+
+def render_profile_template(template_text):
+    userinfo = session.get("userinfo", {})
+    metadata = session.get("metadata", {})
+    template_text = str(template_text)
+    # Example replacements; add more as needed
+    rendered = template_text.replace("{{user_picture}}", userinfo.get("picture", ""))
+    rendered = rendered.replace("{{nome}}", metadata.get("nome", ""))
+    rendered = rendered.replace("{{email}}", metadata.get("email", ""))
+    rendered = rendered.replace("{{lastlogin}}", format_data(metadata.get("lastlogin", "")))
+    rendered = rendered.replace("{{morada}}", metadata.get("morada", ""))
+    rendered = rendered.replace("{{codigopostal}}", metadata.get("codigopostal", ""))
+    rendered = rendered.replace("{{nif}}", str(metadata.get("nif", "")))
+    rendered = rendered.replace("{{telemovel}}", str(metadata.get("telemovel", "")))
+
+    # Replace boolean fields for LEDs (example: 'green' if True else 'orange')
+    vpn_check = metadata.get("vpn_check", False)
+    primeiro_contacto = metadata.get("first_contact_complete", False)
+    primeira_aula = metadata.get("first_session_complete", False)
+    rendered = rendered.replace("{{vpn_check_color}}", "green" if vpn_check else "orange")
+    rendered = rendered.replace("{{primeiro_contacto_color}}", "green" if primeiro_contacto else "orange")
+    rendered = rendered.replace("{{primeira_aula_color}}", "green" if primeira_aula else "orange")
+
+    return Markup(rendered)
