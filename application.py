@@ -7,19 +7,14 @@ from dotenv import load_dotenv
 from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile
-from datetime import datetime
+from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile, refresh_last_login_and_ip, get_lisbon_greeting
+from datetime import datetime, timedelta
+import locale
+import pytz
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
-
-# @app.before_request
-# def initialize():
-#     from connectDB import check_and_create_users_table
-#     if not getattr(g, 'db_initialized', False):
-#         check_and_create_users_table()
-#         g.db_initialized = True
 
 with app.app_context():
     from connectDB import check_and_create_users_table
@@ -182,7 +177,8 @@ def check_user():
         if user:
             pprint('User found in the database.')
             session["metadata"] = get_user_profile(email)
-    
+            refresh_last_login_and_ip(email, request.remote_addr)
+            pprint(session['metadata'])
             return redirect(url_for('profile'))
         else:
             pprint('User not found, redirecting to signup.')
@@ -200,15 +196,15 @@ def profile():
     # print("session data:", session)
     user = session.get('user') or session.get('userinfo')
     # pprint(f'User session data: {user}')
-    pprint(session.get('userinfo'))
+    # pprint(session.get('userinfo'))
     if user:
         pprint('Rendering profile page...')
+
+        session["metadata"]["greeting"] = get_lisbon_greeting()
 
         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
             
             main_content_html = Markup(render_profile_template(file.read()))
-
-        print("-----------------------------------")
 
         return render_template('index.html',
                                 admin_email=os.getenv('ADMINDB_EMAIL').lower(),
@@ -278,20 +274,42 @@ def logout():
 
     # Redirect to sign-in or homepage
     return redirect(url_for('signin'))  # or your login route
-    
 
 
 def format_data(timestampUTC):
+    # print("-----------------------",timestampUTC)
     try:
-        # Set locale to Portuguese (Portugal)
         locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
+        
         dt = datetime.fromisoformat(timestampUTC)
-        # Format: day de MonthName de Year às HH:MM (24h)
-        formatted = dt.strftime('%-d de %B de %Y às %H:%M')
-        return formatted
+        dt = dt - timedelta(hours=1)
+        lisbon_tz = pytz.timezone('Europe/Lisbon')
+        
+        if dt.tzinfo is None:
+            dt = pytz.utc.localize(dt)
+        # print(f"Original datetime: {dt} with tz: {dt.tzinfo}")
+        
+        # dt_local = lisbon_tz
+        dt_local = dt.astimezone(lisbon_tz)
+        # print(f"Converted to Lisbon timezone: {dt_local} with tz: {dt_local.tzinfo}")
+        
+        now_local = datetime.now(lisbon_tz).date()
+        dt_date = dt_local.date()
+        yesterday = now_local - timedelta(days=1)
+        
+        if dt_date == now_local:
+            date_str = "hoje"
+        elif dt_date == yesterday:
+            date_str = "ontem"
+        else:
+            date_str = dt_local.strftime('em %-d de %B de %Y')
+        
+        time_str = dt_local.strftime('às %H:%M')
+        return f"{date_str} {time_str}"
+        
     except Exception as e:
         print(f"Error formatting date: {e}")
-        return timestampUTC  # fallback
+        return timestampUTC
 
 
 def render_profile_template(template_text):
@@ -300,6 +318,7 @@ def render_profile_template(template_text):
     template_text = str(template_text)
     # Example replacements; add more as needed
     rendered = template_text.replace("{{user_picture}}", userinfo.get("picture", ""))
+    rendered = rendered.replace("{{greeting}}", metadata.get("greeting", ""))
     rendered = rendered.replace("{{nome}}", metadata.get("nome", ""))
     rendered = rendered.replace("{{email}}", metadata.get("email", ""))
     rendered = rendered.replace("{{lastlogin}}", format_data(metadata.get("lastlogin", "")))
