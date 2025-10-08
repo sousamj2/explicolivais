@@ -2,40 +2,6 @@
 
 --- This commands update information in the users table ---
 
--- Retrieve the documents->files for user with specific email
-SELECT documents->'files' FROM users WHERE email = 'email001@mail.com';
-
--- To a user with specific email, ad in the documents->'files' array a dictionary element with file name, file location and upload date
-UPDATE users 
-SET documents = jsonb_set(documents, '{files}', (documents->'files')::jsonb || to_jsonb('{"file_name": "example.txt", "file_location": "/path/to/example.txt", "upload_date": "' || NOW() || '"}'::jsonb))
-WHERE email = 'email001@mail.com';
-
--- Check if the ip_last_login is already in the documents->'know_ip' array for user with specific email
-SELECT '1.1.1.1'::inet = ANY (SELECT jsonb_array_elements_text(documents->'know_ip')::inet FROM users WHERE email = 'email001@mail.com');
-
--- Check if the ip_last_login is already in the documents->'know_ip' array for user with specific email and only add it if it is not already present
-DO $$
-DECLARE
-    ip_address inet := '1.1.1.1';
-    email_address varchar := 'email001@mail.com';
-    ip_exists boolean;
-BEGIN
-    SELECT ip_address = ANY (SELECT jsonb_array_elements_text(documents->'know_ip')::inet FROM users WHERE email = email_address) INTO ip_exists;
-    IF NOT ip_exists THEN
-        UPDATE users 
-        SET documents = jsonb_set(documents, '{know_ip}', (documents->'know_ip')::jsonb || to_jsonb(ip_address))
-        WHERE email = email_address;
-    END IF;
-END $$;
-
--- Check if an ip address is in the documents->'block_ip' object for user with specific email
-SELECT '1.1.1.1'::inet = ANY (SELECT jsonb_object_keys(documents->'block_ip')::inet FROM users WHERE email = 'email001@mail.com');
-
--- Add an ip address to the documents->'block_ip' object with a reason for user with specific email
-UPDATE users 
-SET documents = jsonb_set(documents, '{block_ip,1.1.1.1}', to_jsonb('Suspicious activity'))
-WHERE email = 'email001@mail.com';
-
 -- Extract email and created_at if ip address matches ip_created
 SELECT email, created_at
 FROM users
@@ -139,11 +105,6 @@ ADD COLUMN ip_last_login inet NOT NULL
 -- UNIQUE
  DEFAULT ip_created;
 
--- Documents as a dictionary to store additional information with the keys "files", "know_ip" and "preferences". The "files" key stores an array of text values, the "know_ip" key stores an array of inet values, and the "preferences" key stores a JSONB object.
--- The default value is an empty dictionary with empty arrays for "files" and "know_ip", and an empty JSONB object for "preferences".
-ALTER TABLE users
-ADD COLUMN documents JSONB NOT NULL DEFAULT '{"files": [], "know_ip": [], "block_ip": {}, "preferences": {}}'::jsonb;
-
 -- Add iterator to how many times the user logged in. Default is 1 at creation
 ALTER TABLE users
 ADD COLUMN login_count integer NOT NULL DEFAULT 1;
@@ -178,3 +139,83 @@ DELETE FROM users;
 
 --- This drops the users table if it exists ---
 DROP TABLE IF EXISTS users;
+
+
+---- SQL commands for managing user_files table ----
+
+-- Create the user_files table
+CREATE TABLE IF NOT EXISTS user_files (
+    id SERIAL PRIMARY KEY,
+    user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_location VARCHAR(255) NOT NULL,
+    upload_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Retrieve all files for a specific user email
+SELECT file_name, file_location, upload_date FROM user_files WHERE user_email = 'email001@mail.com';
+
+-- Add a new file for a specific user email
+INSERT INTO user_files (user_email, file_name, file_location) VALUES ('email001@mail.com', 'example.txt', '/path/to/example.txt');
+
+
+---- SQL commands for managing user_known_ips table ----
+
+-- Create the user_known_ips table
+CREATE TABLE IF NOT EXISTS user_known_ips (
+    id SERIAL PRIMARY KEY,
+    user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+    ip_address INET NOT NULL,
+    UNIQUE (user_email, ip_address)
+);
+
+-- Retrieve all known IPs for a specific user email
+SELECT ip_address FROM user_known_ips WHERE user_email = 'email001@mail.com';
+
+-- Add a new known IP for a specific user email (only if not already present)
+INSERT INTO user_known_ips (user_email, ip_address)
+SELECT 'email001@mail.com', '1.1.1.1'::inet
+WHERE NOT EXISTS (
+    SELECT 1 FROM user_known_ips WHERE user_email = 'email001@mail.com' AND ip_address = '1.1.1.1'::inet
+);
+
+
+---- SQL commands for managing user_blocked_ips table ----
+
+-- Create the user_blocked_ips table
+CREATE TABLE IF NOT EXISTS user_blocked_ips (
+    id SERIAL PRIMARY KEY,
+    user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+    ip_address INET NOT NULL,
+    reason TEXT,
+    UNIQUE (user_email, ip_address)
+);
+
+-- Retrieve all blocked IPs and their reasons for a specific user email
+SELECT ip_address, reason FROM user_blocked_ips WHERE user_email = 'email001@mail.com';
+
+-- Add a new blocked IP with a reason for a specific user email
+INSERT INTO user_blocked_ips (user_email, ip_address, reason) VALUES ('email001@mail.1.1.1.1'::inet, 'Suspicious activity');
+
+
+---- SQL commands for managing user_preferences table ----
+
+-- Create the user_preferences table
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id SERIAL PRIMARY KEY,
+    user_email VARCHAR(255) NOT NULL UNIQUE REFERENCES users(email) ON DELETE CASCADE,
+    preferences JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+-- Retrieve preferences for a specific user email
+SELECT preferences FROM user_preferences WHERE user_email = 'email001@mail.com';
+
+-- Update preferences for a specific user email
+UPDATE user_preferences SET preferences = jsonb_set(preferences, '{theme}', '"dark"') WHERE user_email = 'email001@mail.com';
+
+-- Insert initial preferences for a user (if not already present)
+INSERT INTO user_preferences (user_email, preferences)
+VALUES ('email001@mail.com', '{"theme": "light", "notifications": true}'::jsonb)
+ON CONFLICT (user_email) DO NOTHING;
+
+------------------------------------------------------------------------------
