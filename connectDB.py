@@ -2,12 +2,50 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from datetime import datetime
-
 from pprint import pprint
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+from datetime import datetime, time, timedelta
+from suntime import Sun
+import pytz
+
+def get_lisbon_greeting():
+    latitude, longitude = 38.7169, -9.1399
+    lisbon_tz = pytz.timezone('Europe/Lisbon')
+    sun = Sun(latitude, longitude)
+
+    now = datetime.now(lisbon_tz)
+    today_datetime = datetime.combine(now.date(), time.min)
+
+    # Get sunrise and sunset for today
+    sunrise_utc = sun.get_sunrise_time(today_datetime)
+    sunset_utc = sun.get_sunset_time(today_datetime)
+
+    sunrise = sunrise_utc.astimezone(lisbon_tz)
+    sunset = sunset_utc.astimezone(lisbon_tz)
+
+    # If now is past today's sunset, get sunset for tomorrow
+    if now > sunset:
+        tomorrow_datetime = today_datetime + timedelta(days=1)
+        sunset_utc = sun.get_sunset_time(tomorrow_datetime)
+        sunset = sunset_utc.astimezone(lisbon_tz)
+
+    # If now is earlier than today's sunrise, get sunrise for yesterday
+    if now < sunrise:
+        yesterday_datetime = today_datetime - timedelta(days=1)
+        sunrise_utc = sun.get_sunrise_time(yesterday_datetime)
+        sunrise = sunrise_utc.astimezone(lisbon_tz)
+
+    noon = now.replace(hour=12, minute=0, second=0, microsecond=0)
+
+    if sunrise <= now < noon:
+        return "Bom dia"
+    elif noon <= now < sunset:
+        return "Boa tarde"
+    else:
+        return "Boa noite"
 
 def dictify_real_dict_row(row):
     def convert_value(val):
@@ -311,3 +349,28 @@ def check_and_create_users_table():
     finally:
         conn.close()
 
+
+def refresh_last_login_and_ip(email, current_ip):
+    conn = get_db_connection()
+    if conn is None:
+        print("No DB connection")
+        return False
+
+    try:
+        with conn.cursor() as cursor:
+            now = datetime.now()
+            cursor.execute("""
+                UPDATE users SET
+                    lastlogin = thislogin,
+                    iplastlogin = ipcreated,
+                    thislogin = %s,
+                    ipcreated = %s
+                WHERE email = %s
+            """, (now, current_ip, email))
+            conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error refreshing last login info: {e}")
+        return False
+    finally:
+        conn.close()
