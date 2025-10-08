@@ -7,3 +7,6 @@ startup.sh
 shutdown.sh
 scratch
 .github
+.vscode
+testing.py
+quiz-time
