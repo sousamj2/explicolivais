@@ -32,7 +32,7 @@ def updateValue(email, tableName, tableColumn, newValue=None):
             c.execute(sql, (user_id,))
             sql = "UPDATE connection SET thisloginip = ?                 WHERE user_id = ?;"
             c.execute(sql, (newValue,user_id))
-            sql = "UPDATE connection SET logincount = logincount + 1 WHERE user_id = ?;"
+            sql = "UPDATE connection SET logincount = logincount + 1     WHERE user_id = ?;"
             c.execute(sql, (user_id,))
             sql = """
             INSERT INTO iplist (user_id, ipValue)
