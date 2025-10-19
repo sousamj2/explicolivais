@@ -1,22 +1,27 @@
 import sqlite3
 
 def getAllUsers():
-    conn,c = dbConnect()
+    # Connect to database
+    conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+    cursor = conn.cursor()
+
     sqlCode = """
     SELECT * FROM users;
     """
-    c.execute(sqlCode)
-    output = c.fetchall()
+    cursor.execute(sqlCode)
+    output = cursor.fetchall()
     conn.close()
     return output
 
 def getUserIdFromEmail(email):
-    conn,c = dbConnect()
+    # Connect to database
+    conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+    cursor = conn.cursor()
     sqlCode = """
     SELECT user_id FROM users WHERE email = ?;
     """
-    c.execute(sqlCode,(email,))
-    output = c.fetchall()
+    cursor.execute(sqlCode,(email,))
+    output = cursor.fetchall()
     conn.close()
     if output:
         return output[0][0]
