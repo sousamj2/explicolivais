@@ -1,5 +1,5 @@
 import sqlite3
-from DBbaseline import *
+from DBbaseline import getUserIdFromEmail
 insertFolder = "SQLiteQueries/insertHandler/"
 
 def execute_insert_from_file(sql_file_path, params_dict):
@@ -14,7 +14,7 @@ def execute_insert_from_file(sql_file_path, params_dict):
             sql_code = file.read()
 
         # Connect to database
-        conn = sqlite3.connect('your_database.db')  # Adjust your DB path
+        conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
         cursor = conn.cursor()
 
         # Prepare parameters tuple in the order matching the SQL placeholders
