@@ -1,12 +1,5 @@
 import sqlite3
 
-def dbConnect():
-    # Create the connection
-    conn = sqlite3.connect("olivaisplica.db")
-    # Create cursor instance
-    cursor = conn.cursor()
-    return conn, cursor
-
 def getAllUsers():
     conn,c = dbConnect()
     sqlCode = """
@@ -29,5 +22,3 @@ def getUserIdFromEmail(email):
         return output[0][0]
     else:
         return None
-
-# # documents    JSONB NOT NULL DEFAULT '{"files": [], "knowip": [], "blockip": {}, "preferences": {}}',
