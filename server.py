@@ -9,5 +9,5 @@ if __name__ == '__main__':
     # For production use waitress to serve the app
 
     # Localhost access only
-    serve(app, host='www.explicacoeslisboa.pt', port=80)
-    # serve(app, host='0.0.0.0', port=8080)
+    # serve(app, host=localhost, port=80)
+    serve(app, host='0.0.0.0', port=8080)

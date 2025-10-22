@@ -18,8 +18,9 @@ app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 with app.app_context():
-    from connectDB import check_and_create_users_table
-    check_and_create_users_table()
+    # from connectDB import check_and_create_users_table
+    # check_and_create_users_table()
+    pass
 
 # Load client secrets from environment variables or a safe storage
 CLIENT_ID = os.getenv('SECRET_CLIENT_KEY')
