@@ -1,0 +1,34 @@
+<!-- Top welcome block -->
+<div class="welcome-block">
+    <h1>{{greeting}} {{nome}} ({{email}})</h1>
+    <h2>A última vez que entrou foi {{lastlogin}}</h2>
+</div>
+
+<!-- Main content block with left-right columns -->
+<div class="profile-content" style="display: flex; gap: 20px;">
+    <!-- Left column: picture + leds -->
+    <div class="left-column" style="flex: 0.1; text-align: center;">
+        <img src="{{user_picture}}" alt="Profile Picture" style="width: 100%; max-width: 120px; border-radius: 50%; margin-bottom: 15px;">
+
+        <ul class="led-list" style="list-style: none; padding-left: 0; text-align: left; display: inline-block;">
+            <li style="margin-bottom: 8px;">
+                <span class="led-bullet" style="background-color: {{vpn_check_color}};"></span> VPN check
+            </li>
+            <li style="margin-bottom: 8px;">
+                <span class="led-bullet" style="background-color: {{primeiro_contacto_color}};"></span> 1º Contacto
+            </li>
+            <li>
+                <span class="led-bullet" style="background-color: {{primeira_aula_color}};"></span> 1ª aula
+            </li>
+        </ul>
+    </div>
+
+    <!-- Right column: Dados Pessoais -->
+    <div class="right-column" style="flex: 0.9;">
+        <p><strong>Dados Pessoais</strong></p>
+        <p>Morada Fiscal: {{morada}}</p>
+        <p>Código Postal: {{codigopostal}}</p>
+        <p>NIF: {{nif}}</p>
+        <p>Contacto Telefónico: {{telemovel}}</p>
+    </div>
+</div>

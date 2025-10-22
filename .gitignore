@@ -1,0 +1,13 @@
+.env
+webappenv/
+__pycache__/
+runFlask.sh
+venv/
+startup.sh
+shutdown.sh
+scratch
+.github
+.vscode
+testing.py
+quiz-time
+explicolivais.db

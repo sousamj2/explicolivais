@@ -1,0 +1,200 @@
+:root {
+    --round: 16px;
+    --blue-title: #2563eb;
+    --egg-shell: #f8f6ea;
+    --yellow-header: #ffd600;
+    --menu-width: 20%;
+    --main-width: 80%;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    transition: background 0.3s, color 0.3s;
+    background-color: var(--egg-shell);
+    color: #000; 
+}
+
+.container {
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+}
+
+/* Title box */
+.title-box {
+    background: var(--blue-title);
+    color: #fff;
+    border-radius: var(--round);
+    margin: 16px;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Columns */
+.columns {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    margin: 16px;
+}
+
+/* Menu (left column) */
+.menu {
+    width: var(--menu-width);
+    background: #fff;
+    border-radius: var(--round);
+    box-shadow: 0 2px 6px rgba(60,60,60,0.09);
+    padding: 32px 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu ul {
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    padding: 10px 0;
+    font-size: 1.1em;
+    border-radius: var(--round);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.menu li:hover {
+    background: #edf2fb;
+}
+
+
+/* Main content (right column) */
+.main-content {
+    width: var(--main-width);
+    background: #fff;
+    border-radius: var(--round);
+    box-shadow: 0 2px 6px rgba(60,60,60,0.09);
+    padding: 40px 24px;
+}
+
+.main-content h2 {
+    color: #2563eb; /* Default header color for light mode */
+    margin-top: 0;
+}
+
+/* DARK THEME */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #152238;
+        color: #fff;
+    }
+    .title-box {
+        background: var(--blue-title);
+        color: #fff;
+    }
+    .menu {
+        background: #233357;
+        color: #fff;
+    }
+    .menu li:hover {
+        background: #314575;
+    }
+    .main-content {
+        background: #233357;
+        color: #fff;
+    }
+    .main-content h2 {
+        color: var(--yellow-header);
+    }
+    .title-box h1 {
+        color: #fff;
+    }
+}
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: var(--egg-shell);
+        color: #000;
+    }
+    .title-box {
+        background: var(--blue-title);
+        color: #fff;
+    }
+    .main-content h2 {
+        color: #2563eb;
+    }
+}
+
+.menu a {
+    color: #2563eb; /* Blue for light mode */
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    padding: 10px 0;
+    border-radius: var(--round);
+}
+
+.menu a:hover {
+    background-color: #edf2fb;
+    color: #003d99;
+}
+
+/* Dark mode menu links */
+@media (prefers-color-scheme: dark) {
+    .menu a {
+        color: #ffd600; /* Yellow headers for dark mode */
+    }
+    .menu a:hover {
+        background-color: #314575;
+        color: #fff;
+    }
+}
+
+.google-btn {
+    background-color: white;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.25);
+    color: #3c4043;
+    font-weight: 500;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+}
+
+.google-btn:hover {
+    box-shadow: 0 0 6px rgb(66 133 244 / 0.6);
+}
+
+.google-logo {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .google-btn {
+        background-color: #000; /* black background */
+        border: 1px solid #444; /* dark border */
+        color: #fff; /* white text */
+        box-shadow: none; /* simpler shadow */
+    }
+    
+    .google-btn:hover {
+        box-shadow: 0 0 6px rgb(255 255 255 / 0.6); /* subtle white glow */
+    }
+
+}
+
+.led-bullet {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    background-color: orange; /* Or overridden inline style */
+  }
