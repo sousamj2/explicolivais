@@ -201,20 +201,20 @@ def check_ip_in_portugal(ip):
         print(f"IP geolocation failed: {e}")
     return False
 
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(
-            dbname=os.getenv('POSTGRES_DB'),
-            user=os.getenv('POSTGRES_USER'),
-            password=os.getenv('POSTGRES_PASSWORD'),
-            host=os.getenv('POSTGRES_HOST'),
-            port=os.getenv('POSTGRES_PORT'),
-            cursor_factory=RealDictCursor
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to the database: {e}")
-        return None
+# def get_db_connection():
+#     try:
+#         conn = psycopg2.connect(
+#             dbname=os.getenv('POSTGRES_DB'),
+#             user=os.getenv('POSTGRES_USER'),
+#             password=os.getenv('POSTGRES_PASSWORD'),
+#             host=os.getenv('POSTGRES_HOST'),
+#             port=os.getenv('POSTGRES_PORT'),
+#             cursor_factory=RealDictCursor
+#         )
+#         return conn
+#     except Exception as e:
+#         print(f"Error connecting to the database: {e}")
+#         return None
     
 def submit_query(query, params=None):
     conn = get_db_connection()
