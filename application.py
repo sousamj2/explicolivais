@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile, refresh_last_login_and_ip, get_lisbon_greeting
+# from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile, refresh_last_login_and_ip, get_lisbon_greeting
+from connectDB import check_ip_in_portugal
 from datetime import datetime, timedelta
 import locale
 import pytz
@@ -72,28 +73,28 @@ render_page(route="/adminDB" , template_name="adminDB"  , page_title="Explicaç�
 # The above function creates routes dynamically, so the below individual route definitions are commented out.
 # They can be removed if the dynamic function works as intended.
 
-@app.route('/adminDB', methods=['POST'])
-def admin_db():
-    data = request.json
-    query = data.get('query')
-    if not query:
-        return jsonify({'error': 'No SQL query provided'}), 400
+# @app.route('/adminDB', methods=['POST'])
+# def admin_db():
+#     data = request.json
+#     query = data.get('query')
+#     if not query:
+#         return jsonify({'error': 'No SQL query provided'}), 400
 
-    result = submit_query(query)
-    if isinstance(result, str):  # Indicates an error message
-        return jsonify({'error': result}), 400
+#     result = submit_query(query)
+#     if isinstance(result, str):  # Indicates an error message
+#         return jsonify({'error': result}), 400
     
-    if isinstance(result, list):
-        if len(result) > 0 and isinstance(result[0],str):
-            result = " ("+",".join(result[1:]) + ") "
-            return jsonify(result)
+#     if isinstance(result, list):
+#         if len(result) > 0 and isinstance(result[0],str):
+#             result = " ("+",".join(result[1:]) + ") "
+#             return jsonify(result)
         
-        html_table = results_to_html_table(result)
-        # pprint(html_table)
+#         html_table = results_to_html_table(result)
+#         # pprint(html_table)
         
-        result = {'html_table': html_table}
+#         result = {'html_table': html_table}
 
-    return jsonify(result)
+#     return jsonify(result)
 
 @app.route('/signin')
 def signin():
@@ -154,68 +155,68 @@ def oauth2callback():
     pprint( 'Authentication successful, tokens acquired!')
     return redirect(url_for('check_user'))
 
-@app.route('/check_user', methods=['GET', 'POST'])
-def check_user():
-    pprint('Checking user in the database...')
-    userinfo = session.get('userinfo')
-    # pprint(userinfo)
-    if not userinfo or 'email' not in userinfo:
-        return redirect(url_for('signin'))
-    email = userinfo['email']
+# @app.route('/check_user', methods=['GET', 'POST'])
+# def check_user():
+#     pprint('Checking user in the database...')
+#     userinfo = session.get('userinfo')
+#     # pprint(userinfo)
+#     if not userinfo or 'email' not in userinfo:
+#         return redirect(url_for('signin'))
+#     email = userinfo['email']
     
-    conn = get_db_connection()
-    if conn is None:
-        return "Database connection error", 500
-    try:
-        with conn.cursor() as cursor:
-            sql = "SELECT * FROM users WHERE email = %s;"
-            cursor.execute(sql, (email,))
-            user = cursor.fetchone()
-            cursor.close()
-            conn.close()
+#     conn = get_db_connection()
+#     if conn is None:
+#         return "Database connection error", 500
+#     try:
+#         with conn.cursor() as cursor:
+#             sql = "SELECT * FROM users WHERE email = %s;"
+#             cursor.execute(sql, (email,))
+#             user = cursor.fetchone()
+#             cursor.close()
+#             conn.close()
 
-        if user:
-            pprint('User found in the database.')
-            session["metadata"] = get_user_profile(email)
-            refresh_last_login_and_ip(email, request.remote_addr)
-            pprint(session['metadata'])
-            return redirect(url_for('profile'))
-        else:
-            pprint('User not found, redirecting to signup.')
-            return redirect(url_for('signup'))
-    except Exception as e:
-        print(f"Error fetching user: {e}")
-        return "Error processing your request", 500
-    finally:
-        conn.close()
+#         if user:
+#             pprint('User found in the database.')
+#             session["metadata"] = get_user_profile(email)
+#             refresh_last_login_and_ip(email, request.remote_addr)
+#             pprint(session['metadata'])
+#             return redirect(url_for('profile'))
+#         else:
+#             pprint('User not found, redirecting to signup.')
+#             return redirect(url_for('signup'))
+#     except Exception as e:
+#         print(f"Error fetching user: {e}")
+#         return "Error processing your request", 500
+#     finally:
+#         conn.close()
         
-@app.route('/profile', methods=['GET', 'POST'])
-def profile():
-    if not session:
-        return redirect(url_for('signin'))
-    # print("session data:", session)
-    user = session.get('user') or session.get('userinfo')
-    # pprint(f'User session data: {user}')
-    # pprint(session.get('userinfo'))
-    if user:
-        pprint('Rendering profile page...')
+# @app.route('/profile', methods=['GET', 'POST'])
+# def profile():
+#     if not session:
+#         return redirect(url_for('signin'))
+#     # print("session data:", session)
+#     user = session.get('user') or session.get('userinfo')
+#     # pprint(f'User session data: {user}')
+#     # pprint(session.get('userinfo'))
+#     if user:
+#         pprint('Rendering profile page...')
 
-        session["metadata"]["greeting"] = get_lisbon_greeting()
+#         session["metadata"]["greeting"] = get_lisbon_greeting()
 
-        with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
+#         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
             
-            main_content_html = Markup(render_profile_template(file.read()))
+#             main_content_html = Markup(render_profile_template(file.read()))
 
-        return render_template('index.html',
-                                admin_email=os.getenv('ADMINDB_EMAIL').lower(),
-                                #    user=user,
-                                user = session.get("userinfo"),
-                                metadata=session.get("metadata"),
-                                page_title="Explicações em Lisboa",
-                                title="Explicações em Lisboa",
-                                main_content=main_content_html)
-    else:
-        return redirect(url_for('/'))        
+#         return render_template('index.html',
+#                                 admin_email=os.getenv('ADMINDB_EMAIL').lower(),
+#                                 #    user=user,
+#                                 user = session.get("userinfo"),
+#                                 metadata=session.get("metadata"),
+#                                 page_title="Explicações em Lisboa",
+#                                 title="Explicações em Lisboa",
+#                                 main_content=main_content_html)
+#     else:
+#         return redirect(url_for('/'))        
         
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
