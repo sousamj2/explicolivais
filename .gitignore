@@ -1,7 +1,8 @@
 .env
 webappenv/
+webappenv-312/
 __pycache__/
-runFlask.sh
+# runFlask.sh
 venv/
 startup.sh
 shutdown.sh
@@ -11,3 +12,4 @@ scratch
 testing.py
 quiz-time
 explicolivais.db
+LE-SA-v1.5-February-24-2025.pdf
