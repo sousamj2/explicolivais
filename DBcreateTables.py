@@ -5,13 +5,13 @@ def handle_tables(sql_file_path):
     """
     Executes a CREATE TABLE SQL command from a file.
     """
+    conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
     try:
         # Read SQL code from file
         with open(sql_file_path, 'r') as file:
             sql_code = file.read()
 
         # Connect to database
-        conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
         cursor = conn.cursor()
 
         # Execute the SQL command
