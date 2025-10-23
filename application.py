@@ -8,11 +8,17 @@ from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
 # from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile, refresh_last_login_and_ip, get_lisbon_greeting
-from connectDB import check_ip_in_portugal
+from connectDB import check_ip_in_portugal, get_lisbon_greeting
 from datetime import datetime, timedelta
 import locale
 import pytz
+
+
 load_dotenv()
+
+from DBinsertTables import *
+from DBselectTables import * 
+from DBupdateTables import *
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
@@ -156,68 +162,85 @@ def oauth2callback():
     pprint( 'Authentication successful, tokens acquired!')
     return redirect(url_for('check_user'))
 
-# @app.route('/check_user', methods=['GET', 'POST'])
-# def check_user():
-#     pprint('Checking user in the database...')
-#     userinfo = session.get('userinfo')
-#     # pprint(userinfo)
-#     if not userinfo or 'email' not in userinfo:
-#         return redirect(url_for('signin'))
-#     email = userinfo['email']
+@app.route('/check_user', methods=['GET', 'POST'])
+def check_user():
+    pprint('Checking user in the database...')
+    userinfo = session.get('userinfo')
+    # pprint(userinfo)
+    if not userinfo or 'email' not in userinfo:
+        return redirect(url_for('signin'))
+    email = userinfo['email']
     
-#     conn = get_db_connection()
-#     if conn is None:
-#         return "Database connection error", 500
-#     try:
-#         with conn.cursor() as cursor:
-#             sql = "SELECT * FROM users WHERE email = %s;"
-#             cursor.execute(sql, (email,))
-#             user = cursor.fetchone()
-#             cursor.close()
-#             conn.close()
+    user = get_user_profile(email)
 
-#         if user:
-#             pprint('User found in the database.')
-#             session["metadata"] = get_user_profile(email)
-#             refresh_last_login_and_ip(email, request.remote_addr)
-#             pprint(session['metadata'])
-#             return redirect(url_for('profile'))
-#         else:
-#             pprint('User not found, redirecting to signup.')
-#             return redirect(url_for('signup'))
-#     except Exception as e:
-#         print(f"Error fetching user: {e}")
-#         return "Error processing your request", 500
-#     finally:
-#         conn.close()
+    if user:
+        pprint('User found in the database.')
+        refresh_last_login_and_ip(email, request.remote_addr)
+        session["metadata"] = get_user_profile(email)
+        # pprint(session['metadata'])
+        return redirect(url_for('profile'))
+    else:
+        pprint('User not found, redirecting to signup.')
+        return redirect(url_for('signup'))
+
+
+    # conn = get_db_connection()
+    # if conn is None:
+    #     return "Database connection error", 500
+    # try:
+    #     with conn.cursor() as cursor:
+    #         sql = "SELECT * FROM users WHERE email = %s;"
+    #         cursor.execute(sql, (email,))
+    #         user = cursor.fetchone()
+    #         cursor.close()
+    #         conn.close()
+
+    #     if user:
+    #         pprint('User found in the database.')
+    #         session["metadata"] = get_user_profile(email)
+    #         refresh_last_login_and_ip(email, request.remote_addr)
+    #         pprint(session['metadata'])
+    #         return redirect(url_for('profile'))
+    #     else:
+    #         pprint('User not found, redirecting to signup.')
+    #         return redirect(url_for('signup'))
+    # except Exception as e:
+    #     print(f"Error fetching user: {e}")
+    #     return "Error processing your request", 500
+    # finally:
+        # conn.close()
         
-# @app.route('/profile', methods=['GET', 'POST'])
-# def profile():
-#     if not session:
-#         return redirect(url_for('signin'))
-#     # print("session data:", session)
-#     user = session.get('user') or session.get('userinfo')
-#     # pprint(f'User session data: {user}')
-#     # pprint(session.get('userinfo'))
-#     if user:
-#         pprint('Rendering profile page...')
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if not session:
+        return redirect(url_for('signin'))
+    # print("session data:", session)
+    user = session.get('user') or session.get('userinfo')
+    # pprint(f'User session data: {user}')
+    # pprint(session.get('userinfo'))
+    if user:
+        pprint('Rendering profile page...')
+        # print(user)
+        # if not session.get("metadata"):
+        #     session["metadata"] = {}
+        email = user['email']
+        session["metadata"] = get_user_profile(email)
+        session["metadata"]["greeting"] = get_lisbon_greeting()
 
-#         session["metadata"]["greeting"] = get_lisbon_greeting()
-
-#         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
+        with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
             
-#             main_content_html = Markup(render_profile_template(file.read()))
+            main_content_html = Markup(render_profile_template(file.read()))
 
-#         return render_template('index.html',
-#                                 admin_email=os.getenv('ADMINDB_EMAIL').lower(),
-#                                 #    user=user,
-#                                 user = session.get("userinfo"),
-#                                 metadata=session.get("metadata"),
-#                                 page_title="Explicações em Lisboa",
-#                                 title="Explicações em Lisboa",
-#                                 main_content=main_content_html)
-#     else:
-#         return redirect(url_for('/'))        
+        return render_template('index.html',
+                                admin_email=os.getenv('ADMINDB_EMAIL').lower(),
+                                #    user=user,
+                                user = session.get("userinfo"),
+                                metadata=session.get("metadata"),
+                                page_title="Explicações em Lisboa",
+                                title="Explicações em Lisboa",
+                                main_content=main_content_html)
+    else:
+        return redirect(url_for('/'))        
         
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -245,8 +268,13 @@ def updateDB():
         pprint(f"IP {register_ip} is not from Lisboa/Portugal.")
         return f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. Nota: só é necessário para o registro não para o acesso.", 400
 
-    success = insert_user(name, email, address, zip_code, cell_phone, register_ip)
-    if success:
+    successUser = insertNewUser(name.split()[0],name.split()[1],email)
+    successPers = insertNewPersonalData(email, address, zip_code,zip_code,cell_phone,cell_phone)
+    successIP   = insertNewIP(email,register_ip)
+    successConn = insertNewConnectionData(email,register_ip)
+    if successPers and successUser:
+    # success = insert_user(name, email, address, zip_code, cell_phone, register_ip)
+    # if success:
         session['user'] = {
             'name': name,
             'email': email,
@@ -279,7 +307,7 @@ def logout():
 
 
 def format_data(timestampUTC):
-    # print("-----------------------",timestampUTC)
+    print("-----------------------",timestampUTC)
     try:
         locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
         
@@ -321,13 +349,13 @@ def render_profile_template(template_text):
     # Example replacements; add more as needed
     rendered = template_text.replace("{{user_picture}}", userinfo.get("picture", ""))
     rendered = rendered.replace("{{greeting}}", metadata.get("greeting", ""))
-    rendered = rendered.replace("{{nome}}", metadata.get("nome", ""))
+    rendered = rendered.replace("{{nome}}", " ".join([metadata.get("first_name", ""), metadata.get("last_name", "")]))
     rendered = rendered.replace("{{email}}", metadata.get("email", ""))
-    rendered = rendered.replace("{{lastlogin}}", format_data(metadata.get("lastlogin", "")))
-    rendered = rendered.replace("{{morada}}", metadata.get("morada", ""))
-    rendered = rendered.replace("{{codigopostal}}", metadata.get("codigopostal", ""))
-    rendered = rendered.replace("{{nif}}", str(metadata.get("nif", "")))
-    rendered = rendered.replace("{{telemovel}}", str(metadata.get("telemovel", "")))
+    rendered = rendered.replace("{{lastlogin}}", format_data(metadata.get("lastlogints", "")))
+    rendered = rendered.replace("{{morada}}", metadata.get("address", ""))
+    rendered = rendered.replace("{{codigopostal}}", str(metadata.get("zip_code1", ""))+'-'+str(metadata.get("zip_code2", ""))) 
+    rendered = rendered.replace("{{nif}}", str(metadata.get("nfiscal", "")))
+    rendered = rendered.replace("{{telemovel}}", str(metadata.get("cell_phone", "")))
 
     # Replace boolean fields for LEDs (example: 'green' if True else 'orange')
     vpn_check = metadata.get("vpn_check", False)
