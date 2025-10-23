@@ -6,10 +6,11 @@ __pycache__/
 venv/
 startup.sh
 shutdown.sh
-scratch
 .github
 .vscode
-testing.py
 quiz-time
 explicolivais.db
 LE-SA-v1.5-February-24-2025.pdf
+testing.json
+testing.html
+testing.py
