@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS connection (
-connection_id  INTEGER PRIMARY KEY,
+connection_id  INTEGER PRIMARY KEY AUTOINCREMENT,
 user_id  INTEGER,
 createdatts TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 thislogints TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -9,6 +9,7 @@ lastloginip TEXT NOT NULL,
 thisloginip TEXT NOT NULL,
 logincount    INTEGER NOT NULL DEFAULT 1,
 vpn_check     INTEGER NOT NULL DEFAULT FALSE,
-vpn_valid     INTEGER NOT NULL DEFAULT FALSE
+vpn_valid     INTEGER NOT NULL DEFAULT FALSE,
+FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 --> To UNIQUE for createdatip

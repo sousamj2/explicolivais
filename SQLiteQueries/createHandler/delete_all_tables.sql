@@ -4,3 +4,5 @@ DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS connection;
 DROP TABLE IF EXISTS personal;
 DROP TABLE IF EXISTS classes;
+
+-- DROP Table if EXISTS sqlite_sequence;
