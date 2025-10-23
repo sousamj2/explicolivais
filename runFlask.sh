@@ -14,7 +14,7 @@ export FLASK_ENV=development
 export FLASK_DEBUG=1
 
 # Get public IP for easy access
-PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "unknown")
+# PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "unknown")
 
 echo -e "${YELLOW}📍 Access URLs:${NC}"
 echo -e "   Direct: http://$PUBLIC_IP:8080"
@@ -30,5 +30,5 @@ echo -e "${RED}Press Ctrl+C to stop${NC}"
 echo ""
 
 # Start Flask
-flask run --host=0.0.0.0 --port=8080
-#flask run --host=localhost --port=8080
+# flask run --host=0.0.0.0 --port=8080
+flask run --host=localhost --port=8080
