@@ -29,6 +29,16 @@ echo ""
 echo -e "${RED}Press Ctrl+C to stop${NC}"
 echo ""
 
+python -c "import DBcreateTables;\
+import os;\
+createHandlerPath=os.getcwd()+'/SQLiteQueries/createHandler/';\
+DBcreateTables.handle_tables(createHandlerPath + 'create_users.sql');\
+DBcreateTables.handle_tables(createHandlerPath + 'create_connections.sql');\
+DBcreateTables.handle_tables(createHandlerPath + 'create_classes.sql');\
+DBcreateTables.handle_tables(createHandlerPath + 'create_documents.sql');\
+DBcreateTables.handle_tables(createHandlerPath + 'create_personal.sql');\
+DBcreateTables.handle_tables(createHandlerPath + 'create_iplist.sql');"
+
 # Start Flask
 # flask run --host=0.0.0.0 --port=8080
 flask run --host=localhost --port=8080

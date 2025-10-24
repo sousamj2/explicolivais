@@ -1,6 +1,71 @@
 import sqlite3
 from datetime import datetime
+import inspect
 selectFolder = "SQLiteQueries/selectHandler/"
+
+def print_caller():
+    # Get the name of the caller (one level up the call stack)
+    caller_name = inspect.stack()[1].function
+    print("Called by function:", caller_name)
+
+def getValueFromAnotherValue(sql_file_path, value1=None ):
+    retVal = None
+    caller_function = inspect.stack()[1].function
+    try:
+        with open(sql_file_path, 'r') as file:
+            sql_code = file.read()
+
+        # Connect to database
+        conn = sqlite3.connect('explicolivais.db')
+
+        if caller_function == "get_user_profile":
+            conn.row_factory = sqlite3.Row
+
+        cursor = conn.cursor()
+
+        if value1 is not None:
+            cursor.execute(sql_code,(value1,))
+        else:
+            cursor.execute(sql_code)
+
+
+        if caller_function == "get_user_profile":
+            retVal = dict(cursor.fetchone())
+        else:
+            output = cursor.fetchall()
+            if output:
+                retVal = output[0][0]
+
+    except Exception as e:
+        retVal = f"Error retrieving data: {e}"
+        print(retVal)
+    finally:
+        conn.close()
+
+    if not isinstance(retVal,str) or "Error" not in retVal:
+        # print("----------------------------------------------------",retVal)
+        retVal = dictify_real_dict_row(retVal)
+
+    return retVal
+
+def getUserIdFromEmail(email):
+    retVal = getValueFromAnotherValue( selectFolder + "get_user_from_email.sql", email)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
+def getEmailFromNIF(nif):
+    return getValueFromAnotherValue( selectFolder + "get_email_from_nif.sql", nif)
+
+def getEmailFromCellNumber(CellNumber):
+    return getValueFromAnotherValue( selectFolder + "get_email_from_CellNumber.sql", CellNumber)
+
+def get_user_profile(email):
+    retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
 
 def dictify_real_dict_row(row):
     def convert_value(val):
@@ -11,84 +76,13 @@ def dictify_real_dict_row(row):
         if isinstance(val, dict):
             return {k: convert_value(v) for k, v in val.items()}
         return val
-
+    if not isinstance(row, (dict, list, datetime)):
+        return row
     print(row)
 
     return {k: convert_value(v) for k, v in row.items()}
 
 
-def get_user_profile(email):
-   
-    # print(f"---------------------{email}")
-    result = None
-    try:
-        # Read SQL code from file
-        with open(selectFolder + "get_profile.sql", 'r') as file:
-            sql_code = file.read()
-
-        # print(sql_code)
-        # Connect to database
-        conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
-        conn.row_factory = sqlite3.Row
-        print(conn)
-        cursor = conn.cursor()
-
-        print(cursor)
-        cursor.execute(sql_code, (email,))
-        result = dict(cursor.fetchone())
-
-        # print("-------------------------------------")
-        # print(result)
-        # print("-------------------------------------")
-        # print()
-        # print()
-
-        status = "User get successful"
-    except Exception as e:
-        status = f"-------------------------------------- Error retrieving data data: {e}"
-        print(status)
-        conn.close()
-        if result is None: 
-            return None
-
-    finally:
-        conn.close()
-
-    return dictify_real_dict_row(result)
-
-
-
-
-# def get_user_profile(email):
-#     result = None
-#     try:
-#         # Read SQL code from file
-#         with open(selectFolder + "get_user_by_email.sql", 'r') as file:
-#             sql_code = file.read()
-
-#         # Connect to database
-#         conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
-#         cursor = conn.cursor()
-
-#         cursor.execute(sql_code, (email,))
-#         result = cursor.fetchone()
-
-#         print("-------------------------------------")
-#         print(result)
-#         print("-------------------------------------")
-#         print()
-#         print()
-
-#         if result is None: 
-#             return None
-
-#         status = "Insert successful"
-#     except Exception as e:
-#         status = f"Error inserting data: {e}"
-#     finally:
-#         conn.close()
-
-#     return dictify_real_dict_row(result)
 
 def submit_query(query, params=None):
     result = None
