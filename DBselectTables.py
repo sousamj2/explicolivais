@@ -18,7 +18,7 @@ def getValueFromAnotherValue(sql_file_path, value1=None ):
         # Connect to database
         conn = sqlite3.connect('explicolivais.db')
 
-        if caller_function == "get_user_profile":
+        if caller_function == "get_user_profile" or "getDataFrom" in caller_function:
             conn.row_factory = sqlite3.Row
 
         cursor = conn.cursor()
@@ -29,7 +29,7 @@ def getValueFromAnotherValue(sql_file_path, value1=None ):
             cursor.execute(sql_code)
 
 
-        if caller_function == "get_user_profile":
+        if caller_function == "get_user_profile" or "getDataFrom" in caller_function:
             retVal = dict(cursor.fetchone())
         else:
             output = cursor.fetchall()
@@ -54,11 +54,6 @@ def getUserIdFromEmail(email):
         return None
     return retVal
 
-def getDataFromNIF(nif):
-    return getValueFromAnotherValue( selectFolder + "get_data_from_nif.sql", nif)
-
-def getDataFromCellNumber(cellNumber):
-    return getValueFromAnotherValue( selectFolder + "cet_data_from_cellNumber.sql", cellNumber)
 
 def get_user_profile(email):
     retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
@@ -118,3 +113,26 @@ def submit_query(query, params=None):
         conn.close()
 
 
+def getDataFromNIF(nif):
+    retVal = getValueFromAnotherValue( selectFolder + "get_data_from_nif.sql", nif)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
+def getDataFromEmail(email):
+    retVal = getValueFromAnotherValue( selectFolder + "get_data_from_email.sql", email)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
+def getDataFromCellNumber(cellNumber):
+    retVal = getValueFromAnotherValue( selectFolder + "get_data_from_cellNumber.sql", cellNumber)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
+def getDataFromIPcreated(ip_value):
+    retVal = getValueFromAnotherValue( selectFolder + "get_data_from_ip_value.sql", ip_value)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
