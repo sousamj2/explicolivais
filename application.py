@@ -12,6 +12,7 @@ from connectDB import check_ip_in_portugal, get_lisbon_greeting
 from datetime import datetime, timedelta
 import locale
 import pytz
+import bleach
 
 
 load_dotenv()
@@ -249,39 +250,66 @@ def signup():
     return render_template(
         'signup.html',
         user=user,
+        metadata=session.get("metadata"),
         admin_email=os.getenv('ADMINDB_EMAIL').lower(),
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa")
+
+
 
 @app.route('/updateDB', methods=['GET', 'POST'])
 def updateDB():
     pprint('Updating user in the database...')
     userinfo = session.get('userinfo')
-    name = userinfo.get('name')
+    pprint(userinfo)
+    first_name = userinfo.get('given_name')
+    last_name = userinfo.get('family_name')
     email = userinfo.get('email')
-    address = request.form.get('address')
-    zip_code = request.form.get('zip_code')
-    cell_phone = request.form.get('cell_phone')
-    register_ip = request.remote_addr
+
+    notes = "NA"
+    address = bleach.clean(request.form.get('address'))
+    number = bleach.clean(request.form.get('number')) or "NA"
+    floor = bleach.clean(request.form.get('floor')) or "NA"
+    door = bleach.clean(request.form.get('door')) or "NA"
+    zip_code1 = bleach.clean(request.form.get('zip_code1'))
+    zip_code2 = bleach.clean(request.form.get('zip_code2'))
+    cell_phone = bleach.clean(request.form.get('cell_phone'))
+    nif = bleach.clean(request.form.get('nfiscal'))
+    g_address = address
+    if number != "NA": g_address = address + ", " + str(number)
+    full_address = g_address
+    if floor != "NA": full_address + " " + str(floor)
+    if door != "NA": full_address + " " + str(door)
+    session['user'] = {
+        'name': first_name + " " + last_name,
+        'email': email,
+        'address': full_address,
+        'g_address': g_address,
+        'address': address,
+        'number': number,
+        'floor': floor,
+        'door': door,
+        'notes': notes,
+        'zip_code1': str(zip_code1),
+        'zip_code2': str(zip_code2),
+        'zip_code': str(zip_code1) + "-" + str(zip_code2),
+        'cell_phone': cell_phone,
+        'nfiscal': nif
+    }
+
+
+    register_ip = bleach.clean(request.remote_addr)
 
     if not check_ip_in_portugal(register_ip):
         pprint(f"IP {register_ip} is not from Lisboa/Portugal.")
         return f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. Nota: só é necessário para o registro não para o acesso.", 400
 
-    successUser = insertNewUser(name.split()[0],name.split()[1],email)
-    successPers = insertNewPersonalData(email, address, zip_code,zip_code,cell_phone,cell_phone)
+    successUser = insertNewUser(first_name,last_name,email)
+    successPers = insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif)
     successIP   = insertNewIP(email,register_ip)
     successConn = insertNewConnectionData(email,register_ip)
-    if successPers and successUser:
-    # success = insert_user(name, email, address, zip_code, cell_phone, register_ip)
-    # if success:
-        session['user'] = {
-            'name': name,
-            'email': email,
-            'address': address,
-            'zip_code': zip_code,
-            'cell_phone': cell_phone
-        }
+    if successPers and successUser and successIP and successConn:
+
         return redirect(url_for('profile'))
     else:
         return "Error registering user", 500

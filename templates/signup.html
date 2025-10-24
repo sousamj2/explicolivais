@@ -28,14 +28,48 @@
             <form id="signupForm" action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
 
             <!-- <form method="post"> -->
-                Morada: <input name="address"><br>
-                Código Postal: <input name="zip_code"><br>
-                Telemóvel: <input name="cell_phone"><br>
+                Morada fiscal: <input name="address" value="{{ address|default='' }}"><br>
+                Número: <input name="number" id="number" value="{{ number|default='' }}" placeholder="NA">
+                Andar: <input name="floor" id="floor" value="{{ floor|default='' }}" placeholder="NA">
+                Porta: <input name="door" id="door" value="{{ door|default='' }}" placeholder="NA"><br>
+                Código Postal: <input 
+                name="zip_code1"
+                id="zip_code1"
+                placeholder="0000"
+                min="1100"
+                max="2999"
+                step="1"
+                required>-<input
+                name="zip_code2"
+                id="zip_code2"
+                placeholder="000"
+                min="000"
+                max="999"
+                value="{{ zip_code1|default='' }}" 
+                required><br>
+                Telemóvel: <input
+                 name="cell_phone"
+                 id="cell_phone"
+                 placeholder="900000000"
+                 min="210000000" 
+                 max="999999999"
+                 step="1"
+                 pattern="\d{9}"
+                 value="{{ zip_code2|default='' }}" 
+                 required><br>
+                Número Fiscal: <input name="nfiscal"
+                id="nfiscal"
+                placeholder="200000000"
+                value="{{ nfiscal|default='' }}" 
+                required><br><br>
                 <input type="submit" value="Submit">
             </form>
 
-            <p> Nenhum dado será partilhado com o Google. O telemóvel serve apenas para poder contactar. A morada é
-                necessária pois é um serviço que faço a ir a casa. </p>
+            {% if error_message %}
+            <div class="error">{{ error_message }}</div>
+            {% endif %}
+
+            <p> Nenhum dado será partilhado fora da aplicação. </p>
 <!-- 
             <script>
                 function openGoogleCalendar() {
@@ -43,6 +77,7 @@
                     return true; // Allow form submission to proceed
                 }
             </script> -->
+
 
             </main>
         </div>
