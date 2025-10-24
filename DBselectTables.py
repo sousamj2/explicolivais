@@ -19,8 +19,8 @@ def dictify_real_dict_row(row):
 
 def get_user_profile(email):
    
-    print(f"---------------------{email}")
-
+    # print(f"---------------------{email}")
+    result = None
     try:
         # Read SQL code from file
         with open(selectFolder + "get_profile.sql", 'r') as file:
@@ -30,10 +30,10 @@ def get_user_profile(email):
         # Connect to database
         conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
         conn.row_factory = sqlite3.Row
-        # print(conn)
+        print(conn)
         cursor = conn.cursor()
 
-        # print(cursor)
+        print(cursor)
         cursor.execute(sql_code, (email,))
         result = dict(cursor.fetchone())
 
@@ -43,18 +43,14 @@ def get_user_profile(email):
         # print()
         # print()
 
-        if result is None: 
-            
-            return None
-
-        # print()
-        # print(result)
-        # print()
-        # print()
         status = "User get successful"
     except Exception as e:
         status = f"-------------------------------------- Error retrieving data data: {e}"
-        # print(status)
+        print(status)
+        conn.close()
+        if result is None: 
+            return None
+
     finally:
         conn.close()
 
@@ -64,35 +60,35 @@ def get_user_profile(email):
 
 
 # def get_user_profile(email):
-    result = None
-    try:
-        # Read SQL code from file
-        with open(selectFolder + "get_user_by_email.sql", 'r') as file:
-            sql_code = file.read()
+#     result = None
+#     try:
+#         # Read SQL code from file
+#         with open(selectFolder + "get_user_by_email.sql", 'r') as file:
+#             sql_code = file.read()
 
-        # Connect to database
-        conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
-        cursor = conn.cursor()
+#         # Connect to database
+#         conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+#         cursor = conn.cursor()
 
-        cursor.execute(sql_code, (email,))
-        result = cursor.fetchone()
+#         cursor.execute(sql_code, (email,))
+#         result = cursor.fetchone()
 
-        print("-------------------------------------")
-        print(result)
-        print("-------------------------------------")
-        print()
-        print()
+#         print("-------------------------------------")
+#         print(result)
+#         print("-------------------------------------")
+#         print()
+#         print()
 
-        if result is None: 
-            return None
+#         if result is None: 
+#             return None
 
-        status = "Insert successful"
-    except Exception as e:
-        status = f"Error inserting data: {e}"
-    finally:
-        conn.close()
+#         status = "Insert successful"
+#     except Exception as e:
+#         status = f"Error inserting data: {e}"
+#     finally:
+#         conn.close()
 
-    return dictify_real_dict_row(result)
+#     return dictify_real_dict_row(result)
 
 def submit_query(query, params=None):
     result = None
