@@ -7,7 +7,7 @@ from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
 # from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile, refresh_last_login_and_ip, get_lisbon_greeting
-from connectDB import check_ip_in_portugal, get_lisbon_greeting
+from connectDB import check_ip_in_portugal, get_lisbon_greeting, mask_email
 from datetime import datetime, timedelta
 import locale
 import pytz
@@ -234,7 +234,7 @@ def signup():
 def updateDB():
     pprint('Updating user in the database...')
     userinfo = session.get('userinfo')
-    pprint(userinfo)
+    # pprint(userinfo)
     first_name = userinfo.get('given_name')
     last_name = userinfo.get('family_name')
     email = userinfo.get('email')
@@ -269,13 +269,35 @@ def updateDB():
         'cell_phone': cell_phone,
         'nfiscal': nif
     }
-
-
-    register_ip = bleach.clean(request.remote_addr)
+    session['error_message'] = ""
+    print("------------------------------------------------")
+    errorMessage = ""
+    sameEmail = getDataFromEmail(email)
+    print("sameEmail",sameEmail)
+    if sameEmail:
+        errorMessage += f"Este email ({sameEmail["email"]}) já tem uma conta aqui criada em {sameEmail["createdatts"]}. <br>"
+    register_ip = request.remote_addr
+    sameIP = getDataFromIPcreated(register_ip)
+    print("sameIP",sameIP)
+    if sameIP:
+        errorMessage += f"Este IP ({register_ip}) já registou o email {mask_email(sameIP["email"])} em {sameIP["createdatts"]}.<br>"
+    sameNIF = getDataFromNIF(nif)
+    print("sameNIF",sameNIF)
+    if sameNIF:
+        errorMessage += f"Este NIF ({nif}) já percence a uma conta com o email {mask_email(sameNIF["email"])} em {sameNIF["createdatts"]}.<br>"
+    sameCell = getDataFromCellNumber(cell_phone)
+    print("sameCell",sameCell)
+    if sameCell:
+        errorMessage += f"Este Telemóvel ({cell_phone}) já percence a uma conta com o email {mask_email(sameCell["email"])} em {sameCell["createdatts"]}.<br>"
 
     if not check_ip_in_portugal(register_ip):
         pprint(f"IP {register_ip} is not from Lisboa/Portugal.")
-        return f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. Nota: só é necessário para o registro não para o acesso.", 400
+        errorMessage += f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. <br> Nota: só é necessário para o registro não para o acesso."
+    print("------------------------------------------------")
+
+    if len(errorMessage) > 0:
+        session['error_message'] = errorMessage
+        return redirect(url_for('signup'))
 
     successUser = insertNewUser(first_name,last_name,email)
     successPers = insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif)
