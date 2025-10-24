@@ -51,7 +51,7 @@ def render_page(route="/", template_name="home", page_title="Explicações em Li
             return redirect(url_for('signin'))
 
         if route == "/profile":
-            pprint(metadata)
+            pprint("metadata is:", metadata)
 
         # if template_name == "adminDB":
 
@@ -226,6 +226,7 @@ def profile():
         #     session["metadata"] = {}
         email = user['email']
         session["metadata"] = get_user_profile(email)
+        # print(session)
         session["metadata"]["greeting"] = get_lisbon_greeting()
 
         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:

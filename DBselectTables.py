@@ -30,10 +30,10 @@ def get_user_profile(email):
         # Connect to database
         conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
         conn.row_factory = sqlite3.Row
-        print(conn)
+        # print(conn)
         cursor = conn.cursor()
 
-        print(cursor)
+        # print(cursor)
         cursor.execute(sql_code, (email,))
         result = dict(cursor.fetchone())
 

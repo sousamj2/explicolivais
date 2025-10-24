@@ -23,15 +23,15 @@
                     {% endif %}
                 </ul>
             </nav>
-            <h1>Registo na base de dados</h1>
+            <h1>Registo na base de dados</h1> <br> 
 
             <form id="signupForm" action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
 
             <!-- <form method="post"> -->
-                Morada fiscal: <input name="address" value="{{ address|default='' }}"><br>
-                Número: <input name="number" id="number" value="{{ number|default='' }}" placeholder="NA">
-                Andar: <input name="floor" id="floor" value="{{ floor|default='' }}" placeholder="NA">
-                Porta: <input name="door" id="door" value="{{ door|default='' }}" placeholder="NA"><br>
+                Morada fiscal: <input name="address" size="32" value="{{ address|default('') }}"><br>
+                Número: <input name="number" id="number" size="4" value="{{ number|default('') }}" placeholder="NA">
+                Andar: <input name="floor" id="floor" size="3" value="{{ floor|default('') }}" placeholder="NA">
+                Porta: <input name="door" id="door" size="2" value="{{ door|default('') }}" placeholder="NA"><br>
                 Código Postal: <input 
                 name="zip_code1"
                 id="zip_code1"
@@ -39,13 +39,15 @@
                 min="1100"
                 max="2999"
                 step="1"
+                size="5"
                 required>-<input
                 name="zip_code2"
                 id="zip_code2"
                 placeholder="000"
                 min="000"
                 max="999"
-                value="{{ zip_code1|default='' }}" 
+                size="4"
+                value="{{ zip_code1|default('') }}" 
                 required><br>
                 Telemóvel: <input
                  name="cell_phone"
@@ -54,13 +56,15 @@
                  min="210000000" 
                  max="999999999"
                  step="1"
+                 size="10"
                  pattern="\d{9}"
-                 value="{{ zip_code2|default='' }}" 
+                 value="{{ zip_code2|default('') }}" 
                  required><br>
                 Número Fiscal: <input name="nfiscal"
                 id="nfiscal"
+                size="10"
                 placeholder="200000000"
-                value="{{ nfiscal|default='' }}" 
+                value="{{ nfiscal|default('') }}" 
                 required><br><br>
                 <input type="submit" value="Submit">
             </form>
