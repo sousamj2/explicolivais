@@ -3,7 +3,6 @@ import os
 import requests
 from flask import Flask, redirect, request, session, render_template, url_for, jsonify, g
 from markupsafe import Markup
-from dotenv import load_dotenv
 from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -14,7 +13,7 @@ import locale
 import pytz
 import bleach
 
-
+from dotenv import load_dotenv
 load_dotenv()
 
 from DBinsertTables import *
@@ -183,33 +182,6 @@ def check_user():
     else:
         pprint('User not found, redirecting to signup.')
         return redirect(url_for('signup'))
-
-
-    # conn = get_db_connection()
-    # if conn is None:
-    #     return "Database connection error", 500
-    # try:
-    #     with conn.cursor() as cursor:
-    #         sql = "SELECT * FROM users WHERE email = %s;"
-    #         cursor.execute(sql, (email,))
-    #         user = cursor.fetchone()
-    #         cursor.close()
-    #         conn.close()
-
-    #     if user:
-    #         pprint('User found in the database.')
-    #         session["metadata"] = get_user_profile(email)
-    #         refresh_last_login_and_ip(email, request.remote_addr)
-    #         pprint(session['metadata'])
-    #         return redirect(url_for('profile'))
-    #     else:
-    #         pprint('User not found, redirecting to signup.')
-    #         return redirect(url_for('signup'))
-    # except Exception as e:
-    #     print(f"Error fetching user: {e}")
-    #     return "Error processing your request", 500
-    # finally:
-        # conn.close()
         
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -226,7 +198,7 @@ def profile():
         #     session["metadata"] = {}
         email = user['email']
         session["metadata"] = get_user_profile(email)
-        # print(session)
+        print(session)
         session["metadata"]["greeting"] = get_lisbon_greeting()
 
         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:

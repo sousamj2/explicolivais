@@ -1,5 +1,5 @@
 import sqlite3
-from DBbaseline import getUserIdFromEmail
+from DBselectTables import getUserIdFromEmail
 insertFolder = "SQLiteQueries/insertHandler/"
 
 def execute_insert_from_file(sql_file_path, params_dict):
@@ -51,16 +51,15 @@ def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,
     if not user_id:
         return "ERROR: There is no user with this email: {email}."
     insertDict = {"user_id": user_id,
-                #    "email": email,
-                   "address": address,
-                   "number": number,
-                   "floor": floor,
-                   "door": door,
-                   "notes": notes,
-                   "zip_code1": zip_code1,
-                   "zip_code2": zip_code2,
-                   "cell_phone":cell_phone,
-                   "nfiscal":nif}
+                  "address": address,
+                  "number": number,
+                  "floor": floor,
+                  "door": door,
+                  "notes": notes,
+                  "zip_code1": zip_code1,
+                  "zip_code2": zip_code2,
+                  "cell_phone":cell_phone,
+                  "nfiscal":nif}
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
     print("Insert personal:",status)
     return status
