@@ -95,6 +95,42 @@ def check_ip_in_portugal(ip):
         print(f"IP geolocation failed: {e}")
     return False
 
+def valid_NIF(nif) -> bool:
+    return True
+
+def valid_NIF_2(nif) -> bool:
+    if isinstance(nif,int):
+        nif = str(nif)
+
+    if len(nif) != 9 or not nif.isdigit():
+        return False
+
+    # Dígitos válidos para o primeiro dígito do NIF
+    if nif[0] not in "125689":
+        return False
+
+    soma = 0
+    for i in range(8):
+        soma += int(nif[i]) * (9 - i)
+
+    resto = soma % 11
+    digito_controlo = 0 if resto == 0 or resto == 1 else 11 - resto
+
+    return digito_controlo == int(nif[8])
+
+def valid_cellphone(cell_phone) -> bool:
+    return True
+
+def valid_cellphone_2(cell_phone) -> bool:
+    valid_prefixes = ["91", "92", "93", "96", "21"]
+    if len(cell_phone) != 9 or not cell_phone.isdigit():
+        return False
+    if not cell_phone.startswith("9"):
+        return False
+    if cell_phone[:2] not in valid_prefixes:
+        return False
+    return True
+
 
 # if __name__ == "__main__":
 #     # Example usage

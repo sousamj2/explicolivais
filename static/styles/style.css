@@ -198,3 +198,28 @@ body {
     vertical-align: middle;
     background-color: orange; /* Or overridden inline style */
   }
+
+
+  /* Error message styling */
+.error {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Light mode - red error */
+.error {
+  color: #c0152f; /* dark red text */
+  background-color: rgba(255, 84, 89, 0.1); /* light red background */
+  border: 1px solid rgba(192, 21, 47, 0.3); /* red border */
+}
+
+/* Dark mode - yellow error */
+@media (prefers-color-scheme: dark) {
+  .error {
+    color: #fbbf24; /* yellow text */
+    background-color: rgba(251, 191, 36, 0.15); /* light yellow background */
+    border: 1px solid rgba(251, 191, 36, 0.3); /* yellow border */
+  }
+}

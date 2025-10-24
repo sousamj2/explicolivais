@@ -7,11 +7,12 @@ from pprint import pprint
 import psycopg2
 from psycopg2.extras import RealDictCursor
 # from connectDB import insert_user, submit_query, results_to_html_table, get_db_connection, check_ip_in_portugal, get_user_profile, refresh_last_login_and_ip, get_lisbon_greeting
-from connectDB import check_ip_in_portugal, get_lisbon_greeting, mask_email
+from connectDB import check_ip_in_portugal, get_lisbon_greeting, mask_email,valid_cellphone,valid_NIF
 from datetime import datetime, timedelta
 import locale
 import pytz
 import bleach
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -42,6 +43,8 @@ def render_page(route="/", template_name="home", page_title="Explicações em Li
     def view_func():
         with open(f'templates/content/{template_name}.html', 'r', encoding='utf-8') as file:
             main_content_html = Markup(file.read())
+            if route == "/map":
+                main_content_html = render_profile_template(file.read())
         user = session.get('user') or session.get('userinfo')
         # pprint(user)
         if not user and template_name == "profile":
@@ -203,7 +206,7 @@ def profile():
 
         with open('templates/content/profile.html', 'r', encoding='utf-8') as file:
             
-            main_content_html = Markup(render_profile_template(file.read()))
+            main_content_html = render_profile_template(file.read())
 
         return render_template('index.html',
                                 admin_email=os.getenv('ADMINDB_EMAIL').lower(),
@@ -220,11 +223,19 @@ def profile():
 def signup():
     pprint('Rendering signup page...')
     user = session.get('user') or session.get('userinfo')
+    if not session.get('metadata') :
+        session['metadata'] = {}
+    session["metadata"]["greeting"] = get_lisbon_greeting()
+
+    with open('templates/content/signup.html', 'r', encoding='utf-8') as file:
+        main_content_html = Markup(render_profile_template(file.read()))
+
     return render_template(
-        'signup.html',
+        'index.html',
         user=user,
         metadata=session.get("metadata"),
         admin_email=os.getenv('ADMINDB_EMAIL').lower(),
+        main_content=main_content_html,
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa")
 
@@ -253,8 +264,10 @@ def updateDB():
     full_address = g_address
     if floor != "NA": full_address + " " + str(floor)
     if door != "NA": full_address + " " + str(door)
-    session['user'] = {
+    session['metadata'] = {
         'name': first_name + " " + last_name,
+        'first_name': first_name,
+        'last_name': last_name,
         'email': email,
         'address': full_address,
         'g_address': g_address,
@@ -275,28 +288,32 @@ def updateDB():
     sameEmail = getDataFromEmail(email)
     print("sameEmail",sameEmail)
     if sameEmail:
-        errorMessage += f"Este email ({sameEmail["email"]}) já tem uma conta aqui criada em {sameEmail["createdatts"]}. <br>"
+        errorMessage += f"Este email ({sameEmail["email"]}) já tem uma conta aqui criada em {sameEmail["createdatts"]}. <br>\n"
     register_ip = request.remote_addr
-    sameIP = getDataFromIPcreated(register_ip)
-    print("sameIP",sameIP)
-    if sameIP:
-        errorMessage += f"Este IP ({register_ip}) já registou o email {mask_email(sameIP["email"])} em {sameIP["createdatts"]}.<br>"
+    # sameIP = getDataFromIPcreated(register_ip)
+    # print("sameIP",sameIP)
+    # if sameIP:
+    #     errorMessage += f"Este IP ({register_ip}) já registou o email {mask_email(sameIP["email"])} em {sameIP["createdatts"]}.<br>\n"
     sameNIF = getDataFromNIF(nif)
     print("sameNIF",sameNIF)
     if sameNIF:
-        errorMessage += f"Este NIF ({nif}) já percence a uma conta com o email {mask_email(sameNIF["email"])} em {sameNIF["createdatts"]}.<br>"
+        errorMessage += f"Este NIF ({nif}) já pertence a uma conta com o email {mask_email(sameNIF["email"])} em {sameNIF["createdatts"]}.<br>\n"
     sameCell = getDataFromCellNumber(cell_phone)
     print("sameCell",sameCell)
     if sameCell:
-        errorMessage += f"Este Telemóvel ({cell_phone}) já percence a uma conta com o email {mask_email(sameCell["email"])} em {sameCell["createdatts"]}.<br>"
-
+        errorMessage += f"Este Telemóvel ({cell_phone}) já pertence a uma conta com o email {mask_email(sameCell["email"])} em {sameCell["createdatts"]}.<br>\n"
     if not check_ip_in_portugal(register_ip):
         pprint(f"IP {register_ip} is not from Lisboa/Portugal.")
-        errorMessage += f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. <br> Nota: só é necessário para o registro não para o acesso."
+        errorMessage += f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. <br> Nota: só é necessário para o registro não para o acesso.<br>\n"
+    if not valid_NIF (nif):
+        errorMessage += f"Este NIF ({nif}) não é válido. <br> \n"
+    if not valid_cellphone (cell_phone):
+        errorMessage += f"Este telemóvel ({cell_phone}) não é válido. <br> \n"
     print("------------------------------------------------")
 
     if len(errorMessage) > 0:
-        session['error_message'] = errorMessage
+        session['metadata']['error_message'] = errorMessage
+        print(errorMessage)
         return redirect(url_for('signup'))
 
     successUser = insertNewUser(first_name,last_name,email)
@@ -380,6 +397,16 @@ def render_profile_template(template_text):
     rendered = rendered.replace("{{nif}}", str(metadata.get("nfiscal", "")))
     rendered = rendered.replace("{{telemovel}}", str(metadata.get("cell_phone", "")))
 
+    rendered = rendered.replace("{{cell_phone}}", str(metadata.get("cell_phone", "")))
+    rendered = rendered.replace("{{zip_code1}}", str(metadata.get("zip_code1", "")))
+    rendered = rendered.replace("{{zip_code2}}", str(metadata.get("zip_code2", "")))
+    rendered = rendered.replace("{{address}}", str(metadata.get("address", "")))
+    rendered = rendered.replace("{{number}}", str(metadata.get("number", "")))
+    rendered = rendered.replace("{{floor}}", str(metadata.get("floor", "")))
+    rendered = rendered.replace("{{door}}", str(metadata.get("door", "")))
+    rendered = rendered.replace("{{nfiscal}}", str(metadata.get("nfiscal", "")))
+    rendered = rendered.replace("{{error_message}}", str(metadata.get("error_message", "")))
+    rendered = rendered.replace("{{gg_address}}", str(format_address_for_url(metadata.get("g_address",""))))
     # Replace boolean fields for LEDs (example: 'green' if True else 'orange')
     vpn_check = metadata.get("vpn_check", False)
     primeiro_contacto = metadata.get("first_contact_complete", False)
@@ -389,3 +416,16 @@ def render_profile_template(template_text):
     rendered = rendered.replace("{{primeira_aula_color}}", "green" if primeira_aula else "orange")
 
     return Markup(rendered)
+
+def format_address_for_url(address):
+    """
+    Takes an address string and returns it formatted for use in a URL.
+    
+    Args:
+        address (str): The address to format (e.g., "Rua Cidade de Nampula, 1, 1800 Lisboa")
+    
+    Returns:
+        str: URL-encoded address
+    """
+    return quote_plus(address)
+
