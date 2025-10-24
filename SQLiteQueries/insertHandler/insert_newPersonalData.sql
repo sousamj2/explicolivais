@@ -1,3 +1,3 @@
 INSERT INTO personal
-    ( user_id, morada,cpostal1,cpostal2,telemovel,nfiscal )
+    ( user_id, address,zip_code1,zip_code2,cell_phone,nfiscal )
     VALUES (?,?,?,?,?,?);

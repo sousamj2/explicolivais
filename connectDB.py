@@ -70,37 +70,37 @@ def convert_datetimes(obj):
         return obj
     
 
-def get_user_profile(email):
-    conn = get_db_connection()
-    if not conn:
-        print("No DB connection")
-        return None
+# def get_user_profile(email):
+#     conn = get_db_connection()
+#     if not conn:
+#         print("No DB connection")
+#         return None
     
-    pprint(f"Retrieving profile data for {email}.")
+#     pprint(f"Retrieving profile data for {email}.")
 
-    try:
-        with conn.cursor() as cursor:
-            sql = """
-                SELECT nome, email, lastlogin, morada, codigopostal, telemovel, vpn_check, first_contact_complete, first_session_complete,
-                    documents->'files' AS files
-                FROM users
-                WHERE email = %s
-                LIMIT 1;
-            """
-            cursor.execute(sql, (email,))
-            result = cursor.fetchone()
+#     try:
+#         with conn.cursor() as cursor:
+#             sql = """
+#                 SELECT nome, email, lastlogin, morada, codigopostal, telemovel, vpn_check, first_contact_complete, first_session_complete,
+#                     documents->'files' AS files
+#                 FROM users
+#                 WHERE email = %s
+#                 LIMIT 1;
+#             """
+#             cursor.execute(sql, (email,))
+#             result = cursor.fetchone()
 
 
-            if not result:
-                return None
+#             if not result:
+#                 return None
 
-            return dictify_real_dict_row(result)
+#             return dictify_real_dict_row(result)
             
-    except Exception as e:
-        print(f"Error retrieving user profile: {e}")
-        return None
-    finally:
-        conn.close()
+#     except Exception as e:
+#         print(f"Error retrieving user profile: {e}")
+#         return None
+#     finally:
+#         conn.close()
 
 
 def insert_user(name, email, address, zip_code, cell_phone, register_ip):
@@ -156,21 +156,21 @@ def insert_user(name, email, address, zip_code, cell_phone, register_ip):
     finally:
         conn.close()
 
-def check_existing_user(register_ip, cell_phone):
-    conn = get_db_connection()
-    if not conn:
-        return None
-    try:
-        cur = conn.cursor()
-        query = """
-        SELECT email, createdat FROM users WHERE ipcreated = %s OR telemovel = %s LIMIT 1
-        """
-        cur.execute(query, (register_ip, cell_phone))
-        user = cur.fetchone()
-        cur.close()
-        return user
-    finally:
-        conn.close()
+# def check_existing_user(register_ip, cell_phone):
+#     conn = get_db_connection()
+#     if not conn:
+#         return None
+#     try:
+#         cur = conn.cursor()
+#         query = """
+#         SELECT email, createdat FROM users WHERE ipcreated = %s OR telemovel = %s LIMIT 1
+#         """
+#         cur.execute(query, (register_ip, cell_phone))
+#         user = cur.fetchone()
+#         cur.close()
+#         return user
+#     finally:
+#         conn.close()
 
 def mask_email(email):
     # Mask email username partially e.g. ma***@email.com
@@ -216,7 +216,7 @@ def check_ip_in_portugal(ip):
 #         print(f"Error connecting to the database: {e}")
 #         return None
     
-def submit_query(query, params=None):
+# def submit_query(query, params=None):
     conn = get_db_connection()
     if conn is None:
         return "Error connecting to the database."
@@ -247,7 +247,7 @@ def submit_query(query, params=None):
     finally:
         conn.close()
 
-def fetch_user_by_email(email):
+# def fetch_user_by_email(email):
     conn = get_db_connection()
     if conn is None:
         return None
@@ -300,7 +300,7 @@ def results_to_html_table(results):
     return table_html
 
 
-def check_and_create_users_table():
+# def check_and_create_users_table():
     conn = get_db_connection()
     if not conn:
         print("Database connection failed.")
@@ -350,7 +350,7 @@ def check_and_create_users_table():
         conn.close()
 
 
-def refresh_last_login_and_ip(email, current_ip):
+# def refresh_last_login_and_ip(email, current_ip):
     conn = get_db_connection()
     if conn is None:
         print("No DB connection")

@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS documents (
-docu_id   INTEGER PRIMARY KEY,
-user_id   INTEGER,
-visible   INTEGER DEFAULT FALSE,
-docname   TEXT,
-docurl    TEXT,
-createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);

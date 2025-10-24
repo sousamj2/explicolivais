@@ -1,3 +1,3 @@
 INSERT INTO iplist
-    ( user_id, ipValue)
+    ( user_id, ip_value)
     VALUES (?,?);
