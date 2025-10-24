@@ -54,11 +54,11 @@ def getUserIdFromEmail(email):
         return None
     return retVal
 
-def getEmailFromNIF(nif):
-    return getValueFromAnotherValue( selectFolder + "get_email_from_nif.sql", nif)
+def getDataFromNIF(nif):
+    return getValueFromAnotherValue( selectFolder + "get_data_from_nif.sql", nif)
 
-def getEmailFromCellNumber(CellNumber):
-    return getValueFromAnotherValue( selectFolder + "get_email_from_CellNumber.sql", CellNumber)
+def getDataFromCellNumber(cellNumber):
+    return getValueFromAnotherValue( selectFolder + "cet_data_from_cellNumber.sql", cellNumber)
 
 def get_user_profile(email):
     retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
