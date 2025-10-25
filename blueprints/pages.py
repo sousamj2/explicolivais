@@ -18,9 +18,9 @@ def render_page(blueprint, route="/", template_name="home", page_title="Explica√
         user = session.get('user') or session.get('userinfo')
         # pprint(user)
         if not user and template_name == "profile":
-            return redirect(url_for('signin'))
+            return redirect(url_for('signin.signin'))
         elif (not user or user['email'].lower() != current_app.config['ADMIN_EMAIL']) and template_name == "adminDB":
-            return redirect(url_for('signin'))
+            return redirect(url_for('signin.signin'))
 
         if route == "/profile":
             pprint("metadata is:", metadata)
