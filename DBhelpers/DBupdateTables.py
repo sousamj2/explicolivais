@@ -1,10 +1,8 @@
 import sqlite3
 from datetime import datetime
-from DBselectTables import getUserIdFromEmail
+from DBhelpers.DBselectTables import getUserIdFromEmail
 
 selectFolder = "SQLiteQueries/updateHandler/"
-
-
 
 def refresh_last_login_and_ip(email, current_ip):
     try:

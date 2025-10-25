@@ -1,5 +1,5 @@
 import sqlite3
-from DBselectTables import getUserIdFromEmail
+from DBhelpers.DBselectTables import getUserIdFromEmail
 insertFolder = "SQLiteQueries/insertHandler/"
 
 def execute_insert_from_file(sql_file_path, params_dict):

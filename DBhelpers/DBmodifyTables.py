@@ -1,5 +1,5 @@
 import sqlite3
-from DBselectTables import getUserIdFromEmail
+from DBhelpers.DBselectTables import getUserIdFromEmail
 
 def updateValue(email, tableName, tableColumn, newValue=None):
     # Connect to database
