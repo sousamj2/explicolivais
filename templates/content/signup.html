@@ -1,12 +1,51 @@
-<h1>Registo na base de dados</h1>
 
-<form method="post">
-    Morada: <input name="address"><br>
-    Código Postal: <input name="zip_code"><br>
-    Telemóvel: <input name="cell_phone"><br>
+<h1>Registo na base de dados</h1> <br> 
+
+<form id="signupForm" action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
+
+<!-- <form method="post"> -->
+    Morada fiscal: <input name="address" size="32" value="{{address}}"><br>
+    Número: <input name="number" id="number" size="4" value="{{number}}" placeholder="NA">
+    Andar: <input name="floor" id="floor" size="3" value="{{floor}}" placeholder="NA">
+    Porta: <input name="door" id="door" size="2" value="{{door}}" placeholder="NA"><br>
+    Código Postal: <input 
+    name="zip_code1"
+    id="zip_code1"
+    placeholder="0000"
+    min="1100"
+    max="2999"
+    step="1"
+    size="5"
+    value="{{zip_code1}}" 
+    required>-<input
+    name="zip_code2"
+    id="zip_code2"
+    placeholder="000"
+    min="000"
+    max="999"
+    size="4"
+    value="{{zip_code2}}" 
+    required><br>
+    Telemóvel: <input
+      name="cell_phone"
+      id="cell_phone"
+      placeholder="900000000"
+      min="210000000" 
+      max="999999999"
+      step="1"
+      size="10"
+      value="{{cell_phone}}" 
+      pattern="\d{9}"
+      required><br>
+    Número Fiscal: <input name="nfiscal"
+    id="nfiscal"
+    size="10"
+    placeholder="200000000"
+    value="{{nfiscal}}" 
+    required><br><br>
     <input type="submit" value="Submit">
-  </form>
+</form>
 
-<p> Nenhum dado será partilhado com o Google. O telemóvel serve apenas para poder contactar. A morada é necessária pois é um serviço que faço a ir a casa. </p>
-<br>
-<p> Esta página nunca deve aparecer. </p>
+<div class="error">{{error_message}}</div>
+
+<p> Nenhum dado será partilhado fora da aplicação. </p>
