@@ -1,6 +1,7 @@
 from waitress import serve
-from application import app
-import DBcreateTables
+# from application import app
+from explicolivais import app
+from DBhelpers import DBcreateTables
 import os
 
 if __name__ == '__main__':
