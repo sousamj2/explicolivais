@@ -30,6 +30,14 @@ class Config:
     TOKEN_URL = 'https://oauth2.googleapis.com/token'
     SCOPE = 'openid email profile'  # Scopes for user info
 
+    # Mail configurations for no-reply
+    MAIL_SERVER         = os.getenv('MAIL_SERVER')
+    MAIL_PORT           = int(os.getenv('MAIL_PORT', 465))
+    MAIL_USE_SSL        = os.getenv('MAIL_USE_SSL', 'True') == 'True'
+    MAIL_USERNAME       = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD       = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+
     SERVICE_ACCOUNT_FILE = './primeiro-contact-account.json'
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     CALENDAR_ID = '982d2d8cb74e54a702ffaaedd1aa7fdc7fa2645931fbd4abb6b80c3da8dd2541@group.calendar.google.com'

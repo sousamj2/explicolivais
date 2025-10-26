@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from pprint import pprint
+from Funhelpers import mail
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,6 +19,8 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
     
+    # Initialize Flask-Mail via the extension pattern to avoid assigning new attributes on Flask
+    mail.init_app(app)
     # Load configuration
     from config import config
     app.config.from_object(config[config_name])
@@ -31,8 +34,6 @@ def create_app(config_name=None):
     app.register_blueprint(signin_bp)
     app.register_blueprint(signup_bp)
     app.register_blueprint(updateDB_bp)
-
-    
     # Main route
     @app.route('/')
     def index():
