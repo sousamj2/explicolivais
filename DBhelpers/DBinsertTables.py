@@ -40,7 +40,7 @@ def insertNewUser(first,last,email):
     print(f"Inserting user with email {email}")
 
     insertFile = "insert_newUser.sql"
-    insertDict = {"first": first, "last": last, "email": email}
+    insertDict = {"first": first, "last": last, "email": email, 'username': email, 'g_token': 1, 'h_password': None}
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
     print("Insert user:",status)
     return status
