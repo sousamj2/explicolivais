@@ -55,7 +55,7 @@ def check_user():
         user = get_user_profile(email)
 
         if user:
-            pprint('User found in the database.')
+            # pprint('User found in the database.')
             refresh_last_login_and_ip(email, request.remote_addr)
             session["metadata"] = get_user_profile(email)
             # pprint(session['metadata'])

@@ -7,10 +7,9 @@ from Funhelpers import get_lisbon_greeting, render_profile_template
 bp_signup = Blueprint('signup', __name__)
 
 
-@bp_signup.route('/signup')
+@bp_signup.route('/signup', methods=['GET', 'POST'])
 def signup():
     pprint('Rendering signup page...')
-    user = session.get('user') or session.get('userinfo')
     if not session.get('metadata') :
         session['metadata'] = {}
     session["metadata"]["greeting"] = get_lisbon_greeting()
@@ -19,21 +18,22 @@ def signup():
     given_name = ''
     family_name = ''
     is_google = False
-    if user: # signup from email
+
+    if request.method == "POST": 
+        email = request.form.get('email', '')
+    elif request.method == "GET":
+        user = session.get('user') or session.get('userinfo')
         email = user['email']
         given_name = user['given_name']
         family_name = user['family_name']
         is_google = True
-    else:
-        # Get email from the query string
-        email = request.args.get('email', '')
 
     if len(email) == 0:
         return redirect(url_for('signin.signin'))
 
-    print(email)
-    error_message = session.get("metadata").get("error_message",'')
-    print(session.get("metadata"))
+    # print(email)
+    # error_message = session.get("metadata").get("error_message",'')
+    # print(session.get("metadata"))
 
     # First render the content template with profile variables
     main_content_html = render_template(

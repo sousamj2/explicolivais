@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session, redirect, url_for, flash, current_app, render_template
+from flask import Blueprint, request, session, redirect, url_for, flash, current_app, render_template, render_template_string
 from Funhelpers.registration_token import generate_token, confirm_token
 from Funhelpers.send_email import send_email
 from markupsafe import Markup
@@ -61,7 +61,16 @@ def confirm_email(token):
         return redirect(url_for('register.request_confirmation'))
 
     # Redirect to signup page with email prefilled or in URL for completion
-    return redirect(url_for('signup.signup', email=email))
+    # return redirect(url_for('signup.signup', email=email))
+     # Render a form that auto-submits via POST to the signup page with email hidden field
+    return render_template_string('''
+        <form id="postform" method="post" action="{{ url_for('signup.signup') }}">
+            <input type="hidden" name="email" value="{{ email }}">
+        </form>
+        <script type="text/javascript">
+            document.getElementById('postform').submit();
+        </script>
+    ''', email=email)
 
 @bp_register.route('/unsubscribe')
 def unsubscribe():
