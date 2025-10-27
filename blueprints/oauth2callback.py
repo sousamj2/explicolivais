@@ -1,10 +1,10 @@
 from flask import Blueprint, request, session, redirect, url_for,current_app
 import requests
 
-oauth2callback_bp = Blueprint('oauth2callback', __name__)
+bp_oauth2callback = Blueprint('oauth2callback', __name__, url_prefix='/oauth2callback')
 
 
-@oauth2callback_bp.route('/oauth2callback')
+@bp_oauth2callback.route('/')
 def oauth2callback():
     code = request.args.get('code')
     # Exchange code for tokens

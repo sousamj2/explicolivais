@@ -3,7 +3,7 @@ import locale
 import pytz
 
 def format_data(timestampUTC):
-    print("-----------------------",timestampUTC)
+    # print("-----------------------",timestampUTC)
     try:
         locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
         

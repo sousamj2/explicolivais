@@ -1,0 +1,1 @@
+SELECT h_password FROM users WHERE email = (?)

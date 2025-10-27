@@ -36,11 +36,20 @@ def execute_insert_from_file(sql_file_path, params_dict):
 
     return status
 
-def insertNewUser(first,last,email):
+def insertNewUser(first,last,email,h_password=None, username=None):
     print(f"Inserting user with email {email}")
 
+    g_token=None
+    # handling gmail token sign up
+    if username is None:
+        username = email
+        g_token = 1
+    else:
+        g_token = 0
+
+
     insertFile = "insert_newUser.sql"
-    insertDict = {"first": first, "last": last, "email": email}
+    insertDict = {"first": first, "last": last, "email": email, 'username': username, 'h_password': h_password, 'g_token': g_token}
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
     print("Insert user:",status)
     return status

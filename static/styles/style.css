@@ -223,3 +223,47 @@ body {
     border: 1px solid rgba(251, 191, 36, 0.3); /* yellow border */
   }
 }
+
+input[readonly] {
+    background-color: #888888;  /* Very light gray */
+ }
+
+ 
+.form-row { display: flex; gap: 1em; margin-bottom: 1em; }
+.form-col { flex: 1 1 0; }
+
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 40% 40% 20%;
+    gap: 1em;
+    width: 100%;
+    max-width: 1200px; /* or as needed */
+    margin: 0 auto;
+  }
+
+  
+  @media (max-width: 1423px) {
+    .form-grid {
+      grid-template-columns: 50% 50%;
+    }
+  }
+
+  
+  .form-grid-wrapper {
+    margin: 0 5%;
+  }
+
+  
+  @media (max-width: 839px) {
+    .form-grid {
+      grid-template-columns: 100%;
+    }
+    .form-row { flex-direction: column; }
+  }
+
+  
+.required {
+  color: red;
+  margin-left: 2px;
+}

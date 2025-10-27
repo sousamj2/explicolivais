@@ -6,8 +6,10 @@ from flask import session
 
 
 def render_profile_template(template_text):
+
     userinfo = session.get("userinfo", {})
     metadata = session.get("metadata", {})
+    print("lastlogints",metadata.get("lastlogints", ""))
     template_text = str(template_text)
     # Example replacements; add more as needed
     rendered = template_text.replace("{{user_picture}}", userinfo.get("picture", ""))

@@ -1,24 +1,32 @@
-# blueprints/__init__.py
 
-# Optional: You can leave this empty or use it to export blueprints
-from .check_user import check_user_bp
-from .logout import logout_bp
-from .oauth2callback import oauth2callback_bp
-from .profile import profile_bp
-from .signin_redirect import signin_redirect_bp
-from .signin import signin_bp
-from .signup import signup_bp
-from .updateDB import updateDB_bp
-from .pages import pages_bp
+# Import and export all blueprints
+from .check_user import bp_check_user
+from .logout import bp_logout
+from .oauth2callback import bp_oauth2callback
+from .profile import bp_profile
+from .signin_redirect import bp_signin_redirect
+from .signin import bp_signin
+from .signup import bp_signup
+from .updateDB import bp_updateDB
+from .pages import bp_home, bp_maps, bp_prices, bp_calendar, bp_terms, bp_adminDB
+from .register import bp_register
+from .request_new_user import bp_request_new_user
 
-
-__all__ = ['check_user_bp',
-           'logout_bp',
-           'oauth2callback_bp',
-           'profile_bp',
-           'signin_redirect_bp',
-           'signin_bp',
-           'signup_bp',
-           'updateDB_bp',
-           'pages_bp'
-    ]
+__all__ = [
+    'bp_check_user',
+    'bp_logout',
+    'bp_oauth2callback',
+    'bp_profile',
+    'bp_signin_redirect',
+    'bp_signin',
+    'bp_signup',
+    'bp_updateDB',
+    'bp_home',
+    'bp_maps',
+    'bp_prices',
+    'bp_calendar',
+    'bp_terms',
+    'bp_adminDB',
+    'bp_register',
+    'bp_request_new_user'
+]

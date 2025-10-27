@@ -1,10 +1,10 @@
 from flask import Blueprint, session, redirect, url_for,current_app
 import requests
 
-logout_bp = Blueprint('logout', __name__)
+bp_logout = Blueprint('logout', __name__, url_prefix='/logout')
 
 
-@logout_bp.route('/logout')
+@bp_logout.route('/')
 def logout():
     # Revoke token if exists
     access_token = session.get('access_token')

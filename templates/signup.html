@@ -25,7 +25,7 @@
             </nav>
             <h1>Registo na base de dados</h1> <br> 
 
-            <form id="signupForm" action="/updateDB" method="post" onsubmit="openGoogleCalendar()">
+            <form id="signupForm" action="{{ url_for('updateDB.update_db') }}" method="post" onsubmit="openGoogleCalendar()">
 
             <!-- <form method="post"> -->
                 Morada fiscal: <input name="address" size="32" value="{{ address|default('') }}"><br>
@@ -73,7 +73,7 @@
             <div class="error">{{ error_message }}</div>
             {% endif %}
 
-            <p> Nenhum dado será partilhado fora da aplicação. </p>
+            <p> Template Nenhum dado será partilhado fora da aplicação. </p>
 <!-- 
             <script>
                 function openGoogleCalendar() {

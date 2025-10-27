@@ -1,30 +1,43 @@
+
 from flask import Blueprint, render_template, session, redirect, url_for, current_app
 from markupsafe import Markup
 from pprint import pprint
 
 from Funhelpers.render_profile_template import render_profile_template
 
-pages_bp = Blueprint('pages', __name__)
-
+# Define a blueprint for each page
+bp_home = Blueprint('home', __name__, url_prefix='/')
+bp_maps = Blueprint('maps', __name__, url_prefix='/maps')
+bp_prices = Blueprint('prices', __name__, url_prefix='/prices')
+bp_calendar = Blueprint('calendar', __name__, url_prefix='/calendar')
+bp_terms = Blueprint('terms', __name__, url_prefix='/terms')
+bp_adminDB = Blueprint('adminDB', __name__, url_prefix='/adminDB')
 
 def render_page(blueprint, route="/", template_name="home", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata=None):
     def view_func():
         with open(f'templates/content/{template_name}.html', 'r', encoding='utf-8') as file:
-            if route == "/maps":
-                print(session.get("metadata"))
+            if template_name == "maps":
                 main_content_html = render_profile_template(Markup(file.read()))
-            else :
+            else:
                 main_content_html = Markup(file.read())
-        user = session.get('user') or session.get('userinfo')
+        # user = session.get('user') or session.get('userinfo')
         # pprint(user)
+        user = session and session.get("metadata")
         if not user and template_name == "profile":
             return redirect(url_for('signin.signin'))
-        elif (not user or user['email'].lower() != current_app.config['ADMIN_EMAIL']) and template_name == "adminDB":
-            return redirect(url_for('signin.signin'))
+        elif (not user or 
+              (session.get("metadata") and
+               session.get("metadata").get('email') and
+               session.get("metadata").get('email').lower() != current_app.config['ADMIN_EMAIL'])
+              ) and template_name == "adminDB":
+            return redirect(url_for('profile.profile'))
+
+        print("metadata is:", session.get("metadata"))
 
         if route == "/profile":
             pprint("metadata is:", metadata)
-
+        if not session.get("metadata").get('email') :
+            user = None
         # if template_name == "adminDB":
 
         return render_template(
@@ -35,17 +48,19 @@ def render_page(blueprint, route="/", template_name="home", page_title="Explica�
             page_title=page_title,
             title=title,
             main_content=main_content_html
-            )
+        )
     view_func.__name__ = f'view_func_{template_name.replace("-", "_").replace("/", "_")}'
     blueprint.route(route, methods=['GET'])(view_func)
     return view_func
 
-render_page(pages_bp,route="/"        , template_name="home"     , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(pages_bp,route="/maps"    , template_name="maps"     , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(pages_bp,route="/prices"  , template_name="prices"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(pages_bp,route="/calendar", template_name="calendar" , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(pages_bp,route="/terms"   , template_name="terms"    , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
-render_page(pages_bp,route="/adminDB" , template_name="adminDB"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
+# Register each page route with its blueprint
+render_page(bp_home, route="/", template_name="home", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata={})
+render_page(bp_maps, route="/", template_name="maps", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata={})
+render_page(bp_prices, route="/", template_name="prices", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata={})
+render_page(bp_calendar, route="/", template_name="calendar", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata={})
+render_page(bp_terms, route="/", template_name="terms", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata={})
+render_page(bp_adminDB, route="/", template_name="adminDB", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata={})
+
 # render_page(pages_bp,route="/profile" , template_name="profile"  , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={session["metadata"]})
 # render_page(pages_bp,route="/signin"  , template_name="signin"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
 # render_page(pages_bp,route="/signup"  , template_name="signup"   , page_title="Explicações em Lisboa", title="Explicações em Lisboa",metadata={})
@@ -78,3 +93,5 @@ render_page(pages_bp,route="/adminDB" , template_name="adminDB"  , page_title="E
 #         result = {'html_table': html_table}
 
 #     return jsonify(result)
+
+

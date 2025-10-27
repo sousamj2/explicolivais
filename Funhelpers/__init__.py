@@ -6,6 +6,8 @@ from .render_profile_template import render_profile_template
 from .results_to_html_table import results_to_html_table
 from .valid_nif import valid_NIF
 from .valid_phone import valid_cellphone
+from .extensions import mail
+from .send_email import send_email
 
 __all__ = [
     "check_ip_in_portugal",
@@ -15,5 +17,7 @@ __all__ = [
     "render_profile_template",
     "results_to_html_table",
     "valid_NIF",
-    "valid_cellphone"
+    "valid_cellphone",
+    "mail",
+    "send_email"
 ]
