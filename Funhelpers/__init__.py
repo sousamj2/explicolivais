@@ -17,7 +17,7 @@ __all__ = [
     "render_profile_template",
     "results_to_html_table",
     "valid_NIF",
-    "valid_cellphone"
-    ,"mail",
+    "valid_cellphone",
+    "mail",
     "send_email"
 ]

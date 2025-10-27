@@ -38,6 +38,9 @@ class Config:
     MAIL_PASSWORD       = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
 
+    SECRET_KEY       = os.getenv('SECRET_KEY')
+    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT')
+
     SERVICE_ACCOUNT_FILE = './primeiro-contact-account.json'
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     CALENDAR_ID = '982d2d8cb74e54a702ffaaedd1aa7fdc7fa2645931fbd4abb6b80c3da8dd2541@group.calendar.google.com'

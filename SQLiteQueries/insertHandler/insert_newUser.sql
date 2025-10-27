@@ -1,3 +1,3 @@
 INSERT INTO users
-(first_name, last_name, email, username, g_token, h_password) 
+(first_name, last_name, email, username, h_password, g_token) 
 VALUES (?,?,?,?,?,?);

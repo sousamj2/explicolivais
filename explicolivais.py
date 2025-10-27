@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, redirect, render_template
 from pprint import pprint
 from Funhelpers import mail
 
@@ -18,26 +18,34 @@ def create_app(config_name=None):
     # Determine which config to use
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
-    
-    # Initialize Flask-Mail via the extension pattern to avoid assigning new attributes on Flask
-    mail.init_app(app)
+
     # Load configuration
     from config import config
     app.config.from_object(config[config_name])
     
-    app.register_blueprint(check_user_bp)
-    app.register_blueprint(logout_bp)
-    app.register_blueprint(oauth2callback_bp)
-    app.register_blueprint(pages_bp)
-    app.register_blueprint(profile_bp)
-    app.register_blueprint(signin_redirect_bp)
-    app.register_blueprint(signin_bp)
-    app.register_blueprint(signup_bp)
-    app.register_blueprint(updateDB_bp)
-    # Main route
+    # Initialize Flask-Mail via the extension pattern to avoid assigning new attributes on Flask
+    mail.init_app(app)
+    print("Mail state after init_app:", mail.state)
+    
+    app.register_blueprint(bp_check_user)
+    app.register_blueprint(bp_logout)
+    app.register_blueprint(bp_oauth2callback)
+    app.register_blueprint(bp_home)
+    app.register_blueprint(bp_maps)
+    app.register_blueprint(bp_prices)
+    app.register_blueprint(bp_calendar)
+    app.register_blueprint(bp_terms)
+    app.register_blueprint(bp_adminDB)
+    app.register_blueprint(bp_profile)
+    app.register_blueprint(bp_signin_redirect)
+    app.register_blueprint(bp_signin)
+    app.register_blueprint(bp_signup)
+    app.register_blueprint(bp_updateDB)
+    app.register_blueprint(bp_register)
+    # Main route: redirect to /pages/ (home)
     @app.route('/')
     def index():
-        return "Home Page"
+        return redirect('/')
     
     return app
 

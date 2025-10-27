@@ -54,9 +54,21 @@ def getUserIdFromEmail(email):
         return None
     return retVal
 
+def getHashFromEmail(email):
+    retVal = getValueFromAnotherValue( selectFolder + "get_hash_from_email.sql", email)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
+def getEmailFromUsername(email):
+    retVal = getValueFromAnotherValue( selectFolder + "get_email_from_username.sql", email)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
 
 def get_user_profile(email):
     retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
+    # print("---------------------------------",retVal)
     if isinstance(retVal,str) and "Error" in retVal:
         return None
     return retVal
@@ -73,7 +85,7 @@ def dictify_real_dict_row(row):
         return val
     if not isinstance(row, (dict, list, datetime)):
         return row
-    print(row)
+    # print(row)
 
     return {k: convert_value(v) for k, v in row.items()}
 
