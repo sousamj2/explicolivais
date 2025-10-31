@@ -36,7 +36,7 @@ def render_page(blueprint, route="/", template_name="home", page_title="Explica√
 
         if route == "/profile":
             pprint("metadata is:", metadata)
-        if not session.get("metadata").get('email') :
+        if not session.get("metadata") or not session.get("metadata").get('email') :
             user = None
         # if template_name == "adminDB":
 
