@@ -1,0 +1,41 @@
+/* Caixa e imagem do quiz (compatível com a página autónoma) */
+.stage-wrapper { width: 100%; overflow-x: auto; padding-bottom: 8px; }
+.stage { position: relative; width: 1032px; max-width: 100%; margin: 0 auto; }
+.quiz-image { display: block; width: 1032px; height: 196px; max-width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+
+/* Overlays na imagem */
+.overlay {
+  position: absolute; background: rgba(255,255,255,.95); border: 1px solid #ccc;
+  border-radius: 8px; padding: 6px 10px; font-size: 14px; line-height: 1.35; color:#000;
+}
+.overlay.title { top: 20px; left: 880px; background: rgba(255,214,0,.97); font-weight: 700; }
+.overlay.note  { top: 160px; left: 800px; background: rgba(173,216,230,.95); font-style: italic; color:#000; }
+
+/* Caixa das respostas */
+.answers { margin-top: 16px; padding: 16px 18px; border-radius: 16px; border:1px solid #e5e7eb; background:#fff; }
+.answers h3 { font-size: 1.05rem; color: var(--blue-title); margin-bottom: 10px; }
+.option {
+  display:flex; align-items:flex-start; gap:10px; padding:10px 12px; margin-bottom:10px;
+  border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+}
+.option:hover { background:#edf2fb; }
+.option input[type="radio"]{ margin-top:2px; width:18px; height:18px; cursor:pointer; }
+.option label{ cursor:pointer; font-size:16px; line-height:1.4; }
+
+/* Dark mode para o quiz e inversão de imagem controlada */
+@media (prefers-color-scheme: dark) {
+  .overlay { background: rgba(10,18,35,.9); border: 1px solid #314575; color:#fff; }
+  .overlay.title { background: rgba(255,214,0,.95); color:#000; }
+  .overlay.note  { background: rgba(49,69,117,.85); color:#e6efff; }
+
+  .answers { background:#233357; border:1px solid #314575; color:#fff; }
+  .answers h3 { color: var(--yellow-header); }
+  .option { background:#1b2a4a; border:1px solid #314575; }
+  .option:hover { background:#203157; }
+
+  /* Inverter imagens do quiz apenas quando desejado */
+  .quiz-image.invert-on-dark {
+    filter: invert(1) hue-rotate(180deg) saturate(.9) brightness(1.05);
+  }
+  .quiz-image.no-invert-on-dark { filter:none !important; }
+}
