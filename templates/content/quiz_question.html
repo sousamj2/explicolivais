@@ -1,0 +1,224 @@
+<div class="quiz-container">
+    <div class="quiz-progress">
+        <div class="progress-info">
+            <span class="progress-text">Pergunta {{ question_num + 1 }} de {{ total_questions }}</span>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ ((question_num + 1) / total_questions * 100) }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <form id="quiz-form" method="POST" action="{{ url_for('quiz.submit_answer') }}">
+        <input type="hidden" name="question_num" value="{{ question_num }}">
+        
+        <!-- Stage with image and overlays -->
+        <div class="stage-wrapper">
+            <div class="stage">
+                <img src="{{ question.image_url }}" alt="Quiz question image" class="quiz-image invert-on-dark">
+                
+                <!-- Title overlay if present -->
+                {% if question.title %}
+                <div class="overlay title">
+                    {{ question.title }}
+                </div>
+                {% endif %}
+                
+                <!-- Note overlay if present -->
+                {% if question.note %}
+                <div class="overlay note">
+                    {% if '<img>' in question.note %}
+                        {{ question.note | safe }}
+                    {% else %}
+                        {{ question.note }}
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Answers section -->
+        <div class="answers">
+            <h3>Respostas:</h3>
+            
+            {% if question.is_multiple_choice %}
+                <!-- Multiple choice: checkboxes -->
+                <div class="options-container">
+                    {% for option in question.options %}
+                        {% set i = loop.index0 %}
+                        {% set is_checked = (i|string in current_answer) %}
+                        {% set is_dont_know = (i == 0) %}
+                        
+                        <!-- Default: "Não sei" is checked if no current answer -->
+                        {% if is_dont_know and not current_answer %}
+                            {% set is_checked = true %}
+                        {% endif %}
+                        
+                        <div class="option option-checkbox" data-option-index="{{ i }}" data-dont-know="{{ is_dont_know|lower }}">
+                            <input 
+                                type="checkbox" 
+                                name="answer" 
+                                value="{{ i }}" 
+                                id="option-{{ i }}"
+                                {% if is_checked %}checked{% endif %}
+                                data-dont-know="{{ is_dont_know|lower }}"
+                                class="answer-checkbox"
+                            >
+                            <label for="option-{{ i }}" class="option-label">
+                                {{ option }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Single choice: radio buttons -->
+                <div class="options-container">
+                    {% for option in question.options %}
+                        {% set i = loop.index0 %}
+                        {% set is_dont_know = (i == 0) %}
+                        {% set is_checked = (i|string in current_answer) if current_answer else is_dont_know %}
+                        
+                        <div class="option option-radio" data-option-index="{{ i }}" data-dont-know="{{ is_dont_know|lower }}">
+                            <input 
+                                type="radio" 
+                                name="answer" 
+                                value="{{ i }}" 
+                                id="option-{{ i }}"
+                                {% if is_checked %}checked{% endif %}
+                                class="answer-radio"
+                            >
+                            <label for="option-{{ i }}" class="option-label">
+                                {{ option }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="quiz-navigation">
+            {% if question_num > 0 %}
+                <button type="button" class="btn btn-secondary" id="btn-previous" onclick="navigatePrevious()">
+                    ← Anterior
+                </button>
+            {% endif %}
+
+            <div class="nav-spacer"></div>
+
+            {% if question_num < total_questions - 1 %}
+                <button type="button" class="btn btn-primary" id="btn-next" onclick="navigateNext()">
+                    Próxima →
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-primary" id="btn-finish" onclick="finishQuiz()">
+                    Finalizar Quiz
+                </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+    // Handle answer selection for single choice
+    const radioInputs = document.querySelectorAll('.answer-radio');
+    radioInputs.forEach(radio => {
+        radio.addEventListener('change', function() {
+            handleSingleChoiceSelection(this);
+            submitAnswerSilent();
+        });
+    });
+
+    // Handle answer selection for multiple choice
+    const checkboxInputs = document.querySelectorAll('.answer-checkbox');
+    checkboxInputs.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            handleMultipleChoiceSelection(this);
+            submitAnswerSilent();
+        });
+    });
+
+    function handleSingleChoiceSelection(radio) {
+        // For single choice, only one option can be selected at a time
+        // This is handled automatically by radio buttons
+    }
+
+    function handleMultipleChoiceSelection(checkbox) {
+        const isDontKnow = checkbox.dataset.dontKnow === 'true';
+        
+        if (isDontKnow && checkbox.checked) {
+            // Uncheck all other options when "Não sei" is selected
+            checkboxInputs.forEach(cb => {
+                if (cb !== checkbox) cb.checked = false;
+            });
+        } else if (!isDontKnow && checkbox.checked) {
+            // Uncheck "Não sei" when any other option is selected
+            const dontKnowCheckbox = document.querySelector('[data-dont-know="true"].answer-checkbox');
+            if (dontKnowCheckbox) dontKnowCheckbox.checked = false;
+        }
+    }
+
+    function submitAnswerSilent() {
+        const form = document.getElementById('quiz-form');
+        const formData = new FormData(form);
+        
+        fetch("{{ url_for('quiz.submit_answer') }}", {
+            method: 'POST',
+            body: formData
+        }).catch(error => console.error('Error submitting answer:', error));
+    }
+
+    function navigatePrevious() {
+        submitAnswerSilent();
+        setTimeout(() => {
+            navigate('previous');
+        }, 100);
+    }
+
+    function navigateNext() {
+        submitAnswerSilent();
+        setTimeout(() => {
+            navigate('next');
+        }, 100);
+    }
+
+    function finishQuiz() {
+        submitAnswerSilent();
+        setTimeout(() => {
+            navigate('finish');
+        }, 100);
+    }
+
+    function navigate(action) {
+        const form = new FormData();
+        form.append('action', action);
+        form.append('current_question', {{ question_num }});
+
+        fetch("{{ url_for('quiz.navigate') }}", {
+            method: 'POST',
+            body: form
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        })
+        .catch(error => console.error('Error navigating:', error));
+    }
+
+    // Set first answer as default on page load if no answer is selected
+    document.addEventListener('DOMContentLoaded', function() {
+        const radioInputs = document.querySelectorAll('.answer-radio');
+        
+        // Check if any radio is already selected
+        let anySelected = false;
+        radioInputs.forEach(radio => {
+            if (radio.checked) anySelected = true;
+        });
+        
+        // If none selected, select the first one
+        if (!anySelected && radioInputs.length > 0) {
+            radioInputs.checked = true;
+        }
+    });
+</script>

@@ -13,6 +13,7 @@
   body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
+    font-size: large;
     transition: background 0.3s, color 0.3s;
     background-color: var(--egg-shell);
     color: #000;

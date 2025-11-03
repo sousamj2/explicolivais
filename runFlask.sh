@@ -12,13 +12,19 @@ python -c "import os;\
 import sys;\
 sys.path.insert(0, os.getcwd() + '/DBhelpers');\
 import DBcreateTables;\
+import DBloadQuiz;\
 createHandlerPath=os.getcwd()+'/SQLiteQueries/createHandler/';\
 DBcreateTables.handle_tables(createHandlerPath + 'create_users.sql');\
 DBcreateTables.handle_tables(createHandlerPath + 'create_connections.sql');\
 DBcreateTables.handle_tables(createHandlerPath + 'create_classes.sql');\
 DBcreateTables.handle_tables(createHandlerPath + 'create_documents.sql');\
 DBcreateTables.handle_tables(createHandlerPath + 'create_personal.sql');\
-DBcreateTables.handle_tables(createHandlerPath + 'create_iplist.sql');"
+DBcreateTables.handle_tables(createHandlerPath + 'create_iplist.sql');\
+DBloadQuiz.loadQanswers();\
+DBloadQuiz.loadQlinks();\
+DBloadQuiz.loadQtemas();\
+DBloadQuiz.loadQaulas();\
+"
 
 echo -e "   ✅ Tables are now up and running"
 echo ""
