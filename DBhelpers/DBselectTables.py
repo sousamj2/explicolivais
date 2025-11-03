@@ -66,6 +66,9 @@ def getEmailFromUsername(email):
         return None
     return retVal
 
+def get_user_quiz(email):
+    return False
+
 def get_user_profile(email):
     retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
     # print("---------------------------------",retVal)

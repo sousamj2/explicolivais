@@ -1,6 +1,29 @@
 <div class="quiz-results-container">
     <div class="results-header">
         <h1>Resultados do Quiz</h1>
+        
+        {% if quiz_uuid %}
+        <div class="quiz-uuid-info">
+            <p>ID do Quiz: <code>{{ quiz_uuid }}</code></p>
+            {% if is_saved %}
+                <p class="text-muted">Salvo em: {{ saved_at }}</p>
+            {% else %}
+                <p class="text-info">
+                    <a href="{{ url_for('quiz.view_quiz_result', quiz_uuid=quiz_uuid) }}">
+                        Clique aqui para salvar este resultado
+                    </a>
+                </p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- ... rest of the results page ... -->
+
+
+<div class="quiz-results-container">
+    <div class="results-header">
+        <h1>Resultados do Quiz</h1>
     </div>
 
     <!-- Summary cards -->

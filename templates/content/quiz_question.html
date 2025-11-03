@@ -40,8 +40,8 @@
         <div class="answers">
             <h3>Respostas:</h3>
             
+            <!-- For MULTIPLE CHOICE -->
             {% if question.is_multiple_choice %}
-                <!-- Multiple choice: checkboxes -->
                 <div class="options-container">
                     {% for option in question.options %}
                         {% set i = loop.index0 %}
@@ -53,7 +53,7 @@
                             {% set is_checked = true %}
                         {% endif %}
                         
-                        <div class="option option-checkbox" data-option-index="{{ i }}" data-dont-know="{{ is_dont_know|lower }}">
+                        <label for="option-{{ i }}" class="option option-checkbox" data-option-index="{{ i }}" data-dont-know="{{ is_dont_know|lower }}">
                             <input 
                                 type="checkbox" 
                                 name="answer" 
@@ -63,21 +63,19 @@
                                 data-dont-know="{{ is_dont_know|lower }}"
                                 class="answer-checkbox"
                             >
-                            <label for="option-{{ i }}" class="option-label">
-                                {{ option }}
-                            </label>
-                        </div>
+                            <span class="option-label">{{ option }}</span>
+                        </label>
                     {% endfor %}
                 </div>
             {% else %}
-                <!-- Single choice: radio buttons -->
+                <!-- For SINGLE CHOICE -->
                 <div class="options-container">
                     {% for option in question.options %}
                         {% set i = loop.index0 %}
                         {% set is_dont_know = (i == 0) %}
                         {% set is_checked = (i|string in current_answer) if current_answer else is_dont_know %}
                         
-                        <div class="option option-radio" data-option-index="{{ i }}" data-dont-know="{{ is_dont_know|lower }}">
+                        <label for="option-{{ i }}" class="option option-radio" data-option-index="{{ i }}" data-dont-know="{{ is_dont_know|lower }}">
                             <input 
                                 type="radio" 
                                 name="answer" 
@@ -86,10 +84,8 @@
                                 {% if is_checked %}checked{% endif %}
                                 class="answer-radio"
                             >
-                            <label for="option-{{ i }}" class="option-label">
-                                {{ option }}
-                            </label>
-                        </div>
+                            <span class="option-label">{{ option }}</span>
+                        </label>
                     {% endfor %}
                 </div>
             {% endif %}

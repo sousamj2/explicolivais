@@ -71,7 +71,7 @@
     margin-bottom: 10px; 
 }
 
-.option {
+/* .option {
     display:flex; 
     align-items:flex-start; 
     gap:10px; 
@@ -109,7 +109,59 @@
 
 .option input { 
     cursor: pointer; 
+} */
+
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;  /* Prevent text selection */
 }
+
+.option:hover {
+    background: #f0f6ff;
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+.option:focus-within {
+    outline: 2px solid #2563eb;
+    outline-offset: 0px;
+}
+
+.option-label {
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1.4;
+    flex: 1;  /* Takes all remaining space */
+    margin: 0;
+}
+
+.option input[type="radio"],
+.option input[type="checkbox"] {
+    flex-shrink: 0;  /* Don't shrink the input */
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin: 0;  /* Remove default margins */
+    accent-color: #2563eb;  /* Custom checkbox/radio color */
+}
+
+.option input[type="radio"]:hover,
+.option input[type="checkbox"]:hover {
+    transform: scale(1.1);
+}
+
+
+
 
 .btn{
     background:var(--blue);
@@ -169,14 +221,28 @@
         color: var(--yellow-header); 
     }
 
-    .option { 
-        background:#1b2a4a; 
-        border:1px solid #314575; 
+    .option {
+        background: #1b2a4a;
+        border-color: #314575;
+        color: #e6efff;
     }
 
-    .option:hover { 
-        background:#203157; 
+    .option:hover {
+        background: #203157;
+        border-color: #4f8ff8;
+        box-shadow: 0 2px 8px rgba(79, 143, 248, 0.2);
     }
+
+    .option-label {
+        color: #e6efff;
+    }
+
+    .option input[type="radio"],
+    .option input[type="checkbox"] {
+        accent-color: #4f8ff8;
+    }
+
+
 
     /* Images are automatically inverted via .invert-on-dark class */
     .quiz-image {
@@ -531,6 +597,16 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
+    
+    .option {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .option-label {
+        font-size: 15px;
+    }
+
     .question-result-content {
         grid-template-columns: 1fr;
     }
