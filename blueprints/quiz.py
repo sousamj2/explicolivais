@@ -1,15 +1,20 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from Funhelpers.quiz_helpers import getListOfQuestions, calculate_score
-from Funhelpers.quiz_storage import save_quiz_result, get_quiz_result, list_all_quiz_results
+from Funhelpers.quiz_storage import (
+    save_quiz_result,
+    get_quiz_result,
+    cleanup_expired_results
+)
 
 quiz_bp = Blueprint('quiz', __name__)
 
 @quiz_bp.route('/quiz')
 def start_quiz():
-    """Initialize a new quiz session"""
-    questions = getListOfQuestions()
+    """Initialize quiz - cleanup expired results"""
+    # Clean up expired anonymous results (lazy cleanup)
+    cleanup_expired_results()
     
-    # Initialize session variables
+    questions = getListOfQuestions()
     session['quiz_questions'] = questions
     session['current_question'] = 0
     session['user_answers'] = {}
@@ -32,7 +37,6 @@ def question(question_num):
         return redirect(url_for('quiz.start_quiz'))
     
     current_question = questions[question_num]
-    print(f"Current question is : {current_question}")
     
     user_answers = session.get('user_answers', {})
     current_answer = user_answers.get(str(question_num), [])
@@ -117,25 +121,33 @@ def results():
     # Calculate results
     quiz_results = calculate_score(questions, user_answers)
     
-    # Save results to file and get UUID
-    quiz_uuid = save_quiz_result(user_answers, questions)
+    # Check if user is authenticated
+    email = session.get('metadata', {}).get('email', '') if session.get('metadata') else ''
+    is_authenticated = bool(email)
     
-    # Store UUID in session for reference
-    session['quiz_uuid'] = quiz_uuid
+    quiz_uuid = None
     
-    # Get user info from session if needed
+    # Only save to file if anonymous
+    if not is_authenticated:
+        quiz_uuid = save_quiz_result(user_answers, questions)
+        session['quiz_uuid'] = quiz_uuid
+    else:
+        # For authenticated users, results go to their user area
+        # TODO: call insertQuizResults(email) to save in user's database
+        print(f"TODO: Save authenticated user quiz to database: {email}")
+    
     user = session.get('user', None)
     
-    # Render the content template first
     content_html = render_template(
         'content/quiz_results.html',
         results=quiz_results,
         questions=questions,
         user_answers=user_answers,
-        quiz_uuid=quiz_uuid
+        quiz_uuid=quiz_uuid,
+        is_authenticated=is_authenticated,
+        email=email
     )
     
-    # Now render the full page with the processed content
     return render_template(
         'index.html',
         admin_email=current_app.config.get('ADMIN_EMAIL', ''),
@@ -148,83 +160,44 @@ def results():
 
 @quiz_bp.route('/results/<quiz_uuid>')
 def view_quiz_result(quiz_uuid):
-    """View saved quiz results by UUID"""
-    # Retrieve the saved answers
+    """View anonymous quiz results"""
     saved_result = get_quiz_result(quiz_uuid)
     
     if not saved_result:
-        flash(f'Quiz não encontrado: {quiz_uuid}', 'error')
+        flash('Quiz não encontrado ou expirou. UUID válido por 1 hora.', 'error')
         return redirect(url_for('quiz.start_quiz'))
     
-    # Get the questions (can be in any order, we use question_number to match)
     all_questions = getListOfQuestions()
-    
-    # Map saved answers back to question indices
-    # saved_result['answers_by_question_number'] maps question_number -> [answer_indices]
     answers_by_question_number = saved_result['answers_by_question_number']
     
-    # Create index-based answers by looking up question_number
+    # Remap answers from question_number to indices
     user_answers = {}
     for question_idx, question in enumerate(all_questions):
         question_num = question['question_number']
         if str(question_num) in answers_by_question_number:
             user_answers[str(question_idx)] = answers_by_question_number[str(question_num)]
     
-    print(f"DEBUG: Remapped answers from question_number to indices: {user_answers}")
-    
-    # Calculate results with correctly mapped answers
     quiz_results = calculate_score(all_questions, user_answers)
     
-    # Get user info from session if needed
     user = session.get('user', None)
     
-    # Render the content template first
     content_html = render_template(
         'content/quiz_results.html',
         results=quiz_results,
         questions=all_questions,
         user_answers=user_answers,
         quiz_uuid=quiz_uuid,
+        is_authenticated=False,  # Anonymous results never show details
         is_saved=True
     )
     
-    # Now render the full page with the processed content
     return render_template(
         'index.html',
         admin_email=current_app.config.get('ADMIN_EMAIL', ''),
         user=user,
         metadata={},
-        page_title='Quiz - Resultados Salvos',
+        page_title='Quiz - Resultados',
         title='Resultados do Quiz',
-        main_content=content_html
-    )
-
-
-
-
-
-@quiz_bp.route('/results/list')
-def list_results():
-    """List all saved quiz results"""
-    all_results = list_all_quiz_results()
-    
-    # Get user info from session if needed
-    user = session.get('user', None)
-    
-    # Render the content template first
-    content_html = render_template(
-        'content/quiz_results_list.html',
-        all_results=all_results
-    )
-    
-    # Now render the full page with the processed content
-    return render_template(
-        'index.html',
-        admin_email=current_app.config.get('ADMIN_EMAIL', ''),
-        user=user,
-        metadata={},
-        page_title='Histórico de Quizzes',
-        title='Histórico de Resultados',
         main_content=content_html
     )
 

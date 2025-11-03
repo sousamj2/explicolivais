@@ -1,25 +1,4 @@
 <div class="quiz-results-container">
-    <div class="results-header">
-        <h1>Resultados do Quiz</h1>
-        
-        {% if quiz_uuid %}
-        <div class="quiz-uuid-info">
-            <p>ID do Quiz: <code>{{ quiz_uuid }}</code></p>
-            {% if is_saved %}
-                <p class="text-muted">Salvo em: {{ saved_at }}</p>
-            {% else %}
-                <p class="text-info">
-                    <a href="{{ url_for('quiz.view_quiz_result', quiz_uuid=quiz_uuid) }}">
-                        Clique aqui para salvar este resultado
-                    </a>
-                </p>
-            {% endif %}
-        </div>
-        {% endif %}
-    </div>
-    
-    <!-- ... rest of the results page ... -->
-
 
 <div class="quiz-results-container">
     <div class="results-header">
@@ -50,7 +29,8 @@
         </div>
     </div>
 
-    <!-- Detailed results - mirror the question layout -->
+    <!-- Detailed results - ONLY for authenticated users -->
+    {% if is_authenticated %}
     <div class="results-details">
         <h2>Detalhes das Respostas</h2>
         
@@ -172,6 +152,24 @@
             </div>
         {% endfor %}
     </div>
+    
+    {% else %}
+        <!-- Anonymous user - show signup incentive -->
+        <div class="results-details-locked">
+            <div class="locked-message">
+                <h3>🔒 Detalhes das Respostas</h3>
+                <p>Para ver os detalhes de suas respostas e manter um histórico permanente, 
+                   <a href="{{ url_for('signin.signin') }}">faça login</a> ou 
+                   <a href="{{ url_for('signin.signin') }}">crie uma conta</a>.</p>
+                {% if quiz_uuid %}
+                <p class="uuid-info">
+                    ID do Quiz: <code>{{ quiz_uuid }}</code><br>
+                    <small>⏰ Disponível por 1 hora</small>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Action buttons -->
     <div class="results-actions">
