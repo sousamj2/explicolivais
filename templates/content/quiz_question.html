@@ -1,4 +1,49 @@
+
+{# Macro to render option based on type and position #}
+{% macro render_option(option, type_of_answer, option_index) -%}
+  {% if option_index == 0 %}
+    {# Index 0 is always "Não sei" - always plain text #}
+    <span class="option-label">{{ option }}</span>
+  {% elif type_of_answer == 'latex' %}
+    {# LaTeX math - wrap in \( ... \) for inline rendering #}
+    {# IMPORTANT: Don't double-escape! Let Jinja render the backslashes #}
+    <span class="option-label">\( {{ option }} \)</span>
+  {% elif type_of_answer == 'image' %}
+    {# Image option - render as img tag #}
+    <span class="option-label">
+      <img src="{{ option }}" alt="Opção" class="option-image">
+    </span>
+  {% else %}
+    {# Plain text - no processing #}
+    <span class="option-label">{{ option }}</span>
+  {% endif %}
+{%- endmacro %}
+
+<!-- Question breadcrumb/path - Fancy version -->
+<div class="question-header">
+    <div class="breadcrumb">
+        {% set parts = question.question_path.split('/') %}
+        {% for part in parts %}
+            <span class="breadcrumb-item">
+                {% if loop.index0 == 0 %}
+                    <span class="breadcrumb-icon">📚</span> Ano {{ part }}
+                {% elif loop.index0 == 1 %}
+                    <span class="breadcrumb-icon">🎯</span> {{ part }}
+                {% else %}
+                    <span class="breadcrumb-icon">📖</span> {{ part }}
+                {% endif %}
+            </span>
+            {% if loop.index0 < parts|length - 1 %}
+                <span class="breadcrumb-separator">/</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+
+
 <div class="quiz-container">
+    <!-- Progress bar -->
     <div class="quiz-progress">
         <div class="progress-info">
             <span class="progress-text">Pergunta {{ question_num + 1 }} de {{ total_questions }}</span>
@@ -8,40 +53,51 @@
         </div>
     </div>
 
-    <form id="quiz-form" method="POST" action="{{ url_for('quiz.submit_answer') }}">
-        <input type="hidden" name="question_num" value="{{ question_num }}">
-        
-        <!-- Stage with image and overlays -->
-        <div class="stage-wrapper">
-            <div class="stage">
-                <img src="{{ question.image_url }}" alt="Quiz question image" class="quiz-image invert-on-dark">
-                
-                <!-- Title overlay if present -->
-                {% if question.title %}
-                <div class="overlay title">
-                    {{ question.title }}
-                </div>
-                {% endif %}
-                
-                <!-- Note overlay if present -->
-                {% if question.note %}
-                <div class="overlay note">
-                    {% if '<img>' in question.note %}
-                        {{ question.note | safe }}
-                    {% else %}
-                        {{ question.note }}
-                    {% endif %}
-                </div>
+    <!-- Question image with overlays -->
+    <div class="stage-wrapper">
+        <div class="stage">
+            <img 
+                src="{{ question.image_url }}" 
+                alt="Quiz question image" 
+                class="quiz-image invert-on-dark"
+            >
+            
+            <!-- Title overlay -->
+            <!-- {% if question.title %}
+            <div class="overlay title">
+                {{ question.title }}
+            </div>
+            {% endif %} -->
+            
+            <!-- Note overlay -->
+            {% if question.note %}
+            <div class="overlay note">
+                {% if '<img>' in question.note %}
+                    {{ question.note | safe }}
+                {% else %}
+                    {{ question.note }}
                 {% endif %}
             </div>
+            {% endif %}
         </div>
+    </div>
 
-        <!-- Answers section -->
-        <div class="answers">
-            <h3>Respostas:</h3>
-            
-            <!-- For MULTIPLE CHOICE -->
+    
+    <!-- Answer options -->
+    <div class="answers">
+        <!-- Composed question instruction - if present -->
+        {% if question.composed_instruction %}
+        <div class="composed-instruction">
+            <strong>{{ question.composed_instruction }}</strong>
+        </div>
+        {% endif %}
+        <h3>Selecione a resposta:</h3>
+
+        <form id="quiz-form">
+            <input type="hidden" name="question_num" value="{{ question_num }}">
+
             {% if question.is_multiple_choice %}
+                <!-- Multiple choice (checkboxes) -->
                 <div class="options-container">
                     {% for option in question.options %}
                         {% set i = loop.index0 %}
@@ -63,12 +119,15 @@
                                 data-dont-know="{{ is_dont_know|lower }}"
                                 class="answer-checkbox"
                             >
-                            <span class="option-label">{{ option }}</span>
+                            <!-- {{ render_option(option, question.type_of_answer) }} -->
+                            {{ render_option(option, question.type_of_answer, loop.index0) }}
+
+
                         </label>
                     {% endfor %}
                 </div>
             {% else %}
-                <!-- For SINGLE CHOICE -->
+                <!-- Single choice (radio buttons) -->
                 <div class="options-container">
                     {% for option in question.options %}
                         {% set i = loop.index0 %}
@@ -84,137 +143,81 @@
                                 {% if is_checked %}checked{% endif %}
                                 class="answer-radio"
                             >
-                            <span class="option-label">{{ option }}</span>
+                            {{ render_option(option, question.type_of_answer, i) }}
                         </label>
                     {% endfor %}
                 </div>
             {% endif %}
-        </div>
+        </form>
+    </div>
 
-        <!-- Navigation buttons -->
-        <div class="quiz-navigation">
-            {% if question_num > 0 %}
-                <button type="button" class="btn btn-secondary" id="btn-previous" onclick="navigatePrevious()">
-                    ← Anterior
-                </button>
-            {% endif %}
-
+    <!-- Navigation buttons -->
+    <div class="quiz-navigation">
+        {% if question_num > 0 %}
+            <button type="button" class="btn btn-secondary" onclick="navigateQuiz('previous')">
+                ← Anterior
+            </button>
+        {% else %}
             <div class="nav-spacer"></div>
+        {% endif %}
 
-            {% if question_num < total_questions - 1 %}
-                <button type="button" class="btn btn-primary" id="btn-next" onclick="navigateNext()">
-                    Próxima →
-                </button>
-            {% else %}
-                <button type="button" class="btn btn-primary" id="btn-finish" onclick="finishQuiz()">
-                    Finalizar Quiz
-                </button>
-            {% endif %}
-        </div>
-    </form>
+        <div class="nav-spacer"></div>
+
+        {% if question_num < total_questions - 1 %}
+            <button type="button" class="btn btn-primary" onclick="navigateQuiz('next')">
+                Próxima →
+            </button>
+        {% else %}
+            <button type="button" class="btn btn-primary" onclick="navigateQuiz('finish')">
+                Finalizar Quiz
+            </button>
+        {% endif %}
+    </div>
 </div>
 
 <script>
-    // Handle answer selection for single choice
-    const radioInputs = document.querySelectorAll('.answer-radio');
-    radioInputs.forEach(radio => {
-        radio.addEventListener('change', function() {
-            handleSingleChoiceSelection(this);
-            submitAnswerSilent();
-        });
+// Submit answer silently when user changes selection
+document.querySelectorAll('.answer-checkbox, .answer-radio').forEach(input => {
+    input.addEventListener('change', function() {
+        submitAnswerSilent();
     });
+});
 
-    // Handle answer selection for multiple choice
-    const checkboxInputs = document.querySelectorAll('.answer-checkbox');
-    checkboxInputs.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            handleMultipleChoiceSelection(this);
-            submitAnswerSilent();
-        });
+function submitAnswerSilent() {
+    const form = document.getElementById('quiz-form');
+    const formData = new FormData(form);
+    
+    fetch('/quiz/submit', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Answer saved:', data);
+    })
+    .catch(error => {
+        console.error('Error saving answer:', error);
     });
+}
 
-    function handleSingleChoiceSelection(radio) {
-        // For single choice, only one option can be selected at a time
-        // This is handled automatically by radio buttons
-    }
-
-    function handleMultipleChoiceSelection(checkbox) {
-        const isDontKnow = checkbox.dataset.dontKnow === 'true';
-        
-        if (isDontKnow && checkbox.checked) {
-            // Uncheck all other options when "Não sei" is selected
-            checkboxInputs.forEach(cb => {
-                if (cb !== checkbox) cb.checked = false;
-            });
-        } else if (!isDontKnow && checkbox.checked) {
-            // Uncheck "Não sei" when any other option is selected
-            const dontKnowCheckbox = document.querySelector('[data-dont-know="true"].answer-checkbox');
-            if (dontKnowCheckbox) dontKnowCheckbox.checked = false;
+function navigateQuiz(action) {
+    const questionNum = {{ question_num }};
+    const formData = new FormData();
+    formData.append('action', action);
+    formData.append('current_question', questionNum);
+    
+    fetch('/quiz/navigate', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.redirect) {
+            window.location.href = data.redirect;
         }
-    }
-
-    function submitAnswerSilent() {
-        const form = document.getElementById('quiz-form');
-        const formData = new FormData(form);
-        
-        fetch("{{ url_for('quiz.submit_answer') }}", {
-            method: 'POST',
-            body: formData
-        }).catch(error => console.error('Error submitting answer:', error));
-    }
-
-    function navigatePrevious() {
-        submitAnswerSilent();
-        setTimeout(() => {
-            navigate('previous');
-        }, 100);
-    }
-
-    function navigateNext() {
-        submitAnswerSilent();
-        setTimeout(() => {
-            navigate('next');
-        }, 100);
-    }
-
-    function finishQuiz() {
-        submitAnswerSilent();
-        setTimeout(() => {
-            navigate('finish');
-        }, 100);
-    }
-
-    function navigate(action) {
-        const form = new FormData();
-        form.append('action', action);
-        form.append('current_question', {{ question_num }});
-
-        fetch("{{ url_for('quiz.navigate') }}", {
-            method: 'POST',
-            body: form
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            }
-        })
-        .catch(error => console.error('Error navigating:', error));
-    }
-
-    // Set first answer as default on page load if no answer is selected
-    document.addEventListener('DOMContentLoaded', function() {
-        const radioInputs = document.querySelectorAll('.answer-radio');
-        
-        // Check if any radio is already selected
-        let anySelected = false;
-        radioInputs.forEach(radio => {
-            if (radio.checked) anySelected = true;
-        });
-        
-        // If none selected, select the first one
-        if (!anySelected && radioInputs.length > 0) {
-            radioInputs.checked = true;
-        }
+    })
+    .catch(error => {
+        console.error('Navigation error:', error);
     });
+}
 </script>

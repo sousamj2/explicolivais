@@ -1,244 +1,149 @@
-from typing import Dict, List, Iterable, Tuple, Union, Set
+"""
+Quiz functions using database-backed questions
+Works with the new dictionary-based question structure
+"""
 
-# Question tuple:
-# (uuid, q_numb, image_url, title, note, isMultiple, options)
-
-def make_url(rel: str) -> str:
-    # Simple passthrough or transform if you host under /static/images
-    return f"/static/images/{rel}"
-
-def getListOfQuestions(ano: int = 5):
-    # uuid, q_numb, image, title, note, isMultipleChoice, list_of_answers
-    list_of_questions = [
-        (
-            "bd415bce-6028-4a73-9273-295310b3f3b6",
-            1,
-            "anos/ano5/tema1/aula106/e1.png",
-            "title-1",
-            "note-1",
-            False,
-            ["Não sei", "700", "600", "620", "580"],
-        ),
-        (
-            "a28eac48-a6e9-4b26-9840-08805e2a7a2d",
-            2,
-            "anos/ano5/tema1/aula106/e1.png",
-            "title-2",
-            "note-2",
-            False,
-            ["Não sei", "1400", "1450", "1250", "1427"],
-        ),
-        (
-            "31019225-8336-45d4-825b-3cefd953984c",
-            3,
-            "anos/ano5/tema1/aula106/e1.png",
-            "title-3",
-            "note-3",
-            False,
-            ["Não sei", "1102", "1010", "1200", "1100"],
-        ),
-        (
-            "c2fbaf7e-b689-44e6-b0e1-a76246019222",
-            4,
-            "anos/ano5/tema2/aula113/e5.png",
-            "title-4",
-            "note-4",
-            False,
-            ["Não sei","O João tem razão","A Joana tem razão"]
-        ),
-        (
-            "4d72c744-2b85-4bc6-848c-9f60de652595",
-            5,
-            "anos/ano5/tema1/aula112/e3.png",
-            "title-5",
-            "note-5",
-            True,
-            ['Não sei','2^4','2^5','2^6','2^8']
-        )
-    ]
-    out = []
-    for uuid, qn, rel, title, note, isMultiple, opts in list_of_questions:
-        img_url = make_url(rel)
-        out.append((uuid, qn, img_url, title, note, isMultiple, opts))
-    return out
-
-def getPointsPerQuestions():
-    # uuid, q_numb, list_of_points (aligned to options)
-    list_of_points = [
-        ("bd415bce-6028-4a73-9273-295310b3f3b6", 1, ["0", "-2", "5", "-2", "-2"]),
-        ("a28eac48-a6e9-4b26-9840-08805e2a7a2d", 2, ["0", "5", "-2", "-2", "-2"]),
-        ("31019225-8336-45d4-825b-3cefd953984c", 3, ["0", "-2", "-2", "-2", "5"]),
-        ("c2fbaf7e-b689-44e6-b0e1-a76246019222", 4, ["0", "-3", "5"]),
-        ("4d72c744-2b85-4bc6-848c-9f60de652595", 5, ["0", "-1", "5", "-1", "-1"])
-    ]
-    return list_of_points
-
-# --- Scoring utilities ---
-
-def _build_points_index() -> Dict[str, List[int]]:
-    pts = {}
-    for uuid, _qn, pts_list in getPointsPerQuestions():
-        pts[uuid] = list(map(int, pts_list))
-    return pts
-
-def _build_options_index() -> Dict[str, List[str]]:
-    idx = {}
-    for uuid, _qn, _img, _title, _note, _is_multi, options in getListOfQuestions():
-        idx[uuid] = options
-    return idx
-
-def _build_is_multi_index() -> Dict[str, bool]:
-    idx = {}
-    for uuid, _qn, _img, _title, _note, is_multi, _options in getListOfQuestions():
-        idx[uuid] = is_multi
-    return idx
-
-def _build_qn_index() -> Dict[str, int]:
-    idx = {}
-    for uuid, qn, *_rest in getListOfQuestions():
-        idx[uuid] = qn
-    return idx
-
-def _index_of(options: List[str], sel) -> int:
-    if isinstance(sel, int):
-        return sel if 0 <= sel < len(options) else -1
-    if isinstance(sel, str):
-        try:
-            return options.index(sel)
-        except ValueError:
-            return -1
-    return -1
+from typing import Dict, List, Union
+import json
 
 def score_points_total(
-    answers: Dict[Union[str, int], Union[int, str, Iterable[int], Iterable[str]]],
-    questions: List[tuple]
+    answers: Dict[Union[str, int], List],
+    questions: List[Dict]
 ) -> Dict[str, object]:
     """
     Sum per-option points for selections.
-    answers may be keyed by q_numb or uuid; both are supported.
+    
+    Args:
+        answers: dict like {'0': ['1'], '1': ['2'], ...} (index-based)
+        questions: list of question dicts from getListOfQuestions()
+    
+    Returns:
+        dict with total_points and per_question_points
     """
-    points_index = _build_points_index()
-    options_index = _build_options_index()
-    is_multi_index = _build_is_multi_index()
-    qn_index = _build_qn_index()
-
-    # Allow both qn and uuid keys in answers
-    # Build a resolver mapping qn->uuid for quick lookup
-    qn_to_uuid = {qn: uuid for uuid, qn, *_ in questions}
-
     total_points = 0
     per_question = {}
-
-    for uuid, qn, _img, _title, _note, is_multi, options in questions:
-        pts_for_opts = points_index.get(uuid)
-        if not pts_for_opts or len(pts_for_opts) != len(options):
-            per_question[uuid] = 0
+    
+    for i, question in enumerate(questions):
+        question_idx = str(i)
+        user_answer = answers.get(question_idx, [])
+        
+        # Get scoring for this question
+        scoring = question.get('scoring', [])
+        options = question.get('options', [])
+        
+        # Skip if no answer or only "Não sei" (index 0)
+        is_skipped = (
+            not user_answer or 
+            (len(user_answer) == 1 and user_answer == '0')
+        )
+        
+        if is_skipped:
+            per_question[question_idx] = 0
             continue
-
-        # resolve answer by uuid or qn
-        sel = None
-        if uuid in answers:
-            sel = answers[uuid]
-        elif qn in answers:
-            sel = answers[qn]
-        elif str(qn) in answers:
-            sel = answers[str(qn)]
-
-        if sel is None:
-            per_question[uuid] = 0
-            continue
-
-        if is_multi:
-            if isinstance(sel, (list, tuple, set)):
-                idxs = {_index_of(options, s) for s in sel}
-            else:
-                idxs = {_index_of(options, sel)}
-            valid = {i for i in idxs if i >= 0}
-            q_points = sum(pts_for_opts[i] for i in valid)
-        else:
-            if isinstance(sel, (list, tuple, set)):
-                # take first valid if a list was mistakenly sent
-                idx = -1
-                for s in sel:
-                    i = _index_of(options, s)
-                    if i >= 0:
-                        idx = i
-                        break
-            else:
-                idx = _index_of(options, sel)
-            q_points = pts_for_opts[idx] if idx >= 0 else 0
-
-        per_question[uuid] = q_points
-        total_points += q_points
-
-    return {"total_points": total_points, "per_question_points": per_question}
+        
+        # Calculate points for selected options
+        question_points = 0
+        for answer_idx in user_answer:
+            try:
+                idx = int(answer_idx)
+                if 0 <= idx < len(scoring):
+                    question_points += float(scoring[idx])
+            except (ValueError, IndexError):
+                continue
+        
+        per_question[question_idx] = question_points
+        total_points += question_points
+    
+    return {
+        "total_points": total_points,
+        "per_question_points": per_question
+    }
 
 def score_counts(
-    answers: Dict[Union[str, int], Union[int, str, Iterable[int], Iterable[str]]],
-    questions: List[tuple]
+    answers: Dict[Union[str, int], List],
+    questions: List[Dict]
 ) -> Dict[str, int]:
     """
-    Count correct/wrong/skip using a simple convention:
-    - Skip if no answer or the selected option(s) are empty or exactly ["Não sei"] or index 0 only.
-    - Correct if the sum of selected points > 0 and no negative points were selected.
-    - Wrong if selected but sum <= 0 or includes any negative points.
-    This aligns with your per-option points model.
+    Count correct/wrong/skip.
+    
+    Scoring logic:
+    - Skip: no answer or only "Não sei" (index 0)
+    - Correct: sum of points > 0
+    - Wrong: selected but sum <= 0
+    
+    Args:
+        answers: dict like {'0': ['1'], '1': ['2'], ...}
+        questions: list of question dicts from getListOfQuestions()
+    
+    Returns:
+        dict with total, correct, wrong, skip counts
     """
-    points_index = _build_points_index()
-
-    correct = wrong = skip = 0
+    correct = 0
+    wrong = 0
+    skip = 0
     total = len(questions)
-
-    for uuid, qn, _img, _title, _note, is_multi, options in questions:
-        pts_for_opts = points_index.get(uuid, [])
-        # resolve answer
-        sel = None
-        if uuid in answers:
-            sel = answers[uuid]
-        elif qn in answers:
-            sel = answers[qn]
-        elif str(qn) in answers:
-            sel = answers[str(qn)]
-
-        # Normalize selection to list of indices
-        if sel is None:
+    
+    for i, question in enumerate(questions):
+        question_idx = str(i)
+        user_answer = answers.get(question_idx, [])
+        
+        scoring = question.get('scoring', [])
+        options = question.get('options', [])
+        
+        # Check if skipped
+        is_skipped = (
+            not user_answer or 
+            (len(user_answer) == 1 and user_answer == '0')
+        )
+        
+        if is_skipped:
             skip += 1
             continue
-
-        if is_multi:
-            if isinstance(sel, (list, tuple, set)):
-                idxs = {_index_of(options, s) for s in sel}
-            else:
-                idxs = {_index_of(options, sel)}
-            idxs = [i for i in idxs if i >= 0]
-        else:
-            if isinstance(sel, (list, tuple, set)):
-                idx = -1
-                for s in sel:
-                    i = _index_of(options, s)
-                    if i >= 0:
-                        idx = i
-                        break
-            else:
-                idx = _index_of(options, sel)
-            idxs = [idx] if idx >= 0 else []
-
-        if not idxs:
-            skip += 1
-            continue
-
-        # Treat choosing only the "Não sei" (index 0) as skip
-        if len(idxs) == 1 and idxs[0] == 0:
-            skip += 1
-            continue
-
-        pts = [pts_for_opts[i] if 0 <= i < len(pts_for_opts) else 0 for i in idxs]
-        sum_pts = sum(pts)
-        any_neg = any(p < 0 for p in pts)
-
-        if sum_pts > 0 and not any_neg:
+        
+        # Calculate points
+        question_points = 0
+        for answer_idx in user_answer:
+            try:
+                idx = int(answer_idx)
+                if 0 <= idx < len(scoring):
+                    question_points += float(scoring[idx])
+            except (ValueError, IndexError):
+                continue
+        
+        # Count as correct or wrong
+        if question_points > 0:
             correct += 1
         else:
             wrong += 1
+    
+    return {
+        "total": total,
+        "correct": correct,
+        "wrong": wrong,
+        "skip": skip
+    }
 
-    return {"total": total, "correct": correct, "wrong": wrong, "skip": skip}
+def format_score_summary(score_result: Dict) -> Dict:
+    """
+    Format score results for display.
+    
+    Args:
+        score_result: result from calculate_score() in quiz_helpers.py
+    
+    Returns:
+        formatted dict ready for templates
+    """
+    total_points = score_result.get('total_points', 0)
+    max_points = score_result.get('max_possible_points', 1)
+    
+    percentage = (total_points / max_points * 100) if max_points > 0 else 0
+    
+    return {
+        'percentage': round(percentage, 1),
+        'total_points': round(total_points, 1),
+        'max_points': max_points,
+        'n_correct': score_result.get('n_correct', 0),
+        'n_wrong': score_result.get('n_wrong', 0),
+        'n_skip': score_result.get('n_skip', 0),
+        'total_questions': score_result.get('total_questions', 0)
+    }

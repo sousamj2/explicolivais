@@ -10,8 +10,6 @@ from .extensions import mail
 from .send_email import send_email
 
 from .quizFunctions import (
-    getListOfQuestions,
-    getPointsPerQuestions,
     score_counts,
     score_points_total,
 )
@@ -27,8 +25,6 @@ __all__ = [
     "valid_cellphone",
     "mail",
     "send_email",
-    "getListOfQuestions",
-    "getPointsPerQuestions",
     "score_counts",
     "score_points_total",
 
