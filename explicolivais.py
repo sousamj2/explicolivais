@@ -13,7 +13,10 @@ from blueprints import *
 
 def create_app(config_name=None):
     """Application factory pattern"""
-    app = Flask(__name__)
+    app = Flask(__name__,
+                static_folder='static',
+                static_url_path='/static'
+                )
 
     # Determine which config to use
     if config_name is None:
@@ -42,6 +45,9 @@ def create_app(config_name=None):
     app.register_blueprint(bp_signup)
     app.register_blueprint(bp_updateDB)
     app.register_blueprint(bp_register)
+    app.register_blueprint(quiz_bp)
+    app.register_blueprint(quiz_assets_bp)
+    
     # Main route: redirect to /pages/ (home)
     @app.route('/')
     def index():

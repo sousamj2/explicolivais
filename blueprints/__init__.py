@@ -11,6 +11,9 @@ from .updateDB import bp_updateDB
 from .pages import bp_home, bp_maps, bp_prices, bp_calendar, bp_terms, bp_adminDB
 from .register import bp_register
 from .request_new_user import bp_request_new_user
+from .quiz import quiz_bp
+from .quiz_assets import quiz_assets_bp
+
 
 __all__ = [
     'bp_check_user',
@@ -28,5 +31,7 @@ __all__ = [
     'bp_terms',
     'bp_adminDB',
     'bp_register',
-    'bp_request_new_user'
-]
+    'bp_request_new_user',
+    'quiz_bp',
+    'quiz_assets_bp',
+    ]

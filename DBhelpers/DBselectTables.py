@@ -8,7 +8,7 @@ def print_caller():
     caller_name = inspect.stack()[1].function
     print("Called by function:", caller_name)
 
-def getValueFromAnotherValue(sql_file_path, value1=None ):
+def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais.db'):
     retVal = None
     caller_function = inspect.stack()[1].function
     try:
@@ -16,15 +16,28 @@ def getValueFromAnotherValue(sql_file_path, value1=None ):
             sql_code = file.read()
 
         # Connect to database
-        conn = sqlite3.connect('explicolivais.db')
+        conn = sqlite3.connect(dbName)
 
-        if caller_function == "get_user_profile" or "getDataFrom" in caller_function:
+        if caller_function == "get_user_profile" or "getDataFrom" in caller_function  or 'getQuestionFromQid' == caller_function:
             conn.row_factory = sqlite3.Row
 
         cursor = conn.cursor()
 
+        def ensure_sequence_params(param):
+                # Normalize parameters:
+                # - None => no parameters
+                # - non-sequence scalar => single-element tuple
+                # - list/tuple => pass through (flatten one level)
+                if param is None:
+                    return None
+                if isinstance(param, (list, tuple)):
+                    return tuple(param)
+                return (param,)
+        value1 = ensure_sequence_params(value1)
+        # print("sql_file_path,value1,sql_code",sql_file_path,value1,'\n',sql_code)
+
         if value1 is not None:
-            cursor.execute(sql_code,(value1,))
+            cursor.execute(sql_code,value1)
         else:
             cursor.execute(sql_code)
 
@@ -35,16 +48,27 @@ def getValueFromAnotherValue(sql_file_path, value1=None ):
             output = cursor.fetchall()
             if output:
                 retVal = output[0][0]
+            if 'getQuestionFromQid' == caller_function:
+                retVal = output[0]
+            if 'getQuestionIDsForYear' == caller_function:
+                retVal = output
+
+
+
 
     except Exception as e:
         retVal = f"Error retrieving data: {e}"
         print(retVal)
     finally:
         conn.close()
+    if 'getQuestionIDsForYear' == caller_function:
+        return retVal
+
 
     if not isinstance(retVal,str) or "Error" not in retVal:
-        # print("----------------------------------------------------",retVal)
+        print("----------------------------------------------------",retVal)
         retVal = dictify_real_dict_row(retVal)
+        print("----------------------------------------------------",retVal)
 
     return retVal
 
@@ -65,6 +89,9 @@ def getEmailFromUsername(email):
     if isinstance(retVal,str) and "Error" in retVal:
         return None
     return retVal
+
+def get_user_quiz(email):
+    return False
 
 def get_user_profile(email):
     retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
@@ -148,3 +175,28 @@ def getDataFromIPcreated(ip_value):
     if isinstance(retVal,str) and "Error" in retVal:
         return None
     return retVal
+
+
+
+def getQuestionIDsForYear(year):
+    nQuestionYear = 15
+    nQuestionPrev = 15
+    if year == 5:
+        nQuestionYear = 300
+        nQuestionPrev = 0
+    arguments = [year,nQuestionYear,year,nQuestionPrev]
+
+    retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')
+    if isinstance(retVal,str) and "Error" in retVal:
+        print("------------------- getQuestionIDsForYear",retVal,arguments)
+        return None
+    return retVal
+
+
+def getQuestionFromQid(qid):
+    retVal = getValueFromAnotherValue( selectFolder + "get_question_from_rowID.sql", value1=qid,dbName='quiz.db')
+    if isinstance(retVal,str) and "Error" in retVal:
+        print("getQuestionFromQid",retVal,qid)
+        return None
+    return retVal
+

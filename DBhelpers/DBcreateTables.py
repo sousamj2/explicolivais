@@ -1,11 +1,11 @@
 import sqlite3
 insertFolder = "SQLiteQueries/insertHandler/"
 
-def handle_tables(sql_file_path):
+def handle_tables(sql_file_path,dbname='explicolivais.db'):
     """
     Executes a CREATE TABLE SQL command from a file.
     """
-    conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+    conn = sqlite3.connect(dbname)  # Adjust your DB path
     try:
         # Read SQL code from file
         with open(sql_file_path, 'r') as file:
@@ -21,6 +21,7 @@ def handle_tables(sql_file_path):
         status = "Table created successfully"
     except Exception as e:
         status = f"Error creating table: {e} from {sql_file_path}"
+        print(status)
     finally:
         conn.close()
 

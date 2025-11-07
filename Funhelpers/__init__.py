@@ -9,6 +9,11 @@ from .valid_phone import valid_cellphone
 from .extensions import mail
 from .send_email import send_email
 
+from .quizFunctions import (
+    score_counts,
+    score_points_total,
+)
+
 __all__ = [
     "check_ip_in_portugal",
     "format_data",
@@ -19,5 +24,8 @@ __all__ = [
     "valid_NIF",
     "valid_cellphone",
     "mail",
-    "send_email"
+    "send_email",
+    "score_counts",
+    "score_points_total",
+
 ]
