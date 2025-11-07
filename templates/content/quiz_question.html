@@ -1,21 +1,18 @@
-
 {# Macro to render option based on type and position #}
 {% macro render_option(option, type_of_answer, option_index) -%}
   {% if option_index == 0 %}
     {# Index 0 is always "Não sei" - always plain text #}
-    <span class="option-label">{{ option }}</span>
+    <span class="answer-text">{{ option }}</span>
   {% elif type_of_answer == 'latex' %}
-    {# LaTeX math - wrap in \( ... \) for inline rendering #}
+    {# LaTeX math - wrap in \( ... \) for inline MathJax rendering #}
     {# IMPORTANT: Don't double-escape! Let Jinja render the backslashes #}
-    <span class="option-label">\( {{ option }} \)</span>
+    <span class="answer-text mathjax-process">\( {{ option }} \)</span>
   {% elif type_of_answer == 'image' %}
     {# Image option - render as img tag #}
-    <span class="option-label">
-      <img src="{{ option }}" alt="Opção" class="option-image">
-    </span>
+    <img src="{{ option }}" alt="option image" class="answer-image">
   {% else %}
     {# Plain text - no processing #}
-    <span class="option-label">{{ option }}</span>
+    <span class="answer-text">{{ option }}</span>
   {% endif %}
 {%- endmacro %}
 
@@ -98,7 +95,7 @@
 
             {% if question.is_multiple_choice %}
                 <!-- Multiple choice (checkboxes) -->
-                <div class="options-container">
+                <div class="quiz-options mathjax-process">
                     {% for option in question.options %}
                         {% set i = loop.index0 %}
                         {% set is_checked = (i|string in current_answer) %}
@@ -149,6 +146,82 @@
                 </div>
             {% endif %}
         </form>
+        
+        <!-- ===== SCRIPT 1: CHECKBOX LOGIC & SUBMISSION ===== -->
+        <script>
+        // "Não sei" checkbox logic
+        document.querySelectorAll('.answer-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allCheckboxes = document.querySelectorAll('.answer-checkbox');
+                const dontKnowCheckbox = document.querySelector('input[value="0"][type="checkbox"]');
+                
+                if (!dontKnowCheckbox) return;
+                
+                if (this.value === '0' && this.checked) {
+                    allCheckboxes.forEach(cb => {
+                        if (cb.value !== '0') cb.checked = false;
+                    });
+                }
+                
+                if (this.value !== '0' && this.checked) {
+                    dontKnowCheckbox.checked = false;
+                }
+                
+                submitAnswerSilent();
+            });
+        });
+        
+        function submitAnswerSilent() {
+            const form = document.getElementById('quiz-form');
+            if (!form) return;
+            
+            fetch('/quiz/submit', {
+                method: 'POST',
+                body: new FormData(form)
+            })
+            .then(r => r.json())
+            .catch(e => console.error('Error:', e));
+        }
+        </script>
+
+
+<!-- ===== SCRIPT 1: CHECKBOX LOGIC & SUBMISSION ===== -->
+<script>
+// "Não sei" checkbox logic
+document.querySelectorAll('.answer-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const allCheckboxes = document.querySelectorAll('.answer-checkbox');
+        const dontKnowCheckbox = document.querySelector('input[value="0"][type="checkbox"]');
+        
+        if (!dontKnowCheckbox) return;
+        
+        if (this.value === '0' && this.checked) {
+            allCheckboxes.forEach(cb => {
+                if (cb.value !== '0') cb.checked = false;
+            });
+        }
+        
+        if (this.value !== '0' && this.checked) {
+            dontKnowCheckbox.checked = false;
+        }
+        
+        submitAnswerSilent();
+    });
+});
+
+function submitAnswerSilent() {
+    const form = document.getElementById('quiz-form');
+    if (!form) return;
+    
+    fetch('/quiz/submit', {
+        method: 'POST',
+        body: new FormData(form)
+    })
+    .then(r => r.json())
+    .catch(e => console.error('Error:', e));
+}
+</script>
+
     </div>
 
     <!-- Navigation buttons -->

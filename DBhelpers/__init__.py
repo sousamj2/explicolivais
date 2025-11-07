@@ -26,6 +26,8 @@ from .DBselectTables import (
     getUserIdFromEmail,
     getHashFromEmail,
     getEmailFromUsername,
+    getQuestionFromQid,
+    getQuestionIDsForYear,
     )
 from .DBupdateTables import (refresh_last_login_and_ip)
 
@@ -69,4 +71,6 @@ __all__ = [
     "loadQcsvFiles",
     "loadQlinks",
     "loadQtemas",
+    "getQuestionFromQid",
+    "getQuestionIDsForYear",
 ]

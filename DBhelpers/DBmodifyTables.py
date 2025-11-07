@@ -57,3 +57,26 @@ def updateValue(email, tableName, tableColumn, newValue=None):
         conn.close()
     return status
     
+
+
+def getQuestionIDsForYear(year):
+    nQuestionYear = 15
+    nQuestionPrev = 15
+    if year == 5:
+        nQuestionYear = 30
+        nQuestionPrev = 0
+    arguments = [year,nQuestionYear,year,nQuestionPrev]
+
+    retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')
+    if isinstance(retVal,str) and "Error" in retVal:
+        print(retVal,arguments)
+        return None
+    return retVal
+
+
+def getQuestionFromQid(qid):
+    retVal = getValueFromAnotherValue( selectFolder + "get_question_from_rowID.sql", value1=qid,dbName='quiz.db')
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
