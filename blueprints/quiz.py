@@ -110,7 +110,7 @@ def start_quiz():
     session['user_answers'] = {}
     session['quiz_started'] = True
     
-    print(f"Quiz started with {len(question_ids)} question IDs")
+    # print(f"Quiz started with {len(question_ids)} question IDs")
     return redirect(url_for('quiz.question', question_num=0))
 
 @quiz_bp.route('/quiz/<int:question_num>')
@@ -121,7 +121,7 @@ def question(question_num):
         return redirect(url_for('quiz.start_quiz'))
     
     question_ids = session['question_ids']  # ✓ CHANGED FROM 'quiz_question_ids'
-    print("question_ids =", question_ids)
+    # print("question_ids =", question_ids)
     
     # Validate question number
     if question_num < 0 or question_num >= len(question_ids):
@@ -130,20 +130,21 @@ def question(question_num):
     
     # Fetch the actual question data by ID
     qid = question_ids[question_num]
-    print(qid)
+    # print(qid)
     question_data = getQuestionFromQid(qid)
-    print(question_data)
-    print()
+    # print(question_data)
+    # print()
 
     if not question_data:
         flash('Erro ao carregar pergunta.', 'error')
         return redirect(url_for('quiz.start_quiz'))
     
     question_path = f"{question_data['ano']}/{question_data['nome_tema']}/{question_data['aula_title']} / aula{question_data['num_aula']} / {question_data['uuid']}"
-    imageName = question_data['imagem'].replace('ano','anos/ano').replace('aula',f'tema{question_data['num_tema']}/aula').replace('.jpg','.png')
+    imageName = question_data['imagem']#.replace('ano','anos/ano').replace('aula',f'tema{question_data['num_tema']}/aula').replace('.jpg','.png')
 
-    image_url = make_url(imageName) if question_data['imagem'] else ""
-
+    # image_url = make_url(imageName) if question_data['imagem'] else ""
+    image_url = imageName
+    print("147",image_url)
 
 
     possible_answers = [s.strip() for s in parse_possible_answers(question_data['possible_answers'])] if question_data['possible_answers'] else []
@@ -166,7 +167,10 @@ def question(question_num):
         'options': possible_answers,
         'scoring': scoring_system,
         'type_of_problem': question_data['type_of_problem'],
-        'question_number': question_data['question_number']
+        'question_number': question_data['question_number'],
+        'composed_instruction': f"Responder apenas à {question_data['question_number']}ª pergunta" if question_data['type_of_problem'] == 'composed' else None
+        # print(question['question_number'],question['type_of_problem'])
+
     }
     
     user_answers = session.get('user_answers', {})
@@ -234,46 +238,89 @@ def navigate():
     
     return jsonify({'error': 'Ação inválida'}), 400
 
-@quiz_bp.route('/results')
+# @quiz_bp.route('/results')
+@quiz_bp.route('/results', methods=['GET'])
 def results():
-    """Display quiz results"""
-    if 'question_ids' not in session or 'user_answers' not in session:  # ✓ CHANGED
+    """
+    Display quiz results with robust question normalization so templates
+    always have image data available.
+    """
+    # 1) Validate session payload
+    if 'question_ids' not in session or 'user_answers' not in session:
         flash('Erro: Dados do quiz não encontrados. Por favor, inicie um novo quiz.', 'error')
         return redirect(url_for('quiz.start_quiz'))
-    
-    question_ids = session['question_ids']  # ✓ CHANGED
+
+    question_ids = session['question_ids']
     user_answers = session['user_answers']
-    
-    questions = []
+
+    # 2) Load raw questions (sqlite3.Row) and convert to dict
+    raw_questions = []
     for qid in question_ids:
-        q_data = getQuestionFromQid(qid)
-        if q_data:
-            questions.append(q_data)
+        q_row = getQuestionFromQid(qid)
+        if q_row:
+            raw_questions.append(dict(q_row))  # convert Row -> dict
+
+    # 3) Normalize each question into a consistent view model
+    #    - Ensure image_url exists
+    #    - Keep original imagem in case template wants a fallback
+    #    - Keep options/scoring as raw strings (your calculate_score already knows how to read them)
+    questions_fixed = []
+    for q in raw_questions:
+        q_fixed = dict(q)
+
+        # Guarantee image_url is present; DB now holds full path in 'imagem'
+        img = q_fixed.get('imagem', '') or ''
+        q_fixed['image_url'] = img
+
+        # Ensure required keys exist to avoid template KeyErrors
+        q_fixed.setdefault('type_of_answer', q_fixed.get('formatting', 'text'))
+        q_fixed.setdefault('is_multiple_choice', bool(q_fixed.get('is_multiple_choice', 0)))
+        q_fixed.setdefault('options', q_fixed.get('possible_answers', ''))
+        q_fixed.setdefault('scoring', q_fixed.get('scoring_system', ''))
+        q_fixed.setdefault('title', q_fixed.get('titulo'))
+        q_fixed.setdefault('note', q_fixed.get('nota'))
+
+        questions_fixed.append(q_fixed)
+
+    print(questions_fixed)
+
+    # 4) Score using the normalized list (order preserved)
+    quiz_results = calculate_score(questions_fixed, user_answers)
+
+    # After: quiz_results = calculate_score(questions_fixed, user_answers)
+
+    if isinstance(quiz_results, dict) and quiz_results.get('question_results'):
+        qr0 = quiz_results['question_results'][0]
+        q0 = qr0.get('question', {})
+        print('RESULTS FIRST IMG:', q0)
+    else:
+        print('RESULTS payload has no question_results or is not a dict:', type(quiz_results))
     
-    quiz_results = calculate_score(questions, user_answers)
-    
+
+    # 5) Auth and optional persistence
     email = session.get('metadata', {}).get('email', '') if session.get('metadata') else ''
     is_authenticated = bool(email)
     quiz_uuid = None
-    
+
     if not is_authenticated:
-        quiz_uuid = save_quiz_result(user_answers, questions)
+        # Save the normalized version to keep structure stable if viewed later
+        quiz_uuid = save_quiz_result(user_answers, questions_fixed)
         session['quiz_uuid'] = quiz_uuid
-    else:
-        print(f"TODO: Save authenticated user quiz to database: {email}")
-    
-    user = session.get('user', None)
-    
+
+    user = session.get('user')
+
+    # 6) Render the results content
     content_html = render_template(
         'content/quiz_results.html',
         results=quiz_results,
-        questions=questions,
+        questions=questions_fixed,         # pass normalized list to template
         user_answers=user_answers,
         quiz_uuid=quiz_uuid,
         is_authenticated=is_authenticated,
         email=email
     )
-    
+
+    # 7) Wrap in main layout
     return render_template(
         'index.html',
         admin_email=current_app.config.get('ADMIN_EMAIL', ''),
@@ -283,6 +330,8 @@ def results():
         title='Resultados do Quiz',
         main_content=content_html
     )
+
+
 
 
 @quiz_bp.route('/results/<quiz_uuid>')

@@ -5,6 +5,47 @@ import json
 import random
 import os
 
+def split_top_level_commas_with_quotes(s: str):
+    parts = []
+    buf = []
+    depth = 0          # { } nesting
+    in_quote = False   # single quotes '
+    i = 0
+    while i < len(s):
+        ch = s[i]
+        if ch == "'" and not in_quote:
+            in_quote = True
+            buf.append(ch)
+        elif ch == "'" and in_quote:
+            in_quote = False
+            buf.append(ch)
+        elif ch == '{' and not in_quote:
+            depth += 1
+            buf.append(ch)
+        elif ch == '}' and not in_quote:
+            depth = max(0, depth - 1)
+            buf.append(ch)
+        elif ch == ',' and not in_quote and depth == 0:
+            parts.append(''.join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+        i += 1
+    if buf:
+        parts.append(''.join(buf).strip())
+    return parts
+
+def parse_possible_answers(field: str):
+    items = split_top_level_commas_with_quotes(field)
+    # strip outer single quotes if present
+    cleaned = []
+    for x in items:
+        x = x.strip()
+        if len(x) >= 2 and x[0] == "'" and x[-1] == "'":
+            x = x[1:-1]
+        cleaned.append(x.strip())
+    return cleaned
+
 def make_url_dev(rel: str) -> str:
     """Development URL - serve from local quiz-time folder"""
     if not rel:
@@ -79,10 +120,18 @@ def calculate_score(questions, user_answers):
             scoring_str = question['scoring_system']
             options_str = question['possible_answers']
         
+
+        
         # Parse CSV fields
         scoring = [s.strip() for s in scoring_str.split(',')] if scoring_str else []
         options = [s.strip() for s in options_str.split(',')] if options_str else []
-        
+        options = [s.strip() for s in parse_possible_answers(question['possible_answers'])] if question['possible_answers'] else []
+
+
+        print("scoring_system",len(scoring),scoring)
+        print("possible_answers",len(options),options)
+
+
         # Calculate max possible points for this question
         try:
             max_points = max([float(score) for score in scoring if float(score) > 0])
@@ -119,6 +168,9 @@ def calculate_score(questions, user_answers):
         
         total_points += question_points
         
+
+        # print("--------------------",question)
+
         # Build question dict for results display
         question_dict = {
             'db_id': question['rowid'],
@@ -130,8 +182,10 @@ def calculate_score(questions, user_answers):
             'type_of_answer': question['formatting'],
             'options': options,
             'scoring': scoring,
+            'img_url': question['imagem'],
             'type_of_problem': question['type_of_problem'],
-            'question_number': question['question_number']
+            'question_number': question['question_number'],
+            'composed_instruction': f"Responder apenas à {question['question_number']}ª pergunta" if question['type_of_problem'] == 'composed' else None
         }
         
         question_results.append({

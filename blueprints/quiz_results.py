@@ -74,10 +74,19 @@ def get_answer_key():
 def results():
     questions = session.get("quiz_questions") or []
     answers = session.get("quiz_answers") or {}
+
+    print(questions)
     summary = evaluateResults(answers, questions)
 
     with open("templates/content/quiz_results.html", "r", encoding="utf-8") as f:
         main_content_html = Markup(f.read())
+
+    # Fix missing image_url field
+    from Funhelpers.quiz_helpers import make_url
+    for q in questions:
+        print("-------------__", q.get('imagem'))
+        if 'image_url' not in q:
+            q['image_url'] = make_url(q.get('imagem', ''))
 
     return render_template("index.html",
                            main_content=main_content_html,
