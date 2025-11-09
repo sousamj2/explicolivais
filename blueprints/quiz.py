@@ -154,21 +154,30 @@ def question(question_num):
     if question_data['formatting'] == 'latex':
         possible_answers = [opt.replace('\\\\', '\\') for opt in possible_answers]
 
+    composed_instruction = None
+    if question_data['type_of_problem'] == 'composed':
+        composed_instruction = f"Responder apenas à {question_data['question_number']}ª pergunta"
+        if question_data['titulo']:
+            composed_instruction += question_data['titulo']
+    
+    note = question_data['nota']
+
+    print("------------------------------",note)
     # Convert to dictionary
     current_question = {
         'db_id': question_data['rowid'],
         'uuid': question_data['uuid'],
         'question_path': question_path,
         'image_url': image_url,
-        'title': question_data['titulo'],
-        'note': question_data['nota'],
+        # 'title': question_data['titulo'],
+        'note': note,
         'is_multiple_choice': bool(question_data['is_multiple_choice']),
         'type_of_answer': question_data['formatting'],
         'options': possible_answers,
         'scoring': scoring_system,
         'type_of_problem': question_data['type_of_problem'],
         'question_number': question_data['question_number'],
-        'composed_instruction': f"Responder apenas à {question_data['question_number']}ª pergunta" if question_data['type_of_problem'] == 'composed' else None
+        'composed_instruction': composed_instruction
         # print(question['question_number'],question['type_of_problem'])
 
     }

@@ -49,7 +49,7 @@
     </div>
 
     <!-- Detailed results - ONLY for authenticated users -->
-    {% if is_authenticated %}
+    {% if not is_authenticated %}
     <div class="results-details">
         <h2>Detalhes das Respostas</h2>
         
@@ -86,14 +86,14 @@
                             class="quiz-image invert-on-dark"
                         >
                         <!-- Title overlay -->
-                        {% if q.title %}
+                        <!-- {% if q.title %}
                         <div class="overlay title">
                             {{ q.title }}
                         </div>
-                        {% endif %}
+                        {% endif %} -->
                         
                         <!-- Note overlay -->
-                        {% if q.note %}
+                        <!-- {% if q.note %}
                         <div class="overlay note">
                             {% if '<img>' in q.note %}
                                 {{ q.note | safe }}
@@ -101,9 +101,23 @@
                                 {{ q.note }}
                             {% endif %}
                         </div>
-                        {% endif %}
+                        {% endif %} -->
                     </div>
                 </div>
+
+                
+                {# Note block between image and answers #}
+                {% if q.note %}
+                  {% set note_str = q.note|string %}
+                  {% set is_img = note_str.endswith('.png') or note_str.endswith('.jpg') or note_str.endswith('.jpeg') or note_str.endswith('.gif') or note_str.endswith('.webp') %}
+                  <div class="question-note-block">
+                    {% if is_img %}
+                      <img src="{{ note_str }}" alt="Nota" class="note-image invert-on-dark">
+                    {% else %}
+                      <div class="note-text">{{ note_str }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
 
                 <!-- Answer comparison section -->
                 <div class="answers-comparison">

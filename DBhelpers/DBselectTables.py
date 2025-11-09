@@ -183,7 +183,7 @@ def getQuestionIDsForYear(year):
     if year == 5:
         nQuestionYear = 20
         nQuestionPrev = 0
-        nskip = 0
+        nskip = 59 + 21 + 19 +20 +20 +20+11 +10 + 5
     arguments = [year,nQuestionYear,nskip,year,nQuestionPrev]
 
     retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')

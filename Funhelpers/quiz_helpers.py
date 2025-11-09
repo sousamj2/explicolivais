@@ -134,7 +134,7 @@ def calculate_score(questions, user_answers):
 
         # Calculate max possible points for this question
         try:
-            max_points = max([float(score) for score in scoring if float(score) > 0])
+            max_points = sum([float(score) for score in scoring if float(score) > 0])
         except ValueError:
             max_points = 0
         max_possible_points += max_points
@@ -171,12 +171,20 @@ def calculate_score(questions, user_answers):
 
         # print("--------------------",question)
 
+
+        composed_instruction = None
+        if question['type_of_problem'] == 'composed':
+            composed_instruction = f"Responder apenas à {question['question_number']}ª pergunta"
+            if question['titulo']:
+                composed_instruction += question['titulo']
+
+
         # Build question dict for results display
         question_dict = {
             'db_id': question['rowid'],
             'uuid': question['uuid'],
             'question_path': f"{question['ano']}/{question['nome_tema']}/{question['aula_title']}",
-            'title': question['titulo'],
+            # 'title': question['titulo'],
             'note': question['nota'],
             'is_multiple_choice': bool(question['is_multiple_choice']),
             'type_of_answer': question['formatting'],
@@ -185,7 +193,7 @@ def calculate_score(questions, user_answers):
             'img_url': question['imagem'],
             'type_of_problem': question['type_of_problem'],
             'question_number': question['question_number'],
-            'composed_instruction': f"Responder apenas à {question['question_number']}ª pergunta" if question['type_of_problem'] == 'composed' else None
+            'composed_instruction': composed_instruction
         }
         
         question_results.append({
