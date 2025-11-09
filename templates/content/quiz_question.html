@@ -59,26 +59,21 @@
                 class="quiz-image invert-on-dark"
             >
             
-            <!-- Title overlay -->
-            <!-- {% if question.title %}
-            <div class="overlay title">
-                {{ question.title }}
-            </div>
-            {% endif %} -->
-            
-            <!-- Note overlay -->
-            {% if question.note %}
-            <div class="overlay note">
-                {% if '<img>' in question.note %}
-                    {{ question.note | safe }}
-                {% else %}
-                    {{ question.note }}
-                {% endif %}
-            </div>
-            {% endif %}
         </div>
     </div>
-
+    
+    {# Note block between image and answers #}
+    {% if question.note %}
+      {% set note_str = question.note|string %}
+      {% set is_img = note_str.endswith('.png') or note_str.endswith('.jpg') or note_str.endswith('.jpeg') or note_str.endswith('.gif') or note_str.endswith('.webp') %}
+      <div class="question-note-block">
+        {% if is_img %}
+          <img src="{{ note_str }}" alt="Nota" class="note-image invert-on-dark">
+        {% else %}
+          <div class="note-text">{{ note_str }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
     
     <!-- Answer options -->
     <div class="answers">
@@ -246,6 +241,10 @@ function submitAnswerSilent() {
             </button>
         {% endif %}
     </div>
+    <br>
+    <p>Perguntas: MATEMATICA.PT &copy; 2025 - Vitor Nunes</p>
+    <p>Respostas: EXPLICACOESLISBOA.PT &copy; 2025 - Mário Sousa</p>
+
 </div>
 
 <script>

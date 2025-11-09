@@ -20,5 +20,5 @@ def serve_quiz_asset(filename):
     safe = os.path.normpath(filename)
     if safe.startswith('..'):
         abort(404)
-    print(f"DEBUG: Serving quiz asset: {filename} from {ASSETS_ROOT}")
+    # print(f"DEBUG: Serving quiz asset: {filename} from {ASSETS_ROOT}")
     return send_from_directory(ASSETS_ROOT, safe)

@@ -824,3 +824,40 @@
   line-height: 1.5;              /* 1.3 → 1.5 gives more breathing room between options */
   font-size: 1.1em;              /* NEW: Also scale the base text (not just math) */
 }
+
+/* Note block between image and answers */
+.question-note-block {
+  margin: 12px 0 16px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.note-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.note-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .question-note-block {
+    background: #1b2a4a;
+    border-color: #314575;
+    color: #e6efff;
+  }
+  .note-text {
+    color: #e6efff;
+  }
+  .note-image {
+    border-color: #314575;
+  }
+}

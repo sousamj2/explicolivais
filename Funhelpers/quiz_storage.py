@@ -61,9 +61,9 @@ def save_quiz_result(user_answers, questions=None):
         # Write quiz result (anonymous, no email)
         writer.writerow([quiz_uuid, timestamp, answers_json])
     
-    print(f"DEBUG: Saved anonymous quiz result")
-    print(f"  UUID: {quiz_uuid}")
-    print(f"  Timestamp: {timestamp}")
+    # print(f"DEBUG: Saved anonymous quiz result")
+    # print(f"  UUID: {quiz_uuid}")
+    # print(f"  Timestamp: {timestamp}")
     
     return quiz_uuid
 
@@ -101,7 +101,7 @@ def cleanup_expired_results():
                     rows_to_keep.append(row)
                 else:
                     rows_deleted += 1
-                    print(f"DEBUG: Deleted expired quiz {row['quiz_uuid']}")
+                    # print(f"DEBUG: Deleted expired quiz {row['quiz_uuid']}")
             except ValueError:
                 # Keep rows with invalid timestamp (safety)
                 rows_to_keep.append(row)
@@ -113,7 +113,7 @@ def cleanup_expired_results():
             writer.writeheader()
             writer.writerows(rows_to_keep)
         
-        print(f"DEBUG: Cleanup removed {rows_deleted} expired quiz results")
+        # print(f"DEBUG: Cleanup removed {rows_deleted} expired quiz results")
     
     return rows_deleted
 
@@ -147,10 +147,10 @@ def get_quiz_result(quiz_uuid):
                     'answers_by_question_number': answers_by_question_number
                 }
                 
-                print(f"DEBUG: Retrieved quiz result: {quiz_uuid}")
+                # print(f"DEBUG: Retrieved quiz result: {quiz_uuid}")
                 return result
     
-    print(f"DEBUG: Quiz UUID not found or expired: {quiz_uuid}")
+    # print(f"DEBUG: Quiz UUID not found or expired: {quiz_uuid}")
     return None
 
 def list_all_quiz_results():

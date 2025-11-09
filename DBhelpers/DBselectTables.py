@@ -66,9 +66,9 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
 
 
     if not isinstance(retVal,str) or "Error" not in retVal:
-        print("----------------------------------------------------",retVal)
+        # print("----------------------------------------------------",retVal)
         retVal = dictify_real_dict_row(retVal)
-        print("----------------------------------------------------",retVal)
+        # print("----------------------------------------------------",retVal)
 
     return retVal
 
@@ -176,19 +176,19 @@ def getDataFromIPcreated(ip_value):
         return None
     return retVal
 
-
-
 def getQuestionIDsForYear(year):
     nQuestionYear = 15
     nQuestionPrev = 15
+    nskip = 0
     if year == 5:
-        nQuestionYear = 300
+        nQuestionYear = 20
         nQuestionPrev = 0
-    arguments = [year,nQuestionYear,year,nQuestionPrev]
+        nskip = 0
+    arguments = [year,nQuestionYear,nskip,year,nQuestionPrev]
 
     retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')
     if isinstance(retVal,str) and "Error" in retVal:
-        print("------------------- getQuestionIDsForYear",retVal,arguments)
+        # print("------------------- getQuestionIDsForYear",retVal,arguments)
         return None
     return retVal
 
@@ -196,7 +196,7 @@ def getQuestionIDsForYear(year):
 def getQuestionFromQid(qid):
     retVal = getValueFromAnotherValue( selectFolder + "get_question_from_rowID.sql", value1=qid,dbName='quiz.db')
     if isinstance(retVal,str) and "Error" in retVal:
-        print("getQuestionFromQid",retVal,qid)
+        # print("getQuestionFromQid",retVal,qid)
         return None
     return retVal
 

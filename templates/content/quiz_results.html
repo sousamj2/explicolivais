@@ -1,3 +1,22 @@
+{# Macro to render option based on type and position #}
+{% macro render_option(option, type_of_answer, option_index) -%}
+  {% if option_index == 0 %}
+    {# Index 0 is always "Não sei" - always plain text #}
+    <span class="answer-text">{{ option }}</span>
+  {% elif type_of_answer == 'latex' %}
+    {# LaTeX math - wrap in \( ... \) for inline MathJax rendering #}
+    {# IMPORTANT: Don't double-escape! Let Jinja render the backslashes #}
+    <span class="answer-text mathjax-process">\( {{ option }} \)</span>
+  {% elif type_of_answer == 'image' %}
+    {# Image option - render as img tag #}
+    <img src="{{ option }}" alt="option image" class="answer-image">
+  {% else %}
+    {# Plain text - no processing #}
+    <span class="answer-text">{{ option }}</span>
+  {% endif %}
+{%- endmacro %}
+
+
 <div class="quiz-results-container">
 
 <div class="quiz-results-container">
@@ -30,15 +49,15 @@
     </div>
 
     <!-- Detailed results - ONLY for authenticated users -->
-    {% if is_authenticated %}
+    {% if not is_authenticated %}
     <div class="results-details">
         <h2>Detalhes das Respostas</h2>
         
         {% for question_result in results.question_results %}
-            {% set index = loop.index0 %}
-            {% set q = question_result.question %}
-            {% set result_type = question_result.result_type %}
-            
+        {% set index = loop.index0 %}
+        {% set q = question_result.question %}
+        {% set result_type = question_result.result_type %}
+        
             <div class="result-question-card result-{{ result_type }}">
                 <!-- Header with question number and status -->
                 <div class="result-question-header">
@@ -63,20 +82,18 @@
                 <div class="stage-wrapper">
                     <div class="stage">
                         <img 
-                            src="{{ q.image_url }}" 
-                            alt="Question image" 
+                            src="{{ q.img_url }}" 
                             class="quiz-image invert-on-dark"
                         >
-                        
                         <!-- Title overlay -->
-                        {% if q.title %}
+                        <!-- {% if q.title %}
                         <div class="overlay title">
                             {{ q.title }}
                         </div>
-                        {% endif %}
+                        {% endif %} -->
                         
                         <!-- Note overlay -->
-                        {% if q.note %}
+                        <!-- {% if q.note %}
                         <div class="overlay note">
                             {% if '<img>' in q.note %}
                                 {{ q.note | safe }}
@@ -84,12 +101,35 @@
                                 {{ q.note }}
                             {% endif %}
                         </div>
-                        {% endif %}
+                        {% endif %} -->
                     </div>
+                    
                 </div>
+
+                
+                {# Note block between image and answers #}
+                {% if q.note %}
+                  {% set note_str = q.note|string %}
+                  {% set is_img = note_str.endswith('.png') or note_str.endswith('.jpg') or note_str.endswith('.jpeg') or note_str.endswith('.gif') or note_str.endswith('.webp') %}
+                  <div class="question-note-block">
+                    {% if is_img %}
+                      <img src="{{ note_str }}" alt="Nota" class="note-image invert-on-dark">
+                    {% else %}
+                      <div class="note-text">{{ note_str }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
 
                 <!-- Answer comparison section -->
                 <div class="answers-comparison">
+                    
+                    {% if q.composed_instruction %}
+                    <div class="composed-instruction">
+                        <strong>{{ q.composed_instruction }}</strong>
+                    </div>
+                    {% endif %}
+
+
                     <h3>Respostas</h3>
                     
                     <!-- Show options with user answer and correct answer highlighted -->
@@ -108,7 +148,8 @@
                                 {% endif %}"
                             >
                                 <div class="option-content">
-                                    <div class="option-text">{{ option }}</div>
+                                    <!-- <div class="option-text">{{ option }}</div> -->
+                                    {{ render_option(option, q.type_of_answer, loop.index0) }}
                                     
                                     <!-- Show badges for user selection and correct answer -->
                                     <div class="option-badges">
@@ -171,6 +212,10 @@
         </div>
     {% endif %}
 
+    <p>Perguntas: MATEMATICA.PT &copy; 2025 - Vitor Nunes</p>
+    <p>Respostas: EXPLICACOESLISBOA.PT &copy; 2025 - Mário Sousa</p>
+    <br>
+
     <!-- Action buttons -->
     <div class="results-actions">
         <a href="{{ url_for('quiz.start_quiz') }}" class="btn btn-primary">
@@ -196,10 +241,16 @@
         margin-bottom: 8px;
         border: 2px solid #e5e7eb;
         border-radius: 8px;
-        background: #f9fafb;
+        background: #f9f9fb;
         transition: all 0.2s ease;
     }
 
+    @media (prefers-color-scheme: dark) {
+  .result-option {
+    background: #0f172a;      /* dark slate */
+    border-color: #1f2a44;    /* muted border */
+  }
+}
     .option-content {
         flex: 1;
         display: flex;
