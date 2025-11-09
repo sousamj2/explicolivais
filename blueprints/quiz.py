@@ -144,7 +144,7 @@ def question(question_num):
 
     # image_url = make_url(imageName) if question_data['imagem'] else ""
     image_url = imageName
-    print("147",image_url)
+    # print("147",image_url)
 
 
     possible_answers = [s.strip() for s in parse_possible_answers(question_data['possible_answers'])] if question_data['possible_answers'] else []
@@ -162,7 +162,7 @@ def question(question_num):
     
     note = question_data['nota']
 
-    print("------------------------------",note)
+    # print("------------------------------",note)
     # Convert to dictionary
     current_question = {
         'db_id': question_data['rowid'],
@@ -291,7 +291,7 @@ def results():
 
         questions_fixed.append(q_fixed)
 
-    print(questions_fixed)
+    # print(questions_fixed)
 
     # 4) Score using the normalized list (order preserved)
     quiz_results = calculate_score(questions_fixed, user_answers)
@@ -301,9 +301,10 @@ def results():
     if isinstance(quiz_results, dict) and quiz_results.get('question_results'):
         qr0 = quiz_results['question_results'][0]
         q0 = qr0.get('question', {})
-        print('RESULTS FIRST IMG:', q0)
+        # print('RESULTS FIRST IMG:', q0)
     else:
-        print('RESULTS payload has no question_results or is not a dict:', type(quiz_results))
+        # print('RESULTS payload has no question_results or is not a dict:', type(quiz_results))
+        pass
     
 
     # 5) Auth and optional persistence
@@ -367,12 +368,12 @@ def view_quiz_result(quiz_uuid):
     answers_by_index = {}  # Rebuild as {index: [options]} for calculate_score
     
     for idx, (qnum, options) in enumerate(sorted(answers.items())):
-        print(qnum)
+        # print(qnum)
         qnum = int(qnum)
-        print(qnum)
+        # print(qnum)
 
         question = getQuestionFromQid(qnum)
-        print(question)
+        # print(question)
 
         if question:
             questions.append(question)

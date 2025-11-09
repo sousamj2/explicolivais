@@ -128,8 +128,8 @@ def calculate_score(questions, user_answers):
         options = [s.strip() for s in parse_possible_answers(question['possible_answers'])] if question['possible_answers'] else []
 
 
-        print("scoring_system",len(scoring),scoring)
-        print("possible_answers",len(options),options)
+        # print("scoring_system",len(scoring),scoring)
+        # print("possible_answers",len(options),options)
 
 
         # Calculate max possible points for this question
