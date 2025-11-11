@@ -17,12 +17,12 @@ def _import_boto3():
         return None
 
 APP_NAME = os.getenv("APP_NAME", "explicolivais")
-APP_ENV = os.getenv("APP_ENV")  # "production" or "development" or "testing"
+APP_ENV = os.getenv("APP_ENV","dev")  # "production" or "development" or "testing"
 
 # Heuristic to decide environment if APP_ENV not set
 def _is_aws_host() -> bool:
     if APP_ENV:
-        return APP_ENV.lower() == "production"
+        return APP_ENV.lower() == "dev"
     sysname = platform.system()
     nodename = platform.node()  # e.g., ip-xx-xx-xx-xx for EC2
     return sysname == "Linux" and nodename.startswith("ip-") and ".compute.internal" in nodename
@@ -33,7 +33,7 @@ def _load_from_env() -> Dict[str, str]:
         load_dotenv()
     return dict(os.environ)
 
-def _load_from_ssm(prefix: str = f"/{APP_NAME}/") -> Dict[str, str]:
+def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
     boto3 = _import_boto3()
     if not boto3:
         raise RuntimeError("boto3 not installed; required to load from SSM on AWS")
