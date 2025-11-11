@@ -64,7 +64,7 @@ def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
 
 def _settings() -> Dict[str, str]:
     if _is_aws_host():
-        return _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_NAME}/"))
+        return _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
     return _load_from_env()
 
 # Centralized lookup dictionary
