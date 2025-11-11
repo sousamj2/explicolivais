@@ -33,5 +33,5 @@ if __name__ == '__main__':
     # For production use waitress to serve the app
 
     # Localhost access only
-    serve(app, host="localhost", port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )
-    # serve(app, host='0.0.0.0', port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )
+    # serve(app, host="localhost", port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )
+    serve(app, host='0.0.0.0', port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )

@@ -1,90 +1,148 @@
 import os
+import platform
+from typing import Dict, Optional
 
-from dotenv import load_dotenv
-load_dotenv()
+# Optional: keep dotenv for local usage only
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
+# Optional import for AWS SSM on EC2/production
+def _import_boto3():
+    try:
+        import boto3
+        return boto3
+    except ImportError:
+        return None
+
+APP_NAME = os.getenv("APP_NAME", "explicolivais")
+APP_ENV = os.getenv("APP_ENV","dev")  # "production" or "development" or "testing"
+
+# Heuristic to decide environment if APP_ENV not set
+def _is_aws_host() -> bool:
+    if APP_ENV:
+        return APP_ENV.lower() == "dev"
+    sysname = platform.system()
+    nodename = platform.node()  # e.g., ip-xx-xx-xx-xx for EC2
+    return sysname == "Linux" and nodename.startswith("ip-") and ".compute.internal" in nodename
+
+def _load_from_env() -> Dict[str, str]:
+    # Local/dev: load .env if library available
+    if load_dotenv:
+        load_dotenv()
+    return dict(os.environ)
+
+def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
+    boto3 = _import_boto3()
+    if not boto3:
+        raise RuntimeError("boto3 not installed; required to load from SSM on AWS")
+
+    ssm = boto3.client("ssm", region_name=os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "eu-south-2")))
+    params: Dict[str, str] = {}
+    next_token: Optional[str] = None
+
+    # Retrieve all parameters under a prefix. Use SecureString decryption.
+    while True:
+        kwargs = {
+            "Path": prefix,
+            "Recursive": True,
+            "WithDecryption": True,
+            "MaxResults": 10,
+        }
+        if next_token:
+            kwargs["NextToken"] = next_token
+        resp = ssm.get_parameters_by_path(**kwargs)
+        for p in resp.get("Parameters", []):
+            # Convert name '/app/KEY' -> 'KEY'
+            key = p["Name"].split("/")[-1]
+            params[key] = p["Value"]
+        next_token = resp.get("NextToken")
+        if not next_token:
+            break
+    return params
+
+def _settings() -> Dict[str, str]:
+    if _is_aws_host():
+        return _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
+    return _load_from_env()
+
+# Centralized lookup dictionary
+SETTINGS = _settings()
+
+def _get(key: str, default: Optional[str] = None, required: bool = False) -> Optional[str]:
+    val = SETTINGS.get(key, default)
+    if required and (val is None or val == ""):
+        raise ValueError(f"{key} environment variable must be set")
+    return val
 
 class Config:
-    """Base configuration"""
-    
-    # Flask config
-    SECRET_KEY = os.getenv('FLASK_SECRET_KEY')
-    if SECRET_KEY is None:
-        raise ValueError("FLASK_SECRET_KEY environment variable must be set")
-    
+    # Flask
+    SECRET_KEY = _get("FLASK_SECRET_KEY", required=True)
+
     # Admin config
-    ADMIN_EMAIL = os.getenv('ADMINDB_EMAIL')
-    if ADMIN_EMAIL is None:
-        raise ValueError("ADMINDB_EMAIL environment variable must be set")
-    ADMIN_EMAIL = ADMIN_EMAIL.lower()
-    
-    # Database config (example)
-    DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///default.db')
-    
-    # Load client secrets from environment variables or a safe storage
-    CLIENT_ID = os.getenv('SECRET_CLIENT_KEY')
-    CLIENT_SECRET = os.getenv('SECRET_CLIENT_SECRET')
-    REDIRECT_URI = 'http://localhost:8080/oauth2callback'  # Your redirect URI
+    ADMIN_EMAIL = _get("ADMINDB_EMAIL", required=True)
+    if ADMIN_EMAIL:
+        ADMIN_EMAIL = ADMIN_EMAIL.lower()
 
-    # OAuth 2.0 endpoints
-    AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
-    TOKEN_URL = 'https://oauth2.googleapis.com/token'
-    SCOPE = 'openid email profile'  # Scopes for user info
+    # Database
+    DATABASE_URI = _get("DATABASE_URI", "sqlite:///default.db")
 
-    # Mail configurations for no-reply
-    MAIL_SERVER         = os.getenv('MAIL_SERVER')
-    MAIL_PORT           = int(os.getenv('MAIL_PORT', 465))
-    MAIL_USE_SSL        = os.getenv('MAIL_USE_SSL', 'True') == 'True'
-    MAIL_USERNAME       = os.getenv('MAIL_USERNAME')
-    MAIL_PASSWORD       = os.getenv('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+    # OAuth2 (Google)
+    CLIENT_ID = _get("SECRET_CLIENT_KEY")
+    CLIENT_SECRET = _get("SECRET_CLIENT_SECRET")
+    # Use separate redirect for production if provided, else default local
+    REDIRECT_URI = _get("OAUTH_REDIRECT_URI", "http://localhost:8080/oauth2callback")
 
-    SECRET_KEY       = os.getenv('SECRET_KEY')
-    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT')
+    AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+    TOKEN_URL = "https://oauth2.googleapis.com/token"
+    SCOPE = "openid email profile"
 
-    SERVICE_ACCOUNT_FILE = './primeiro-contact-account.json'
-    SCOPES = ['https://www.googleapis.com/auth/calendar']
-    CALENDAR_ID = '982d2d8cb74e54a702ffaaedd1aa7fdc7fa2645931fbd4abb6b80c3da8dd2541@group.calendar.google.com'
+    # Mail (no-reply)
+    MAIL_SERVER = _get("MAIL_SERVER")
+    MAIL_PORT = int(_get("MAIL_PORT", "465"))
+    MAIL_USE_SSL = (_get("MAIL_USE_SSL", "True") == "True")
+    MAIL_USERNAME = _get("MAIL_USERNAME")
+    MAIL_PASSWORD = _get("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = _get("MAIL_DEFAULT_SENDER")
 
-    # Scheduling configuration
-    MAX_SLOTS_PER_TIME = 4  # Maximum 4 people per time slot
-    APPOINTMENT_DURATION = 10  # 10 minutes per appointment
+    # Optional secondary secret items
+    SECURITY_PASSWORD_SALT = _get("SECURITY_PASSWORD_SALT")
 
-    # Weekly schedule definition
+    # Google Calendar service account
+    SERVICE_ACCOUNT_FILE = _get("SERVICE_ACCOUNT_FILE", "./primeiro-contact-account.json")
+    SCOPES = ["https://www.googleapis.com/auth/calendar"]
+    CALENDAR_ID = _get("CALENDAR_ID", "CHANGE_ME")
+
+    # Scheduling
+    MAX_SLOTS_PER_TIME = int(_get("MAX_SLOTS_PER_TIME", "4"))
+    APPOINTMENT_DURATION = int(_get("APPOINTMENT_DURATION", "10"))
     WEEKLY_SCHEDULE = {
-        0: [('15:00', '17:00')],  # Sunday
-        1: [('08:00', '10:00'), ('10:00', '12:00'), ('14:00', '16:00'), ('16:00', '18:00'), ('18:00', '20:00')],  # Monday
-        2: [('08:00', '10:00'), ('10:00', '12:00'), ('14:00', '16:00'), ('16:00', '18:00'), ('18:00', '20:00')],  # Tuesday
-        3: [('08:00', '10:00'), ('10:00', '12:00'), ('14:00', '16:00'), ('16:00', '18:00'), ('18:00', '20:00')],  # Wednesday
-        4: [('08:00', '10:00'), ('10:00', '12:00'), ('14:00', '16:00'), ('16:00', '18:00'), ('18:00', '20:00')],  # Thursday
-        5: [('08:00', '10:00'), ('10:00', '12:00'), ('14:00', '16:00'), ('16:00', '18:00'), ('18:00', '20:00')],  # Friday
-        6: [('08:00', '10:00'), ('10:00', '12:00'), ('13:00', '15:00')],  # Saturday
+        0: [("15:00", "17:00")],
+        1: [("08:00", "10:00"), ("10:00", "12:00"), ("14:00", "16:00"), ("16:00", "18:00"), ("18:00", "20:00")],
+        2: [("08:00", "10:00"), ("10:00", "12:00"), ("14:00", "16:00"), ("16:00", "18:00"), ("18:00", "20:00")],
+        3: [("08:00", "10:00"), ("10:00", "12:00"), ("14:00", "16:00"), ("16:00", "18:00"), ("18:00", "20:00")],
+        4: [("08:00", "10:00"), ("10:00", "12:00"), ("14:00", "16:00"), ("16:00", "18:00"), ("18:00", "20:00")],
+        5: [("08:00", "10:00"), ("10:00", "12:00"), ("14:00", "16:00"), ("16:00", "18:00"), ("18:00", "20:00")],
+        6: [("08:00", "10:00"), ("10:00", "12:00"), ("13:00", "15:00")],
     }
 
-    # Other settings
     DEBUG = False
     TESTING = False
-    
 
 class DevelopmentConfig(Config):
-    """Development configuration"""
     DEBUG = True
 
-
 class ProductionConfig(Config):
-    """Production configuration"""
     DEBUG = False
 
-
 class TestingConfig(Config):
-    """Testing configuration"""
     TESTING = True
     DEBUG = True
 
-
-# Configuration dictionary
 config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "testing": TestingConfig,
+    "default": DevelopmentConfig,
 }
