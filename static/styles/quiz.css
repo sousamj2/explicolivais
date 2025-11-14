@@ -861,3 +861,56 @@
     border-color: #314575;
   }
 }
+
+/* Inline link pill for note area */
+.question-note-block a.btn.btn-primary,
+.question-note-block a.note-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;          /* lean padding */
+  border-radius: 999px;       /* pill */
+  font-size: 0.9rem;          /* smaller than body */
+  line-height: 1.2;
+  background: transparent;    /* no fill */
+  color: #2563eb;             /* your blue */
+  border: 1px solid rgba(37, 99, 235, 0.35);  /* thin outline */
+  text-decoration: none;
+  box-shadow: none;
+  transition: color .15s, border-color .15s, background-color .15s;
+}
+
+.question-note-block a.btn.btn-primary:hover,
+.question-note-block a.note-link:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(37, 99, 235, 0.55);
+  color: #1d4ed8;
+}
+
+.question-note-block a.btn.btn-primary:active,
+.question-note-block a.note-link:active {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.75);
+}
+
+/* Reduce focus ring bulk but keep accessibility */
+.question-note-block a.btn.btn-primary:focus-visible,
+.question-note-block a.note-link:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 2px;
+}
+
+/* Dark mode tweak if you use prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  .question-note-block a.btn.btn-primary,
+  .question-note-block a.note-link {
+    color: #9cc1ff;
+    border-color: rgba(156, 193, 255, 0.35);
+  }
+  .question-note-block a.btn.btn-primary:hover,
+  .question-note-block a.note-link:hover {
+    background: rgba(156, 193, 255, 0.08);
+    border-color: rgba(156, 193, 255, 0.6);
+    color: #b9d4ff;
+  }
+}

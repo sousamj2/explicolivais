@@ -177,11 +177,11 @@ def getDataFromIPcreated(ip_value):
     return retVal
 
 def getQuestionIDsForYear(year):
-    nQuestionYear = 15
-    nQuestionPrev = 15
+    nQuestionYear = 10
+    nQuestionPrev = 10
     nskip = 0
-    if year == 5:
-        nQuestionYear = 20
+    if year == 5: 
+        nQuestionYear = 2000
         nQuestionPrev = 0
         nskip = 0
     arguments = [year,nQuestionYear,nskip,year,nQuestionPrev]

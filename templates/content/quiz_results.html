@@ -9,7 +9,7 @@
     <span class="answer-text mathjax-process">\( {{ option }} \)</span>
   {% elif type_of_answer == 'image' %}
     {# Image option - render as img tag #}
-    <img src="{{ option }}" alt="option image" class="answer-image">
+    <img src="{{ option }}" alt="option image" class="answer-image" style="width:50%; height:auto;">
   {% else %}
     {# Plain text - no processing #}
     <span class="answer-text">{{ option }}</span>
@@ -114,6 +114,10 @@
                   <div class="question-note-block">
                     {% if is_img %}
                       <img src="{{ note_str }}" alt="Nota" class="note-image invert-on-dark">
+                    {% elif '<a ' in note_str and '</a>' in note_str %}
+                    <div class="question-note-block">
+                        {{ note_str | safe }}
+                    </div>
                     {% else %}
                       <div class="note-text">{{ note_str }}</div>
                     {% endif %}
