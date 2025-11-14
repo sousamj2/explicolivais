@@ -99,7 +99,7 @@ def start_quiz():
     """Initialize quiz - cleanup expired results"""
     cleanup_expired_results()
     
-    question_ids = getQuestionIDsForYear(year=5)
+    question_ids = getQuestionIDsForYear(year=6)
     
     if not question_ids:
         flash('Erro ao carregar perguntas. Tente novamente.','error')
