@@ -18,7 +18,16 @@
 
 
 <div class="quiz-results-container">
-
+<!-- Action buttons -->
+<div class="results-actions">
+    <a href="{{ url_for('quiz.start_quiz') }}" class="btn btn-primary">
+        Começar de novo
+    </a>
+    <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
+        Alterar configurações
+    </a>
+</div>
+<br>
 <div class="quiz-results-container">
     <div class="results-header">
         <h1>Resultados do Quiz</h1>
@@ -223,13 +232,10 @@
     <!-- Action buttons -->
     <div class="results-actions">
         <a href="{{ url_for('quiz.start_quiz') }}" class="btn btn-primary">
-            Fazer Novo Quiz
+            Começar de novo
         </a>
-        <a href="{{ url_for('quiz.restart_quiz') }}" class="btn btn-secondary">
-            Reiniciar com Mesmas Perguntas
-        </a>
-        <a href="{{ url_for('index') }}" class="btn btn-tertiary">
-            Voltar ao Início
+        <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
+            Alterar configurações
         </a>
     </div>
 </div>

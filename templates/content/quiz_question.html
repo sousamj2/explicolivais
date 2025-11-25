@@ -23,21 +23,44 @@
         {% for part in parts %}
             <span class="breadcrumb-item">
                 {% if loop.index0 == 0 %}
-                    <span class="breadcrumb-icon">📚</span> Ano {{ part }}
+                    <span class="breadcrumb-icon">📚</span> {{ part }}º ano
                 {% elif loop.index0 == 1 %}
                     <span class="breadcrumb-icon">🎯</span> {{ part }}
-                {% else %}
+                {% elif loop.index0 == 2 %}
                     <span class="breadcrumb-icon">📖</span> {{ part }}
+                {% elif loop.index0 == 3 %}<br>
+                </span>
+                </div>
+                    Para dicas e outras perguntas sobre este tema podes consultar aqui:
+                    <a href="https://www.matematica.pt/aulas-exercicios.php?id={{ part }}" target="_blank">www.matematica.pt</a>
+                    
                 {% endif %}
-            </span>
-            {% if loop.index0 < parts|length - 1 %}
-                <span class="breadcrumb-separator">/</span>
-            {% endif %}
-        {% endfor %}
-    </div>
+                {% endfor %}
 </div>
+        
 
+<!-- Navigation buttons -->
+<div class="quiz-navigation">
+    {% if question_num > 0 %}
+        <button type="button" class="btn btn-secondary" onclick="navigateQuiz('previous')">
+            ← Anterior
+        </button>
+    {% else %}
+        <div class="nav-spacer"></div>
+    {% endif %}
 
+    <div class="nav-spacer"></div>
+
+    {% if question_num < total_questions - 1 %}
+        <button type="button" class="btn btn-primary" onclick="navigateQuiz('next')">
+            Próxima →
+        </button>
+    {% else %}
+        <button type="button" class="btn btn-primary" onclick="navigateQuiz('finish')">
+            Finalizar Quiz
+        </button>
+    {% endif %}
+</div>
 
 <div class="quiz-container">
     <!-- Progress bar -->

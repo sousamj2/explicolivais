@@ -94,18 +94,74 @@ def parse_possible_answers(field: str):
 
 quiz_bp = Blueprint('quiz', __name__)
 
+@quiz_bp.route('/quiz-config')
+def quiz_config():
+    """Display quiz configuration page"""
+    user = session.get('user', None)
+    
+    content_html = render_template(
+        'content/quiz_config.html'
+    )
+    
+    return render_template(
+        'index.html',
+        admin_email=current_app.config.get('ADMIN_EMAIL', ''),
+        user=user,
+        metadata={},
+        page_title='Configuração do Quiz',
+        title='Configurar Quiz',
+        main_content=content_html
+    )
+
+
 @quiz_bp.route('/quiz')
 def start_quiz():
     """Initialize quiz - cleanup expired results"""
     cleanup_expired_results()
     
-    question_ids = getQuestionIDsForYear(year=6)
+    # Get configuration from query parameters or use defaults
+    year = request.args.get('year', 7, type=int)
+    num_exercises = request.args.get('num_exercises', 20, type=int)
+    current_year_percent = request.args.get('current_year_percent', 50, type=int)
+        
+    if num_exercises not in [20, 40, 60, 80, 100]:
+        flash('Número de exercícios inválido.', 'error')
+        return redirect(url_for('quiz.quiz_config'))
     
-    if not question_ids:
-        flash('Erro ao carregar perguntas. Tente novamente.','error')
-        return redirect(url_for('index'))
+    # Auto-adjust percentage for edge cases
+    if year == 5:
+        current_year_percent = 100  # Force 100% for year 5 (no previous years)
+    elif year > 7:
+        current_year_percent = 0  # Force 0% for years under construction (use previous years only)
     
-    session['question_ids'] = question_ids  # ✓ CORRECT
+    # Validate percentage (only if year is 6 or 7)
+    if year in [6, 7]:
+        if current_year_percent not in [25, 50, 75]:
+            flash('Percentagem inválida.', 'error')
+            return redirect(url_for('quiz.quiz_config'))
+        
+    # Store configuration in session
+    session['quiz_config'] = {
+        'year': year,
+        'num_exercises': num_exercises,
+        'current_year_percent': current_year_percent
+    }
+    
+    # Get questions for the current year
+    current_year_questions = getQuestionIDsForYear(year=year,num_exercises=num_exercises,current_year_percent=current_year_percent)
+    
+    if not current_year_questions:
+        flash('Erro ao carregar perguntas. Tente novamente.', 'error')
+        return redirect(url_for('quiz.quiz_config'))
+
+
+    # question_ids = getQuestionIDsForYear(year=7)
+    
+    # if not question_ids:
+    #     flash('Erro ao carregar perguntas. Tente novamente.','error')
+    #     return redirect(url_for('index'))
+    
+    session['question_ids'] = current_year_questions  # ✓ CORRECT
     session['current_question'] = 0
     session['user_answers'] = {}
     session['quiz_started'] = True
@@ -139,7 +195,7 @@ def question(question_num):
         flash('Erro ao carregar pergunta.', 'error')
         return redirect(url_for('quiz.start_quiz'))
     
-    question_path = f"{question_data['ano']}/{question_data['nome_tema']}/{question_data['aula_title']} / aula{question_data['num_aula']} / {question_data['uuid']}"
+    question_path = f"{question_data['ano']}/{question_data['nome_tema']}/{question_data['aula_title']}/{question_data['num_aula']}/{question_data['uuid']}"
     imageName = question_data['imagem']#.replace('ano','anos/ano').replace('aula',f'tema{question_data['num_tema']}/aula').replace('.jpg','.png')
 
     # image_url = make_url(imageName) if question_data['imagem'] else ""
@@ -203,8 +259,6 @@ def question(question_num):
         title=f'Quiz - Pergunta {question_num + 1} de {len(question_ids)}',
         main_content=content_html
     )
-
-
 
 @quiz_bp.route('/quiz/submit', methods=['POST'])
 def submit_answer():
@@ -341,9 +395,6 @@ def results():
         main_content=content_html
     )
 
-
-
-
 @quiz_bp.route('/results/<quiz_uuid>')
 def view_quiz_result(quiz_uuid):
     """
@@ -408,9 +459,6 @@ def view_quiz_result(quiz_uuid):
         title=f'Resultados do Quiz',
         main_content=content_html
     )
-
-
-
 
 @quiz_bp.route('/quiz/restart')
 def restart_quiz():

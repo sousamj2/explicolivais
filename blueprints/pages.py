@@ -32,7 +32,7 @@ def render_page(blueprint, route="/", template_name="home", page_title="Explica√
               ) and template_name == "adminDB":
             return redirect(url_for('profile.profile'))
 
-        print("metadata is:", session.get("metadata"))
+        # print("metadata is:", session.get("metadata"))
 
         if route == "/profile":
             pprint("metadata is:", metadata)

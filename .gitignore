@@ -13,3 +13,7 @@ explicolivais.db
 otherstuff
 quiz.db
 quiz_results
+*.tgz
+testarea
+templates/content/*_2*html
+Profile_picture.png

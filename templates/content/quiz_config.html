@@ -1,0 +1,172 @@
+<div class="config-container">
+    <div class="config-section">
+        <h3>📚 Ano Escolar</h3>
+        <div class="form-group">
+            <label for="year">Selecione o ano:</label>
+            <select id="year" name="year">
+                <option value="5">5º Ano</option>
+                <option value="6">6º Ano</option>
+                <option value="7" selected>7º Ano</option>
+                <option value="8">8º Ano (em construção)</option>
+                <option value="9">9º Ano (em construção)</option>
+                <option value="10">10º Ano (em construção)</option>
+                <option value="11">11º Ano (em construção)</option>
+                <option value="12">12º Ano (em construção)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h3>🔢 Número de Exercícios</h3>
+        <div class="form-group">
+            <label for="num_exercises">Quantos exercícios pretende resolver?</label>
+            <select id="num_exercises" name="num_exercises">
+                <option value="20" selected>20 exercícios</option>
+                <option value="40">40 exercícios</option>
+                <option value="60">60 exercícios</option>
+                <option value="80">80 exercícios</option>
+                <option value="100">100 exercícios</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h3>📊 Distribuição por Ano</h3>
+        <div class="form-group">
+            <label for="current_year_percent">Percentagem de exercícios do ano atual:</label>
+            <select id="current_year_percent" name="current_year_percent">
+                <option value="25">25% do ano atual</option>
+                <option value="50" selected>50% do ano atual</option>
+                <option value="75">75% do ano atual</option>
+            </select>
+            <p class="info-text" id="distribution-info">Os restantes exercícios serão de anos anteriores para revisão.</p>
+            <p class="warning-text" id="distribution-warning" style="display: none;"></p>
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <h3>📋 Resumo da Configuração</h3>
+        <div class="summary-item">
+            <span class="summary-label">Ano Escolar:</span>
+            <span class="summary-value" id="summary-year">7º Ano</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Número de Exercícios:</span>
+            <span class="summary-value" id="summary-exercises">20 exercícios</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Do Ano Atual:</span>
+            <span class="summary-value" id="summary-current">10 exercícios (50%)</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">De Anos Anteriores:</span>
+            <span class="summary-value" id="summary-previous">10 exercícios (50%)</span>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="btn-start" onclick="startQuiz()">Iniciar Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Update summary and handle edge cases
+    function updateSummary() {
+        const year = parseInt(document.getElementById('year').value);
+        const numExercises = parseInt(document.getElementById('num_exercises').value);
+        const percentSelect = document.getElementById('current_year_percent');
+        let currentYearPercent = parseInt(percentSelect.value);
+
+        const distributionInfo = document.getElementById('distribution-info');
+        const distributionWarning = document.getElementById('distribution-warning');
+
+        // Handle edge cases
+        if (year === 5) {
+            // Year 5: Force 100%, disable selection
+            currentYearPercent = 100;
+            percentSelect.value = '100';
+            percentSelect.disabled = true;
+            
+            // Add 100% option if not present
+            if (!percentSelect.querySelector('option[value="100"]')) {
+                const option100 = document.createElement('option');
+                option100.value = '100';
+                option100.textContent = '100% do ano atual';
+                percentSelect.appendChild(option100);
+            }
+            percentSelect.value = '100';
+            
+            distributionInfo.style.display = 'none';
+            distributionWarning.style.display = 'block';
+            distributionWarning.textContent = '5º Ano: Apenas exercícios do ano atual (não há anos anteriores).';
+            
+        } else if (year > 7) {
+            // Years 8-12: Force 0%, disable selection
+            currentYearPercent = 0;
+            percentSelect.value = '0';
+            percentSelect.disabled = true;
+            
+            // Add 0% option if not present
+            if (!percentSelect.querySelector('option[value="0"]')) {
+                const option0 = document.createElement('option');
+                option0.value = '0';
+                option0.textContent = '0% do ano atual';
+                percentSelect.insertBefore(option0, percentSelect.firstChild);
+            }
+            percentSelect.value = '0';
+            
+            distributionInfo.style.display = 'none';
+            distributionWarning.style.display = 'block';
+            distributionWarning.textContent = 'Anos 8-12 em construção: Apenas exercícios de anos anteriores (5º-7º ano).';
+            
+        } else {
+            // Years 6-7: Normal operation, enable selection
+            percentSelect.disabled = false;
+            
+            // Remove edge case options if present
+            const option0 = percentSelect.querySelector('option[value="0"]');
+            const option100 = percentSelect.querySelector('option[value="100"]');
+            if (option0) option0.remove();
+            if (option100) option100.remove();
+            
+            // Ensure valid selection
+            if (![25, 50, 75].includes(currentYearPercent)) {
+                percentSelect.value = '50';
+                currentYearPercent = 50;
+            }
+            
+            distributionInfo.style.display = 'block';
+            distributionWarning.style.display = 'none';
+        }
+
+        // Calculate distribution
+        const currentYearExercises = Math.round(numExercises * currentYearPercent / 100);
+        const previousYearExercises = numExercises - currentYearExercises;
+
+        // Update summary display
+        document.getElementById('summary-year').textContent = year + 'º Ano';
+        document.getElementById('summary-exercises').textContent = numExercises + ' exercícios';
+        document.getElementById('summary-current').textContent = 
+            currentYearExercises + ' exercícios (' + currentYearPercent + '%)';
+        document.getElementById('summary-previous').textContent = 
+            previousYearExercises + ' exercícios (' + (100 - currentYearPercent) + '%)';
+    }
+
+    // Add event listeners
+    document.getElementById('year').addEventListener('change', updateSummary);
+    document.getElementById('num_exercises').addEventListener('change', updateSummary);
+    document.getElementById('current_year_percent').addEventListener('change', updateSummary);
+
+    // Start quiz with selected configuration
+    function startQuiz() {
+        const year = document.getElementById('year').value;
+        const numExercises = document.getElementById('num_exercises').value;
+        const currentYearPercent = document.getElementById('current_year_percent').value;
+
+        // Redirect to quiz with parameters
+        window.location.href = `/quiz?year=${year}&num_exercises=${numExercises}&current_year_percent=${currentYearPercent}`;
+    }
+
+    // Initialize summary on page load
+    updateSummary();
+</script>
