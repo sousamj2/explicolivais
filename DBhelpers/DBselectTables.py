@@ -176,17 +176,27 @@ def getDataFromIPcreated(ip_value):
         return None
     return retVal
 
-def getQuestionIDsForYear(year):
-    nQuestionYear = 10
-    nQuestionPrev = 10
+def getQuestionIDsForYear(year,num_exercises=20,current_year_percent=50):
+    debug=False
+    # debug=True
+    nQuestionYear = int(num_exercises*current_year_percent/100)
+    nQuestionPrev = int(num_exercises*(1.-current_year_percent/100))
+    sqlfile= "get_questionIDs_from_year_prod.sql"
     nskip = 0
     if year == 5: 
+        nQuestionYear = num_exercises
+        nQuestionPrev = 0
+    if debug:
+        sqlfile= "get_questionIDs_from_year_devel.sql"
+        # year=6
         nQuestionYear = 2000
         nQuestionPrev = 0
         nskip = 0
+
     arguments = [year,nQuestionYear,nskip,year,nQuestionPrev]
 
-    retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')
+    retVal = getValueFromAnotherValue( selectFolder + sqlfile, value1=arguments,dbName='quiz.db')
+    print(retVal)
     if isinstance(retVal,str) and "Error" in retVal:
         # print("------------------- getQuestionIDsForYear",retVal,arguments)
         return None
