@@ -1,9 +1,10 @@
 from flask import Blueprint, redirect,current_app
 
 bp_signin_redirect = Blueprint('signin_redirect', __name__, url_prefix='/signin_redirect')
+bp_signin_redirect314 = Blueprint('signin_redirect314', __name__, url_prefix='/signin_redirect314')
 
-@bp_signin_redirect.route('/')
-def signin_redirect():
+@bp_signin_redirect314.route('/')
+def signin_redirect314():
     # Create the Google OAuth authorization URL
     auth_url = (
         f'{current_app.config["AUTHORIZATION_URL"]}?response_type=code'
@@ -15,3 +16,7 @@ def signin_redirect():
         f'&state=secure_random_state'
     )
     return redirect(auth_url)
+
+@bp_signin_redirect.route('/')
+def signin_redirect():
+    pass
