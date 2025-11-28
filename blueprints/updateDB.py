@@ -1,4 +1,4 @@
-from flask import Blueprint, request, session, redirect, url_for,current_app
+from flask import Blueprint, request, session, redirect, url_for,current_app, render_template
 from pprint import pprint
 import bleach
 from Funhelpers import check_ip_in_portugal, valid_cellphone,valid_NIF, mask_email
@@ -6,12 +6,32 @@ from DBhelpers import *
 from typing import Any, Mapping, cast
 from werkzeug.security import generate_password_hash
 import re
+from markupsafe import Markup
 
 bp_updateDB = Blueprint('updateDB', __name__)
-
+bp_updateDB314 = Blueprint('updateDB314', __name__)
 
 @bp_updateDB.route('/updateDB', methods = ["GET","POST"])
+def updateDB314():
+    user = session.get('user') or session.get('userinfo')
+    # Render the content template first
+    main_content_html = render_template(
+        'content/wip.html',
+    )
+    user = None
 
+    # Then render the main template with the content
+    return render_template(
+        'index.html',
+        admin_email=current_app.config['ADMIN_EMAIL'],
+        user=user,
+        page_title="Explicações em Lisboa",
+        title="Explicações em Lisboa",
+        main_content=Markup(main_content_html))
+
+
+
+@bp_updateDB314.route('/updateDB314', methods = ["GET","POST"])
 def updateDB():
     pprint('Updating user in the database...')
     userinfo = session.get('userinfo', {})

@@ -42,9 +42,13 @@ def create_app(config_name=None):
     app.register_blueprint(bp_profile)
     app.register_blueprint(bp_signin_redirect)
     app.register_blueprint(bp_signin)
+    app.register_blueprint(bp_signin314)
     app.register_blueprint(bp_signup)
+    app.register_blueprint(bp_signup314)
     app.register_blueprint(bp_updateDB)
+    app.register_blueprint(bp_updateDB314)
     app.register_blueprint(bp_register)
+    app.register_blueprint(bp_register314)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(quiz_assets_bp)
     

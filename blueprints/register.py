@@ -4,8 +4,30 @@ from Funhelpers.send_email import send_email
 from markupsafe import Markup
 
 bp_register = Blueprint('register', __name__, url_prefix='/register')
+bp_register314 = Blueprint('register314', __name__, url_prefix='/register314')
 
-@bp_register.route('/', methods=['GET', 'POST'])
+
+
+@bp_register.route('/')
+def signin():
+    user = session.get('user') or session.get('userinfo')
+    # Render the content template first
+    main_content_html = render_template(
+        'content/wip.html',
+    )
+    user = None
+
+    # Then render the main template with the content
+    return render_template(
+        'index.html',
+        admin_email=current_app.config['ADMIN_EMAIL'],
+        user=user,
+        page_title="Explicações em Lisboa",
+        title="Explicações em Lisboa",
+        main_content=Markup(main_content_html))
+
+
+@bp_register314.route('/', methods=['GET', 'POST'])
 def request_confirmation():
     if request.method == 'POST':
         email = request.form.get('email')
