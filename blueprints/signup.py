@@ -8,7 +8,7 @@ bp_signup314 = Blueprint('signup314', __name__)
 bp_signup = Blueprint('signup', __name__)
 
 
-@bp_signup.route('/signup314', methods=['GET', 'POST'])
+@bp_signup314.route('/signup314', methods=['GET', 'POST'])
 def signup314():
     pprint('Rendering signup page...')
     if not session.get('metadata') :
@@ -30,7 +30,7 @@ def signup314():
         is_google = True
 
     if len(email) == 0:
-        return redirect(url_for('signin.signin'))
+        return redirect(url_for('signin314.signin314'))
 
     # print(email)
     # error_message = session.get("metadata").get("error_message",'')
