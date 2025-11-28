@@ -34,7 +34,7 @@ def request_confirmation():
 
         if not email:
             flash('Please enter your email address.')
-            return redirect(url_for('register.request_confirmation'))
+            return redirect(url_for('register314.request_confirmation'))
 
         # Optional: Check if email is blacklisted and reject if so
 
@@ -44,8 +44,8 @@ def request_confirmation():
         # Generate token for email verification
         token = generate_token(email)
 
-        confirm_url = url_for('register.confirm_email', token=token, _external=True)
-        unsubscribe_url = url_for('register.unsubscribe', email=email, ip=ip_addr, _external=True)
+        confirm_url = url_for('register314.confirm_email', token=token, _external=True)
+        unsubscribe_url = url_for('register314.unsubscribe', email=email, ip=ip_addr, _external=True)
 
         subject = "Confirm your email address"
         html_message = f"""
@@ -60,7 +60,7 @@ def request_confirmation():
 
         flash('Confirmation email sent. Please check your inbox.')
         # return redirect(url_for('signin_redirect.signin_redirect'))
-        return redirect(url_for('register.request_confirmation'))
+        return redirect(url_for('register314.request_confirmation'))
 
     main_content_html = render_template(
         'content/request_new_user.html'
@@ -80,13 +80,13 @@ def confirm_email(token):
     email = confirm_token(token)
     if not email:
         flash("Invalid or expired confirmation token.")
-        return redirect(url_for('register.request_confirmation'))
+        return redirect(url_for('register314.request_confirmation'))
 
     # Redirect to signup page with email prefilled or in URL for completion
     # return redirect(url_for('signup.signup', email=email))
      # Render a form that auto-submits via POST to the signup page with email hidden field
     return render_template_string('''
-        <form id="postform" method="post" action="{{ url_for('signup.signup') }}">
+        <form id="postform" method="post" action="{{ url_for('signup314.signup') }}">
             <input type="hidden" name="email" value="{{ email }}">
         </form>
         <script type="text/javascript">
