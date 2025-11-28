@@ -5,10 +5,29 @@ from pprint import pprint
 from DBhelpers import get_user_profile, refresh_last_login_and_ip,getHashFromEmail,getEmailFromUsername
 
 bp_check_user = Blueprint('check_user', __name__, url_prefix='/check_user')
-
+bp_check_user314 = Blueprint('check_user314', __name__, url_prefix='/check_user314')
 
 @bp_check_user.route('/', methods=['GET', 'POST'])
 def check_user():
+    user = session.get('user') or session.get('userinfo')
+    # Render the content template first
+    main_content_html = render_template(
+        'content/wip.html',
+    )
+    user = None
+
+    # Then render the main template with the content
+    return render_template(
+        'index.html',
+        admin_email=current_app.config['ADMIN_EMAIL'],
+        user=user,
+        page_title="Explicações em Lisboa",
+        title="Explicações em Lisboa",
+        main_content=Markup(main_content_html))
+
+
+@bp_check_user314.route('/', methods=['GET', 'POST'])
+def check_user314():
     pprint('Checking user in the database...')
 
     if request.method == 'POST':

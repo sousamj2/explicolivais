@@ -31,6 +31,7 @@ def create_app(config_name=None):
     print("Mail state after init_app:", mail.state)
     
     app.register_blueprint(bp_check_user)
+    app.register_blueprint(bp_check_user314)
     app.register_blueprint(bp_logout)
     app.register_blueprint(bp_oauth2callback)
     app.register_blueprint(bp_home)

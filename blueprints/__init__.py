@@ -1,6 +1,6 @@
 
 # Import and export all blueprints
-from .check_user import bp_check_user
+from .check_user import bp_check_user,bp_check_user314
 from .logout import bp_logout
 from .oauth2callback import bp_oauth2callback
 from .profile import bp_profile
@@ -34,6 +34,7 @@ __all__ = [
     'bp_request_new_user',
     'quiz_bp',
     'quiz_assets_bp',
+    'bp_check_user314',
     'bp_signin314',
     'bp_updateDB314',
     'bp_register314',
