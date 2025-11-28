@@ -39,7 +39,11 @@ def request_confirmation314():
         # Optional: Check if email is blacklisted and reject if so
 
         # Capture IP address for unsubscribe tracking
-        ip_addr = request.remote_addr
+        # Get real IP when behind reverse proxy
+        if request.headers.get('X-Forwarded-For'):
+            ip_addr = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+        else:
+            ip_addr = request.remote_addr
 
         # Generate token for email verification
         token = generate_token(email)

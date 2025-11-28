@@ -2,6 +2,7 @@ import os
 from flask import Flask, redirect, render_template
 from pprint import pprint
 from Funhelpers import mail
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,6 +19,15 @@ def create_app(config_name=None):
                 static_url_path='/static'
                 )
 
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,      # Number of values to trust in X-Forwarded-For
+        x_proto=1,
+        x_host=1,
+        x_port=1,
+        x_prefix=1
+    )
+    
     # Determine which config to use
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
