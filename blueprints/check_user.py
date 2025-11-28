@@ -17,7 +17,7 @@ def check_user():
 
         if not email or not password:
             flash('Missing email or password.')
-            return redirect(url_for('signin.signin'))
+            return redirect(url_for('signin314.signin314'))
 
         if '@' not in email: # case for user name
             email = getEmailFromUsername(email)
@@ -26,7 +26,7 @@ def check_user():
         hashval = getHashFromEmail(email)
         if hashval is None:
             flash('User not found.')
-            return redirect(url_for('signin.signin'))
+            return redirect(url_for('signin314.signin314'))
         
         # Verify password against hash
         if check_password_hash(hashval, password):
@@ -38,17 +38,17 @@ def check_user():
                 return redirect(url_for('profile.profile'))
             else:
                 flash('Profile not found, please register.')
-                return redirect(url_for('signup.signup'))
+                return redirect(url_for('signup314.signup314'))
         else:
             flash('Incorrect password.')
-            return redirect(url_for('signin.signin'))
+            return redirect(url_for('signin314.signin314'))
         
     else:
         userinfo = session.get('userinfo')
         # pprint(userinfo)
         # pprint(session)["metadata"])
         if not userinfo or 'email' not in userinfo:
-            return redirect(url_for('signup.signup'))
+            return redirect(url_for('signup314.signup314'))
 
         email = userinfo['email']
         
@@ -64,4 +64,4 @@ def check_user():
         else:
             flash('Profile not found, please register.')
             # pprint('User not found, redirecting to signup.')
-            return redirect(url_for('signup.signup'))
+            return redirect(url_for('signup314.signup314'))
