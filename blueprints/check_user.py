@@ -1,8 +1,11 @@
-from flask import Blueprint, request, session, redirect, url_for, flash, current_app
+from flask import Blueprint, request, session, redirect, url_for, flash, current_app,render_template
 from werkzeug.security import check_password_hash  # pip install werkzeug for password hash comparison
 
 from pprint import pprint
 from DBhelpers import get_user_profile, refresh_last_login_and_ip,getHashFromEmail,getEmailFromUsername
+
+from markupsafe import Markup
+
 
 bp_check_user = Blueprint('check_user', __name__, url_prefix='/check_user')
 bp_check_user314 = Blueprint('check_user314', __name__, url_prefix='/check_user314')
