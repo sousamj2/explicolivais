@@ -32,4 +32,4 @@ def oauth2callback():
     # print()
     # pprint(tokens)  # For debugging purposes
     print( 'Authentication successful, tokens acquired!')
-    return redirect(url_for('check_user.check_user'))
+    return redirect(url_for('check_user314.check_user'))
