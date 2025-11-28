@@ -28,13 +28,13 @@ def signin():
 
 
 @bp_register314.route('/', methods=['GET', 'POST'])
-def request_confirmation():
+def request_confirmation314():
     if request.method == 'POST':
         email = request.form.get('email')
 
         if not email:
             flash('Please enter your email address.')
-            return redirect(url_for('register314.request_confirmation'))
+            return redirect(url_for('register314.request_confirmation314'))
 
         # Optional: Check if email is blacklisted and reject if so
 
@@ -44,8 +44,8 @@ def request_confirmation():
         # Generate token for email verification
         token = generate_token(email)
 
-        confirm_url = url_for('register314.confirm_email', token=token, _external=True)
-        unsubscribe_url = url_for('register314.unsubscribe', email=email, ip=ip_addr, _external=True)
+        confirm_url = url_for('register314.confirm_email314', token=token, _external=True)
+        unsubscribe_url = url_for('register314.unsubscribe314', email=email, ip=ip_addr, _external=True)
 
         subject = "Confirm your email address"
         html_message = f"""
@@ -60,7 +60,7 @@ def request_confirmation():
 
         flash('Confirmation email sent. Please check your inbox.')
         # return redirect(url_for('signin_redirect.signin_redirect'))
-        return redirect(url_for('register314.request_confirmation'))
+        return redirect(url_for('register314.request_confirmation314'))
 
     main_content_html = render_template(
         'content/request_new_user.html'
@@ -75,18 +75,18 @@ def request_confirmation():
 
     # return render_template('content/request_new_user.html')
 
-@bp_register.route('/confirm/<token>')
-def confirm_email(token):
+@bp_register314.route('/confirm/<token>')
+def confirm_email314(token):
     email = confirm_token(token)
     if not email:
         flash("Invalid or expired confirmation token.")
-        return redirect(url_for('register314.request_confirmation'))
+        return redirect(url_for('register314.request_confirmation314'))
 
     # Redirect to signup page with email prefilled or in URL for completion
     # return redirect(url_for('signup.signup', email=email))
      # Render a form that auto-submits via POST to the signup page with email hidden field
     return render_template_string('''
-        <form id="postform" method="post" action="{{ url_for('signup314.signup') }}">
+        <form id="postform" method="post" action="{{ url_for('signup314.signup314') }}">
             <input type="hidden" name="email" value="{{ email }}">
         </form>
         <script type="text/javascript">
@@ -94,12 +94,12 @@ def confirm_email(token):
         </script>
     ''', email=email)
 
-@bp_register.route('/unsubscribe')
-def unsubscribe():
+@bp_register314.route('/unsubscribe')
+def unsubscribe314():
     email = request.args.get('email')
     ip = request.args.get('ip')
 
     # Add logic to insert email & ip into your blacklist db or cache
 
     flash("You have been unsubscribed and will not receive further emails.")
-    return redirect(url_for('signin.signin'))
+    return redirect(url_for('signin314.signin314'))

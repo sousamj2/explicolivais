@@ -12,7 +12,7 @@ bp_updateDB = Blueprint('updateDB', __name__)
 bp_updateDB314 = Blueprint('updateDB314', __name__)
 
 @bp_updateDB.route('/updateDB', methods = ["GET","POST"])
-def updateDB314():
+def updateDB():
     user = session.get('user') or session.get('userinfo')
     # Render the content template first
     main_content_html = render_template(
@@ -32,7 +32,7 @@ def updateDB314():
 
 
 @bp_updateDB314.route('/updateDB314', methods = ["GET","POST"])
-def updateDB():
+def updateDB314():
     pprint('Updating user in the database...')
     userinfo = session.get('userinfo', {})
     # pprint(userinfo)
@@ -140,7 +140,7 @@ def updateDB():
     if len(errorMessage) > 0:
         session['metadata']['error_message'] = errorMessage
         print(errorMessage)
-        return redirect(url_for('signup.signup',email = email))
+        return redirect(url_for('signup314.signup314',email = email))
 
     successUser = insertNewUser(first_name,last_name,email,h_password,username)
     successPers = insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif)
