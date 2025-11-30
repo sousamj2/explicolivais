@@ -54,7 +54,7 @@ def check_user314():
         if check_password_hash(hashval, password):
             user = get_user_profile(email)
             if user:
-                refresh_last_login_and_ip(email, request.remote_addr)
+                refresh_last_login_and_ip(email, request.headers.get('X-Real-IP'))
                 session["metadata"] = user
                 # return redirect(url_for('profile.profile', source_method ='POST'))
                 return redirect(url_for('profile.profile'))
@@ -78,7 +78,7 @@ def check_user314():
 
         if user:
             # pprint('User found in the database.')
-            refresh_last_login_and_ip(email, request.remote_addr)
+            refresh_last_login_and_ip(email, request.headers.get('X-Real-IP'))
             session["metadata"] = get_user_profile(email)
             # pprint(session['metadata'])
             # return redirect(url_for('profile.profile', source_method ='GET'))

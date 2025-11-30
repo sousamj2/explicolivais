@@ -113,7 +113,7 @@ def updateDB314():
     if sameEmail:
         sameEmail_map = cast(Mapping[str, Any], sameEmail)
         errorMessage += f"Este email ({sameEmail_map.get('email','')}) já tem uma conta aqui criada em {sameEmail_map.get('createdatts','')}. <br>\n"
-    register_ip = request.remote_addr
+    register_ip = request.headers.get('X-Real-IP')
     # sameIP = getDataFromIPcreated(register_ip)
     # print("sameIP",sameIP)
     # if sameIP:
