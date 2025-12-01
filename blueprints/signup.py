@@ -4,11 +4,12 @@ from pprint import pprint
 from Funhelpers import get_lisbon_greeting, render_profile_template
 
 
+bp_signup314 = Blueprint('signup314', __name__)
 bp_signup = Blueprint('signup', __name__)
 
 
-@bp_signup.route('/signup', methods=['GET', 'POST'])
-def signup():
+@bp_signup314.route('/signup314', methods=['GET', 'POST'])
+def signup314():
     pprint('Rendering signup page...')
     if not session.get('metadata') :
         session['metadata'] = {}
@@ -29,7 +30,7 @@ def signup():
         is_google = True
 
     if len(email) == 0:
-        return redirect(url_for('signin.signin'))
+        return redirect(url_for('signin314.signin314'))
 
     # print(email)
     # error_message = session.get("metadata").get("error_message",'')
@@ -55,3 +56,22 @@ def signup():
         main_content=Markup(main_content_html),
         page_title="Explicações em Lisboa",
         title="Explicações em Lisboa")
+
+
+@bp_signup.route('/')
+def signup():
+    user = session.get('user') or session.get('userinfo')
+    # Render the content template first
+    main_content_html = render_template(
+        'content/wip.html',
+    )
+    user = None
+
+    # Then render the main template with the content
+    return render_template(
+        'index.html',
+        admin_email=current_app.config['ADMIN_EMAIL'],
+        user=user,
+        page_title="Explicações em Lisboa",
+        title="Explicações em Lisboa",
+        main_content=Markup(main_content_html))

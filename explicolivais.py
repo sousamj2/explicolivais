@@ -2,6 +2,7 @@ import os
 from flask import Flask, redirect, render_template
 from pprint import pprint
 from Funhelpers import mail
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -31,6 +32,7 @@ def create_app(config_name=None):
     print("Mail state after init_app:", mail.state)
     
     app.register_blueprint(bp_check_user)
+    app.register_blueprint(bp_check_user314)
     app.register_blueprint(bp_logout)
     app.register_blueprint(bp_oauth2callback)
     app.register_blueprint(bp_home)
@@ -41,10 +43,15 @@ def create_app(config_name=None):
     app.register_blueprint(bp_adminDB)
     app.register_blueprint(bp_profile)
     app.register_blueprint(bp_signin_redirect)
+    app.register_blueprint(bp_signin_redirect314)
     app.register_blueprint(bp_signin)
+    app.register_blueprint(bp_signin314)
     app.register_blueprint(bp_signup)
+    app.register_blueprint(bp_signup314)
     app.register_blueprint(bp_updateDB)
+    app.register_blueprint(bp_updateDB314)
     app.register_blueprint(bp_register)
+    app.register_blueprint(bp_register314)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(quiz_assets_bp)
     
@@ -58,6 +65,15 @@ def create_app(config_name=None):
 
 # Create the app
 app = create_app()
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_for=1,      # Number of values to trust in X-Forwarded-For
+    x_proto=1,
+    x_host=1,
+    x_port=1,
+    x_prefix=1
+)
+
 
 if __name__ == '__main__':
     app.run()

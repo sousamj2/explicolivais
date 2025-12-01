@@ -1,14 +1,36 @@
-from flask import Blueprint, request, session, redirect, url_for, flash, current_app
+from flask import Blueprint, request, session, redirect, url_for, flash, current_app,render_template
 from werkzeug.security import check_password_hash  # pip install werkzeug for password hash comparison
 
 from pprint import pprint
 from DBhelpers import get_user_profile, refresh_last_login_and_ip,getHashFromEmail,getEmailFromUsername
 
-bp_check_user = Blueprint('check_user', __name__, url_prefix='/check_user')
+from markupsafe import Markup
 
+
+bp_check_user = Blueprint('check_user', __name__, url_prefix='/check_user')
+bp_check_user314 = Blueprint('check_user314', __name__, url_prefix='/check_user314')
 
 @bp_check_user.route('/', methods=['GET', 'POST'])
 def check_user():
+    user = session.get('user') or session.get('userinfo')
+    # Render the content template first
+    main_content_html = render_template(
+        'content/wip.html',
+    )
+    user = None
+
+    # Then render the main template with the content
+    return render_template(
+        'index.html',
+        admin_email=current_app.config['ADMIN_EMAIL'],
+        user=user,
+        page_title="Explicações em Lisboa",
+        title="Explicações em Lisboa",
+        main_content=Markup(main_content_html))
+
+
+@bp_check_user314.route('/', methods=['GET', 'POST'])
+def check_user314():
     pprint('Checking user in the database...')
 
     if request.method == 'POST':
@@ -17,7 +39,7 @@ def check_user():
 
         if not email or not password:
             flash('Missing email or password.')
-            return redirect(url_for('signin.signin'))
+            return redirect(url_for('signin314.signin314'))
 
         if '@' not in email: # case for user name
             email = getEmailFromUsername(email)
@@ -26,29 +48,29 @@ def check_user():
         hashval = getHashFromEmail(email)
         if hashval is None:
             flash('User not found.')
-            return redirect(url_for('signin.signin'))
+            return redirect(url_for('signin314.signin314'))
         
         # Verify password against hash
         if check_password_hash(hashval, password):
             user = get_user_profile(email)
             if user:
-                refresh_last_login_and_ip(email, request.remote_addr)
+                refresh_last_login_and_ip(email, request.headers.get('X-Real-IP'))
                 session["metadata"] = user
                 # return redirect(url_for('profile.profile', source_method ='POST'))
                 return redirect(url_for('profile.profile'))
             else:
                 flash('Profile not found, please register.')
-                return redirect(url_for('signup.signup'))
+                return redirect(url_for('signup314.signup314'))
         else:
             flash('Incorrect password.')
-            return redirect(url_for('signin.signin'))
+            return redirect(url_for('signin314.signin314'))
         
     else:
         userinfo = session.get('userinfo')
         # pprint(userinfo)
         # pprint(session)["metadata"])
         if not userinfo or 'email' not in userinfo:
-            return redirect(url_for('signup.signup'))
+            return redirect(url_for('signup314.signup314'))
 
         email = userinfo['email']
         
@@ -56,7 +78,7 @@ def check_user():
 
         if user:
             # pprint('User found in the database.')
-            refresh_last_login_and_ip(email, request.remote_addr)
+            refresh_last_login_and_ip(email, request.headers.get('X-Real-IP'))
             session["metadata"] = get_user_profile(email)
             # pprint(session['metadata'])
             # return redirect(url_for('profile.profile', source_method ='GET'))
@@ -64,4 +86,4 @@ def check_user():
         else:
             flash('Profile not found, please register.')
             # pprint('User not found, redirecting to signup.')
-            return redirect(url_for('signup.signup'))
+            return redirect(url_for('signup314.signup314'))
