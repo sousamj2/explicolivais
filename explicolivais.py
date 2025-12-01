@@ -54,6 +54,7 @@ def create_app(config_name=None):
     app.register_blueprint(bp_register314)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(quiz_assets_bp)
+    app.register_blueprint(bp_elevate_tier)
     
     # Main route: redirect to /pages/ (home)
     @app.route('/')

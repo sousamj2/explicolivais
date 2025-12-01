@@ -1,0 +1,65 @@
+<div class="elevate-tier-container">
+    <h2>Elevar Conta para Tier 2</h2>
+    
+    {% if session.get('metadata', {}).get('error_message') %}
+    <div class="alert alert-danger">
+        {{ session['metadata']['error_message'] | replace('\n', '<br>') }}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="form-elevate-tier">
+        <div class="form-section">
+            <h3>Endereço</h3>
+            
+            <div class="form-group">
+                <label for="address">Morada *</label>
+                <input type="text" id="address" name="address" required class="form-control">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="number">Número</label>
+                    <input type="text" id="number" name="number" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="floor">Andar</label>
+                    <input type="text" id="floor" name="floor" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="door">Porta</label>
+                    <input type="text" id="door" name="door" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="zip_code1">Código Postal (Parte 1) *</label>
+                    <input type="text" id="zip_code1" name="zip_code1" required class="form-control" placeholder="XXXX">
+                </div>
+                <div class="form-group">
+                    <label for="zip_code2">Código Postal (Parte 2) *</label>
+                    <input type="text" id="zip_code2" name="zip_code2" required class="form-control" placeholder="XXX">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Informação de Contacto</h3>
+            
+            <div class="form-group">
+                <label for="cell_phone">Telemóvel *</label>
+                <input type="tel" id="cell_phone" name="cell_phone" required class="form-control" placeholder="+351 9XXXXXXXX">
+            </div>
+
+            <div class="form-group">
+                <label for="nfiscal">NIF *</label>
+                <input type="text" id="nfiscal" name="nfiscal" required class="form-control" placeholder="XXXXXXXXX">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn--primary btn--lg">Confirmar Tier 2</button>
+            <a href="{{ url_for('profile.profile') }}" class="btn btn--secondary btn--lg">Cancelar</a>
+        </div>
+    </form>
+</div>

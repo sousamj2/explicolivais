@@ -1,34 +1,78 @@
-<!-- Top welcome block -->
-<div class="welcome-block">
-    <h1>{{greeting}} {{full_name}} ({{email}})</h1>
-    <h2>A última vez que entrou foi {{lastlogin}}</h2>
-</div>
-
-<!-- Main content block with left-right columns -->
-<div class="profile-content" style="display: flex; gap: 20px;">
-    <!-- Left column: picture + leds -->
-    <div class="left-column" style="flex: 0.1; text-align: center;">
-        <img src="{{user_picture}}" alt="Profile Picture" style="width: 100%; max-width: 120px; border-radius: 50%; margin-bottom: 15px;">
-
-        <ul class="led-list" style="list-style: none; padding-left: 0; text-align: left; display: inline-block;">
-            <li style="margin-bottom: 8px;">
-                <span class="led-bullet" style="background-color: {{vpn_check_color}};"></span> VPN check
-            </li>
-            <li style="margin-bottom: 8px;">
-                <span class="led-bullet" style="background-color: {{primeiro_contacto_color}};"></span> 1º Contacto
-            </li>
-            <li>
-                <span class="led-bullet" style="background-color: {{primeira_aula_color}};"></span> 1ª aula
-            </li>
-        </ul>
+<div class="profile-container">
+    <div class="greeting">
+        <h2>{{ greeting }} {{ full_name }}!</h2>
     </div>
 
-    <!-- Right column: Dados Pessoais -->
-    <div class="right-column" style="flex: 0.9;">
-        <p><strong>Dados Pessoais</strong></p>
-        <p>Morada Fiscal: {{morada}}</p>
-        <p>Código Postal: {{codigopostal}}</p>
-        <p>NIF: {{nif}}</p>
-        <p>Contacto Telefónico: {{telemovel}}</p>
+    <!-- TIER 1 & 2: Common Info Section -->
+    <div class="info-section">
+        <h3>Informação da Conta</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Email:</label>
+                <p>{{ email }}</p>
+            </div>
+            <div class="info-item">
+                <label>Último Acesso:</label>
+                <p>{{ lastlogin }}</p>
+            </div>
+        </div>
     </div>
+
+    <!-- TIER 1 ONLY: Upgrade Button -->
+    {% if tier == 1 %}
+    <div class="tier-upgrade-section">
+        <div class="info-box warning">
+            <h4>Conta Tier 1 - Acesso Limitado</h4>
+            <p>Tem acesso apenas às suas aulas. Para acesso completo ao portal, eleve a sua conta para Tier 2.</p>
+            <a href="{{ url_for('elevate_tier.elevate_tier') }}" class="btn btn--primary">
+                Pedir Explicações (Elevar para Tier 2)
+            </a>
+        </div>
+    </div>
+
+    <!-- TIER 2 ONLY: Full Personal Info Section -->
+    {% elif tier == 2 %}
+    <div class="personal-info-section">
+        <h3>Informação Pessoal</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Morada:</label>
+                <p>{{ morada }}</p>
+            </div>
+            <div class="info-item">
+                <label>Código Postal:</label>
+                <p>{{ codigopostal }}</p>
+            </div>
+            <div class="info-item">
+                <label>NIF:</label>
+                <p>{{ nif }}</p>
+            </div>
+            <div class="info-item">
+                <label>Telemóvel:</label>
+                <p>{{ telemovel }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-section">
+        <h3>Estado da Conta</h3>
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-badge" style="background-color: #{{ vpn_check_color }};">
+                    Verificação VPN: ✓
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-badge" style="background-color: #{{ primeiro_contacto_color }};">
+                    Primeiro Contacto: Pendente
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-badge" style="background-color: #{{ primeira_aula_color }};">
+                    Primeira Aula: Pendente
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>

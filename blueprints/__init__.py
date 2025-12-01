@@ -13,6 +13,7 @@ from .register import bp_register,bp_register314
 from .request_new_user import bp_request_new_user
 from .quiz import quiz_bp
 from .quiz_assets import quiz_assets_bp
+from .elevate_tier import bp_elevate_tier
 
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     'bp_register314',
     'bp_signup314',
     'bp_signin_redirect314',
+    'bp_elevate_tier',
     ]
