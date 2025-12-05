@@ -92,8 +92,8 @@ class Config:
     CLIENT_ID = _get("SECRET_CLIENT_KEY")
     CLIENT_SECRET = _get("SECRET_CLIENT_SECRET")
 
-    print(CLIENT_ID)
-    print(CLIENT_SECRET)
+    # print(CLIENT_ID)
+    # print(CLIENT_SECRET)
 
     # Use separate redirect for production if provided, else default local
     REDIRECT_URI = _get("OAUTH_REDIRECT_URI", "http://localhost:8080/oauth2callback")
