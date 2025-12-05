@@ -97,8 +97,8 @@ quiz_bp = Blueprint('quiz', __name__)
 @quiz_bp.route('/quiz-config')
 def quiz_config():
     """Display quiz configuration page"""
-    user = session.get('user', None)
-    
+    # user = session.get('user', None)
+    user = session and session.get("metadata")    
     content_html = render_template(
         'content/quiz_config.html'
     )
@@ -174,7 +174,7 @@ def question(question_num):
     """Display a specific question"""
     if 'question_ids' not in session:  # ✓ CHANGED FROM 'quiz_question_ids'
         flash('Erro: Sessão de quiz não encontrada. Por favor, inicie um novo quiz.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     question_ids = session['question_ids']  # ✓ CHANGED FROM 'quiz_question_ids'
     # print("question_ids =", question_ids)
@@ -182,7 +182,7 @@ def question(question_num):
     # Validate question number
     if question_num < 0 or question_num >= len(question_ids):
         flash('Pergunta não encontrada.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     # Fetch the actual question data by ID
     qid = question_ids[question_num]
@@ -193,7 +193,7 @@ def question(question_num):
 
     if not question_data:
         flash('Erro ao carregar pergunta.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     question_path = f"{question_data['ano']}/{question_data['nome_tema']}/{question_data['aula_title']}/{question_data['num_aula']}/{question_data['uuid']}"
     imageName = question_data['imagem']#.replace('ano','anos/ano').replace('aula',f'tema{question_data['num_tema']}/aula').replace('.jpg','.png')
@@ -240,8 +240,11 @@ def question(question_num):
     
     user_answers = session.get('user_answers', {})
     current_answer = user_answers.get(str(question_num), [])
-    user = session.get('user', None)
-    
+    # user = session.get('user', None)
+    user = session and session.get("metadata")
+
+
+
     content_html = render_template(
         'content/quiz_question.html',
         question=current_question,
@@ -311,11 +314,10 @@ def results():
     # 1) Validate session payload
     if 'question_ids' not in session or 'user_answers' not in session:
         flash('Erro: Dados do quiz não encontrados. Por favor, inicie um novo quiz.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
 
     question_ids = session['question_ids']
     user_answers = session['user_answers']
-
     # 2) Load raw questions (sqlite3.Row) and convert to dict
     raw_questions = []
     for qid in question_ids:
@@ -368,10 +370,21 @@ def results():
 
     if not is_authenticated:
         # Save the normalized version to keep structure stable if viewed later
-        quiz_uuid = save_quiz_result(user_answers, questions_fixed)
+
+        # print()
+        # print(session)
+        # print("-----------------------------------------------------------")
+        # print(user_answers)
+        # print("-----------------------------------------------------------")
+        # print(question_ids)
+        # print("-----------------------------------------------------------")
+        # print()
+
+        quiz_uuid = save_quiz_result(user_answers, question_ids)
         session['quiz_uuid'] = quiz_uuid
 
-    user = session.get('user')
+    # user = session.get('user')
+    user = session and session.get("metadata")
 
     # 6) Render the results content
     content_html = render_template(
@@ -409,10 +422,12 @@ def view_quiz_result(quiz_uuid):
     
     if not quiz_data:
         flash('Quiz não encontrado ou expirado. Os resultados têm validade de 1 hora.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     answers = quiz_data['answers_by_question_number']  # {question_number: [option_indices]}
     timestamp = quiz_data['timestamp']
+    email = session.get('metadata', {}).get('email', '') if session.get('metadata') else ''
+    is_authenticated = bool(email)
     
     # Convert question_numbers to rowids, then fetch full questions
     questions = []
@@ -432,7 +447,7 @@ def view_quiz_result(quiz_uuid):
     
     if not questions:
         flash('Não foi possível carregar as perguntas do quiz.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     # Calculate results
     quiz_results = calculate_score(questions, answers_by_index)
@@ -445,7 +460,7 @@ def view_quiz_result(quiz_uuid):
         questions=questions,
         user_answers=answers_by_index,
         quiz_uuid=quiz_uuid,
-        is_authenticated=False,
+        is_authenticated=is_authenticated,
         email='',
         timestamp=timestamp
     )
@@ -470,4 +485,4 @@ def restart_quiz():
     session.pop('quiz_uuid', None)
     
     flash('Quiz reiniciado com sucesso!', 'success')
-    return redirect(url_for('quiz.start_quiz'))
+    return redirect(url_for('quiz.quiz_config'))
