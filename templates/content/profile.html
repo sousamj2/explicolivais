@@ -1,31 +1,18 @@
 <div class="profile-container">
-    <div class="greeting">
-        <h2>{{ greeting }} {{ full_name }}!</h2>
+    <!-- Top welcome block -->
+    <div class="welcome-block">
+        <h1>{{greeting}} {{full_name}} ({{email}})</h1>
+        <h2>A última vez que entrou foi {{lastlogin}}</h2>
     </div>
-
-    <!-- TIER 1 & 2: Common Info Section -->
-    <div class="info-section">
-        <h3>Informação da Conta</h3>
-        <div class="info-grid">
-            <div class="info-item">
-                <label>Email:</label>
-                <p>{{ email }}</p>
-            </div>
-            <div class="info-item">
-                <label>Último Acesso:</label>
-                <p>{{ lastlogin }}</p>
-            </div>
-        </div>
-    </div>
+    
+    <br>
 
     <!-- TIER 1 ONLY: Upgrade Button -->
     {% if tier == 1 %}
     <div class="tier-upgrade-section">
         <div class="info-box warning">
-            <h4>Conta Tier 1 - Acesso Limitado</h4>
-            <p>Tem acesso apenas às suas aulas. Para acesso completo ao portal, eleve a sua conta para Tier 2.</p>
             <a href="{{ url_for('elevate_tier.elevate_tier') }}" class="btn btn--primary">
-                Pedir Explicações (Elevar para Tier 2)
+                Pedir Explicações (só no concelho de Lisboa)
             </a>
         </div>
     </div>
@@ -75,4 +62,7 @@
         </div>
     </div>
     {% endif %}
+
+
+    
 </div>
