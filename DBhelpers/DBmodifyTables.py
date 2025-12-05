@@ -1,9 +1,16 @@
-import sqlite3
-from DBhelpers.DBselectTables import getUserIdFromEmail
+# import sqlite3
+from DBselectTables import getUserIdFromEmail
+from .DBbaseline import get_mysql_connection
+
 
 def updateValue(email, tableName, tableColumn, newValue=None):
     # Connect to database
-    conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+    
+    # Choose backend
+    conn = get_mysql_connection()
+    if not conn:
+        raise ConnectionError("Could not connect to MySQL database")
+
     cursor = conn.cursor()
 
     user_id = getUserIdFromEmail(email)
@@ -30,25 +37,26 @@ def updateValue(email, tableName, tableColumn, newValue=None):
 
     try:
         if "thisloginip" == tableColumn:
-            sql = "UPDATE connection SET lastlogindt = thislogindt       WHERE user_id = ?;"
+            sql = "UPDATE connection SET lastlogindt = thislogindt       WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
-            sql = "UPDATE connection SET lastloginip = thisloginip       WHERE user_id = ?;"
+            sql = "UPDATE connection SET lastloginip = thisloginip       WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
-            sql = "UPDATE connection SET thislogindt = CURRENT_TIMESTAMP WHERE user_id = ?;"
+            sql = "UPDATE connection SET thislogindt = CURRENT_TIMESTAMP WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
-            sql = "UPDATE connection SET thisloginip = ?                 WHERE user_id = ?;"
+            sql = "UPDATE connection SET thisloginip = %s                WHERE user_id = %s;"
             cursor.execute(sql, (newValue,user_id))
-            sql = "UPDATE connection SET logincount = logincount + 1     WHERE user_id = ?;"
+            sql = "UPDATE connection SET logincount = logincount + 1     WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
             sql = """
             INSERT INTO iplist (user_id, ipValue)
-            VALUES (?, ?)
+            VALUES (%s, %s)
             ON CONFLICT(user_id, ipValue) DO UPDATE SET
                 logincount = logincount + 1;
             """
+            
             cursor.execute(sql, (user_id, newValue))
         else:
-            sql = "UPDATE {tableName} SET {tableColumn} = ? WHERE user_id = ?;"
+            sql = "UPDATE {tableName} SET {tableColumn} = %s WHERE user_id = %s;"
             cursor.execute(sql, (newValue, user_id))
         conn.commit()
     except Exception as e:

@@ -5,5 +5,6 @@ last_name  TEXT NOT NULL,
 email      TEXT NOT NULL,
 username   TEXT NOT NULL,
 h_password TEXT,
-g_token    INTEGER DEFAULT 1
+g_token    INTEGER DEFAULT 1,
+tier       INTEGER DEFAULT 1
 );

@@ -11,15 +11,9 @@ echo -e "   🚀 Creating tables if they don't exit"
 python -c "import os;\
 import sys;\
 sys.path.insert(0, os.getcwd() + '/DBhelpers');\
-import DBcreateTables;\
+import DBbaseline;\
 import DBloadQuiz;\
-createHandlerPath=os.getcwd()+'/SQLiteQueries/createHandler/';\
-DBcreateTables.handle_tables(createHandlerPath + 'create_users.sql');\
-DBcreateTables.handle_tables(createHandlerPath + 'create_connections.sql');\
-DBcreateTables.handle_tables(createHandlerPath + 'create_classes.sql');\
-DBcreateTables.handle_tables(createHandlerPath + 'create_documents.sql');\
-DBcreateTables.handle_tables(createHandlerPath + 'create_personal.sql');\
-DBcreateTables.handle_tables(createHandlerPath + 'create_iplist.sql');\
+DBbaseline.setup_mysql_database();\
 DBloadQuiz.loadQanswers();\
 DBloadQuiz.loadQlinks();\
 DBloadQuiz.loadQtemas();\

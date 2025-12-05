@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS connection (
+  connection_id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id       INT,
+  createdatts   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  thislogints   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  lastlogints   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdatip   VARCHAR(45) NOT NULL,
+  lastloginip   VARCHAR(45) NOT NULL,
+  thisloginip   VARCHAR(45) NOT NULL,
+  logincount    INT NOT NULL DEFAULT 1,
+  vpn_check     BOOLEAN NOT NULL DEFAULT FALSE,
+  vpn_valid     BOOLEAN NOT NULL DEFAULT FALSE,
+  CONSTRAINT fk_connection_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+) ENGINE=InnoDB;

@@ -2,7 +2,7 @@ from flask import Blueprint, request, session, redirect, url_for, flash, current
 from werkzeug.security import check_password_hash  # pip install werkzeug for password hash comparison
 
 from pprint import pprint
-from DBhelpers import get_user_profile, refresh_last_login_and_ip,getHashFromEmail,getEmailFromUsername
+from DBhelpers import get_user_profile_tier1, refresh_last_login_and_ip,getHashFromEmail,getEmailFromUsername
 
 from markupsafe import Markup
 
@@ -52,7 +52,7 @@ def check_user314():
         
         # Verify password against hash
         if check_password_hash(hashval, password):
-            user = get_user_profile(email)
+            user = get_user_profile_tier1(email)
             if user:
                 refresh_last_login_and_ip(email, request.headers.get('X-Real-IP'))
                 session["metadata"] = user
@@ -74,12 +74,12 @@ def check_user314():
 
         email = userinfo['email']
         
-        user = get_user_profile(email)
+        user = get_user_profile_tier1(email)
 
         if user:
             # pprint('User found in the database.')
             refresh_last_login_and_ip(email, request.headers.get('X-Real-IP'))
-            session["metadata"] = get_user_profile(email)
+            session["metadata"] = get_user_profile_tier1(email)
             # pprint(session['metadata'])
             # return redirect(url_for('profile.profile', source_method ='GET'))
             return redirect(url_for('profile.profile'))

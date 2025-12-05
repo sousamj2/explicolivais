@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, session, redirect, url_for, reques
 from markupsafe import Markup
 from pprint import pprint
 
-from DBhelpers import get_user_profile
+from DBhelpers import get_user_profile_tier1,get_user_profile_tier2
 from Funhelpers import get_lisbon_greeting, format_data
 
 bp_profile = Blueprint('profile', __name__, url_prefix='/profile')
@@ -10,7 +10,6 @@ bp_profile = Blueprint('profile', __name__, url_prefix='/profile')
 @bp_profile.route('/')
 def profile():
     """Profile page - shows different content based on user tier"""
-    
     source_method = request.args.get('source_method', 'GET')
     email = None
     mypict = ''
@@ -27,29 +26,32 @@ def profile():
         pprint('Rendering profile page...')
         
         # Get full profile from DB
-        session["metadata"] = get_user_profile(email)
-        session["metadata"]["greeting"] = get_lisbon_greeting()
-        
-        # Build address
-        g_address = session["metadata"]["address"]
-        if session["metadata"]["number"] != "NA":
-            g_address = session["metadata"]["address"] + ", " + str(session["metadata"]["number"])
-        
-        full_address = g_address
-        if session["metadata"]["floor"] != "NA":
-            full_address = full_address + " " + str(session["metadata"]["floor"])
-        if session["metadata"]["door"] != "NA":
-            full_address = full_address + " " + str(session["metadata"]["door"])
-        
-        session["metadata"]["full_address"] = full_address
-        session["metadata"]["g_address"] = g_address
-        
-        zip_full = str(session["metadata"].get("zip_code1", "")) + "-" + str(session["metadata"].get("zip_code2", ""))
-        session["metadata"]["full_name"] = session["metadata"]["first_name"] + " " + session["metadata"]["last_name"]
-        
+        session["metadata"] = get_user_profile_tier1(email)
         # GET USER TIER FROM DATABASE - critical for conditional rendering
         user_tier = session["metadata"].get("tier", 1)  # Default to tier 1
-        
+        full_address = None
+        zip_full = None
+
+        if user_tier > 1:
+            session["metadata"] = get_user_profile_tier2(email)
+            # Build address
+            g_address = session["metadata"]["address"]
+            if session["metadata"]["number"] != "NA":
+                g_address = session["metadata"]["address"] + ", " + str(session["metadata"]["number"])
+            full_address = g_address
+            if session["metadata"]["floor"] != "NA":
+                full_address = full_address + " " + str(session["metadata"]["floor"])
+            if session["metadata"]["door"] != "NA":
+                full_address = full_address + " " + str(session["metadata"]["door"])
+            session["metadata"]["full_address"] = full_address
+            session["metadata"]["g_address"] = g_address
+            zip_full = str(session["metadata"].get("zip_code1", "")) + "-" + str(session["metadata"].get("zip_code2", ""))
+            
+        session["metadata"]["full_name"] = session["metadata"]["first_name"] + " " + session["metadata"]["last_name"]
+        session["metadata"]["greeting"] = get_lisbon_greeting()
+        # pprint(session)
+        # print()
+
         # Render content template with tier information
         main_content_html = render_template(
             'content/profile.html',

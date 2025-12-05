@@ -1,6 +1,8 @@
-import sqlite3
+# import sqlite3
 from DBhelpers.DBselectTables import getUserIdFromEmail
 insertFolder = "SQLiteQueries/insertHandler/"
+
+from .DBbaseline import get_mysql_connection
 
 def execute_insert_from_file(sql_file_path, params_dict):
     """
@@ -16,7 +18,10 @@ def execute_insert_from_file(sql_file_path, params_dict):
             sql_code = file.read()
 
         # Connect to database
-        conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+        conn = get_mysql_connection()
+        if not conn:
+            raise ConnectionError("Could not connect to MySQL database")
+
         cursor = conn.cursor()
 
         # Prepare parameters tuple in the order matching the SQL placeholders
@@ -24,7 +29,7 @@ def execute_insert_from_file(sql_file_path, params_dict):
         params = tuple(params_dict[key] for key in params_dict)
 
         # Execute the SQL INSERT
-        cursor.execute(sql_code, params)
+        cursor.execute(sql_code.replace("?","%s"), params)
         conn.commit()
 
         status = "Insert successful"
@@ -122,3 +127,19 @@ def insertNewClass(email, year, childName, disciplina="Matemática" ):
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
     return status
 
+def insertNewResults(email,q_uuid,q_year,q_perc,q_resp,q_score,n_corr,n_inco,n_skip,start_ts):
+    insertFile = "insert_newResult.sql"
+    user_id = getUserIdFromEmail(email)
+    if not user_id:
+        return "ERROR: There is no user with this email: {email}."
+    insertDict = {"q_uuid": q_uuid,
+                  "q_score": q_score,
+                  "q_year": q_year,
+                  "q_percent": q_perc,
+                  "q_resp": q_resp,
+                  "n_correct": n_corr,
+                  "n_wrong": n_inco,
+                  "n_skip": n_skip,
+                  "user_id": user_id,
+                  "start_ts": start_ts, 
+    }

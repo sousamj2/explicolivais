@@ -60,6 +60,7 @@ def updateDB314():
         h_password = generate_password_hash(password)
     
     register_ip = request.headers.get('X-Real-IP')
+    if not register_ip : register_ip = request.remote_addr
     
     # Validation
     sameEmail = getDataFromEmail(email)
@@ -72,6 +73,7 @@ def updateDB314():
     
     if len(errorMessage) > 0:
         session['metadata']['error_message'] = errorMessage
+        print(errorMessage)
         return redirect(url_for('signup314.signup314', email=email))
     
     # TIER 1: Only these three functions

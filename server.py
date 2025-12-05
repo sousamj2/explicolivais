@@ -1,11 +1,10 @@
 from waitress import serve
-# from application import app
 from explicolivais import app
 import sys
 import os
 sys.path.insert(0,os.getcwd()+"/DBhelpers")
 
-import DBcreateTables
+import DBbaseline
 import DBloadQuiz
 
 import os
@@ -16,15 +15,7 @@ logging.getLogger('waitress.queue').setLevel(logging.ERROR)
 
 
 if __name__ == '__main__':
-    # check_and_create_tables()
-    createHandlerPath=os.getcwd()+'/SQLiteQueries/createHandler/'
-    DBcreateTables.handle_tables(createHandlerPath + 'create_users.sql')
-    DBcreateTables.handle_tables(createHandlerPath + 'create_connections.sql')
-    DBcreateTables.handle_tables(createHandlerPath + 'create_classes.sql')
-    DBcreateTables.handle_tables(createHandlerPath + 'create_documents.sql')
-    DBcreateTables.handle_tables(createHandlerPath + 'create_personal.sql')
-    DBcreateTables.handle_tables(createHandlerPath + 'create_iplist.sql')
-
+    DBbaseline.setup_mysql_database();
     DBloadQuiz.loadQanswers();
     DBloadQuiz.loadQlinks();
     DBloadQuiz.loadQtemas();

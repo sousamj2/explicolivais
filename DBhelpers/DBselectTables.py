@@ -1,6 +1,8 @@
 import sqlite3
 from datetime import datetime
 import inspect
+from .DBbaseline import get_mysql_connection
+import pymysql
 selectFolder = "SQLiteQueries/selectHandler/"
 
 def print_caller():
@@ -11,17 +13,34 @@ def print_caller():
 def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais.db'):
     retVal = None
     caller_function = inspect.stack()[1].function
+
+    # Choose backend
+    use_mysql = (dbName == 'explicolivais.db')
+    want_dict = use_mysql and ("get_user_profile" in caller_function or "getDataFrom" in caller_function)
+    
+    if use_mysql:
+        conn = get_mysql_connection(use_dict_cursor=want_dict)
+        if not conn:
+            raise ConnectionError("Could not connect to MySQL database")
+    else:
+        conn = sqlite3.connect(dbName)
+
     try:
         with open(sql_file_path, 'r') as file:
             sql_code = file.read()
+            if use_mysql:
+                sql_code = sql_code.replace("?","%s")
 
-        # Connect to database
-        conn = sqlite3.connect(dbName)
-
-        if caller_function == "get_user_profile" or "getDataFrom" in caller_function  or 'getQuestionFromQid' == caller_function:
+        if not use_mysql and 'getQuestionFromQid' == caller_function:
+            # SQLite: keep row_factory
             conn.row_factory = sqlite3.Row
-
+        
+        # Default tuple cursor for all
         cursor = conn.cursor()
+
+        # if "get_user_profile" in caller_function or "getDataFrom" in caller_function  or 'getQuestionFromQid' == caller_function:
+        #     conn.row_factory = sqlite3.Row
+        # cursor = conn.cursor()
 
         def ensure_sequence_params(param):
                 # Normalize parameters:
@@ -38,11 +57,12 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
 
         if value1 is not None:
             cursor.execute(sql_code,value1)
+            # print(sql_code,value1)
         else:
             cursor.execute(sql_code)
 
 
-        if caller_function == "get_user_profile" or "getDataFrom" in caller_function:
+        if "get_user_profile" in caller_function or "getDataFrom" in caller_function:
             retVal = dict(cursor.fetchone())
         else:
             output = cursor.fetchall()
@@ -93,8 +113,17 @@ def getEmailFromUsername(email):
 def get_user_quiz(email):
     return False
 
-def get_user_profile(email):
-    retVal = getValueFromAnotherValue( selectFolder + "get_profile_from_email.sql", email)
+def get_user_profile_tier2(email):
+    # print("---------------------------------",email)
+    retVal = getValueFromAnotherValue( selectFolder + "get_T2profile_from_email.sql", email)
+    # print("---------------------------------",retVal)
+    if isinstance(retVal,str) and "Error" in retVal:
+        return None
+    return retVal
+
+def get_user_profile_tier1(email):
+    # print("---------------------------------",email)
+    retVal = getValueFromAnotherValue( selectFolder + "get_T1profile_from_email.sql", email)
     # print("---------------------------------",retVal)
     if isinstance(retVal,str) and "Error" in retVal:
         return None
@@ -120,9 +149,13 @@ def dictify_real_dict_row(row):
 
 def submit_query(query, params=None):
     result = None
+    conn = get_mysql_connection()
+    if not conn:
+        raise ConnectionError("Could not connect to MySQL database")
+
     try:
         # Connect to database
-        conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+        # conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
         # cursor = conn.cursor()
 
         with conn.cursor() as cursor:

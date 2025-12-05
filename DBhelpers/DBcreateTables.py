@@ -1,52 +1,43 @@
-import sqlite3
-insertFolder = "SQLiteQueries/insertHandler/"
+createFolder = "SQLiteQueries/createHandlerMySQL/"
 
-def handle_tables(sql_file_path,dbname='explicolivais.db'):
+def create_tables(sql_file_path,cursor):
     """
     Executes a CREATE TABLE SQL command from a file.
     """
-    conn = sqlite3.connect(dbname)  # Adjust your DB path
+
     try:
         # Read SQL code from file
         with open(sql_file_path, 'r') as file:
             sql_code = file.read()
 
-        # Connect to database
-        cursor = conn.cursor()
-
         # Execute the SQL command
-        cursor.executescript(sql_code)  # Using executescript to handle multiple statements if exist
-        conn.commit()
+        cursor.execute(sql_code)  # Using executescript to handle multiple statements if exist
+        # conn.commit()
 
         status = "Table created successfully"
     except Exception as e:
         status = f"Error creating table: {e} from {sql_file_path}"
         print(status)
-    finally:
-        conn.close()
 
     return status
 
-def newTableClass():
-    handle_tables(insertFolder + "create_classes.sql")
+def newTableClass(cursor):
+    create_tables(sql_file_path=createFolder + "create_classes.sql",cursor=cursor)
 
-def newTableIPs():
-    handle_tables(insertFolder + "create_iplist.sql")
+def newTableIPs(cursor):
+    create_tables(sql_file_path=createFolder + "create_iplist.sql",cursor=cursor)
 
-def newTableDocuments():
-    handle_tables(insertFolder + "create_documents.sql")
+def newTableResults(cursor):
+    create_tables(sql_file_path=createFolder + "create_qresults.sql",cursor=cursor)
 
-def newTableConnectionData():
-    handle_tables(insertFolder + "create_connections.sql")
+def newTableDocuments(cursor):
+    create_tables(sql_file_path=createFolder + "create_documents.sql",cursor=cursor)
 
-def newTablePersonalData():
-    handle_tables(insertFolder + "create_personal.sql")
+def newTableConnectionData(cursor):
+    create_tables(sql_file_path=createFolder + "create_connections.sql",cursor=cursor)
 
-def newTableUsers():
-    handle_tables(insertFolder + "create_users.sql")
+def newTablePersonalData(cursor):
+    create_tables(sql_file_path=createFolder + "create_personal.sql",cursor=cursor)
 
-def createAllTables():
-    handle_tables(insertFolder + "create_all_tables.sql")
-
-def deleteAllTable():
-    handle_tables(insertFolder + "delete_all_tables.sql")
+def newTableUsers(cursor):
+    create_tables(sql_file_path=createFolder + "create_users.sql",cursor=cursor)

@@ -1,12 +1,16 @@
-from .DBbaseline import getAllUsers
+from .DBbaseline import (
+    setup_mysql_database,
+    get_mysql_connection,
+)
 from .DBcreateTables import (
-    handle_tables,
+    create_tables,
     newTableClass,
     newTableConnectionData,
     newTableDocuments,
     newTableIPs,
     newTablePersonalData,
     newTableUsers,
+    newTableResults,
     )
 from .DBinsertTables import (
     insertNewClass,
@@ -17,7 +21,8 @@ from .DBinsertTables import (
     insertNewUser,
     )
 from .DBselectTables import (
-    get_user_profile,
+    get_user_profile_tier1,
+    get_user_profile_tier2,
     get_user_quiz,
     getDataFromCellNumber,
     getDataFromEmail,
@@ -42,21 +47,23 @@ from .DBloadQuiz import (
 # from .DBmodifyTables import updateValue
 
 __all__ = [
-    "getAllUsers",
-    "handle_tables",
+    "setup_mysql_database",
+    "create_tables",
     "newTableClass",
     "newTableConnectionData",
     "newTableDocuments",
     "newTableIPs",
     "newTablePersonalData",
     "newTableUsers",
+    "newTableResults",
     "insertNewClass",
     "insertNewConnectionData",
     "insertNewDocument",
     "insertNewIP",
     "insertNewPersonalData",
     "insertNewUser",
-    "get_user_profile",
+    "get_user_profile_tier1",
+    "get_user_profile_tier2",
     "getDataFromCellNumber",
     "getDataFromEmail",
     "getDataFromIPcreated",
@@ -73,4 +80,5 @@ __all__ = [
     "loadQtemas",
     "getQuestionFromQid",
     "getQuestionIDsForYear",
+    "get_mysql_connection",
 ]
