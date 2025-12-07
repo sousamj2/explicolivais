@@ -7,6 +7,14 @@ bp_signin314 = Blueprint('signin314', __name__, url_prefix='/signin314')
 
 @bp_signin314.route('/')
 def signin314():
+    """
+    Renders the main sign-in page for the application.
+
+    This function displays the sign-in page by rendering the 'content/signin.html'
+    template. This template contains the user interface for authentication, including
+    the sign-in form and a "Sign in with Google" button. The resulting HTML is then
+    embedded into the main 'index.html' site layout.
+    """
     user = session.get('user') or session.get('userinfo')
     # Render the content template first
     main_content_html = render_template(
@@ -26,6 +34,13 @@ def signin314():
 
 @bp_signin.route('/')
 def signin():
+    """
+    Renders a work-in-progress page.
+
+    This function is a placeholder and is not yet fully implemented.
+    It is intended to be used for future development of an alternative
+    sign-in process.
+    """
     user = session.get('user') or session.get('userinfo')
     # Render the content template first
     main_content_html = render_template(

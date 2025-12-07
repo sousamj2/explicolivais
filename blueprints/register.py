@@ -10,6 +10,12 @@ bp_register314 = Blueprint('register314', __name__, url_prefix='/register314')
 
 @bp_register.route('/')
 def signin():
+    """
+    Renders a work-in-progress page.
+
+    This function is a placeholder and is not yet fully implemented.
+    It is intended to be used for future development of the sign-in process.
+    """
     user = session.get('user') or session.get('userinfo')
     # Render the content template first
     main_content_html = render_template(
@@ -29,6 +35,19 @@ def signin():
 
 @bp_register314.route('/', methods=['GET', 'POST'])
 def request_confirmation314():
+    """
+    Handles the initial step of user registration by requesting email confirmation.
+
+    On a GET request, this function displays the 'request_new_user.html' page, which
+    contains a form for the user to submit their email address.
+
+    On a POST request, it processes the submitted email:
+    1.  Generates a time-sensitive, secure token associated with the email address.
+    2.  Constructs a confirmation URL and an unsubscribe URL using the generated token and email.
+    3.  Sends an email to the user with the confirmation link.
+    4.  Flashes a message informing the user that a confirmation email has been sent.
+    5.  Redirects back to the same page to prevent re-submission.
+    """
     if request.method == 'POST':
         email = request.form.get('email')
 
@@ -78,6 +97,25 @@ def request_confirmation314():
 
 @bp_register314.route('/confirm/<token>')
 def confirm_email314(token):
+    """
+    Confirms a user's email address using a secure token.
+
+    This endpoint is the target of the confirmation link sent to the user's email.
+    It validates the provided token. If the token is valid and not expired, it
+    extracts the associated email address.
+
+    Instead of a simple redirect, this function renders an HTML page with a hidden,
+    auto-submitting form. This form sends the confirmed email address via a POST request
+    to the main signup page (`signup314.signup314`), securely transferring the user
+    to the final step of registration.
+
+    Args:
+        token (str): The confirmation token sent to the user's email.
+
+    Returns:
+        A rendered HTML page with a self-submitting form, or a redirect to the request
+        page if the token is invalid.
+    """
     email = confirm_token(token)
     if not email:
         flash("Invalid or expired confirmation token.")
@@ -97,6 +135,18 @@ def confirm_email314(token):
 
 @bp_register314.route('/unsubscribe')
 def unsubscribe314():
+    """
+    Handles user unsubscribe requests.
+
+    This endpoint is the target of the unsubscribe link sent in confirmation emails.
+    It retrieves the user's email and their IP address from the URL query parameters.
+
+    The intended logic is to add this information to a blacklist database or cache to
+    prevent the user from receiving further communications.
+
+    After processing, it flashes a message confirming the unsubscription and redirects
+    the user to the main sign-in page.
+    """
     email = request.args.get('email')
     ip = request.args.get('ip')
 

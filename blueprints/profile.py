@@ -9,7 +9,22 @@ bp_profile = Blueprint('profile', __name__, url_prefix='/profile')
 
 @bp_profile.route('/')
 def profile():
-    """Profile page - shows different content based on user tier"""
+    """
+    Renders the user's profile page with content tailored to their account tier.
+
+    This function first ensures that the user is logged in by checking for session metadata.
+    If the user is not authenticated, they are redirected to the sign-in page.
+
+    The function retrieves the user's profile information from the database. The level of detail
+    depends on the user's tier:
+    - Tier 1: Basic profile information.
+    - Tier 2: Includes additional details such as a full address.
+
+    After fetching the data, it is processed and formatted for display (e.g., constructing a
+    full name and address). Finally, it renders the 'profile.html' template with the
+    retrieved information and embeds it within the main 'index.html' layout. The content
+    displayed on the profile page is conditionally rendered based on the user's tier.
+    """
     source_method = request.args.get('source_method', 'GET')
     email = None
     mypict = ''

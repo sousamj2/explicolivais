@@ -6,11 +6,51 @@ import pymysql
 selectFolder = "SQLiteQueries/selectHandler/"
 
 def print_caller():
+    """
+    Prints the name of the calling function.
+
+    This is a simple debugging utility that inspects the call stack to
+    determine which function called the current function and prints its
+    name to the console.
+    """
     # Get the name of the caller (one level up the call stack)
     caller_name = inspect.stack()[1].function
     print("Called by function:", caller_name)
 
 def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais.db'):
+    """
+    A highly versatile function for executing SQL SELECT queries from predefined .sql files.
+
+    This function dynamically connects to either a MySQL database (using `pymysql`)
+    or a SQLite database (using `sqlite3`), determined by the `dbName` parameter.
+    It reads an SQL query from the specified `sql_file_path`, substitutes parameters,
+    and executes the query.
+
+    Key features include:
+    -   **Dynamic Database Backend**: Connects to MySQL if `dbName` is 'explicolivais.db',
+        otherwise to SQLite.
+    -   **Flexible Parameter Handling**: Accepts a single value, a list, or a tuple for `value1`,
+        which is then formatted correctly for `pymysql` (using '%s') or `sqlite3` (using '?').
+    -   **Intelligent Result Formatting**:
+        -   If the calling function's name suggests it's fetching a user profile (e.g.,
+            'get_user_profile', 'getDataFrom'), it attempts to return the result as a dictionary
+            (using `DictCursor` for MySQL or `row_factory` for SQLite).
+        -   For other queries, it typically returns the first column of the first row fetched.
+        -   Special handling for `getQuestionFromQid` (returns the full row) and
+            `getQuestionIDsForYear` (returns the full list of fetched rows).
+    -   **Error Handling**: Catches exceptions during execution and returns an error message string.
+
+    Args:
+        sql_file_path (str): The path to the .sql file containing the SELECT query.
+        value1 (any, optional): The parameter(s) to be passed to the SQL query. Can be
+                                a scalar, list, or tuple. Defaults to None.
+        dbName (str, optional): The name of the database to connect to. 'explicolivais.db'
+                                implies MySQL; otherwise, SQLite. Defaults to 'explicolivais.db'.
+
+    Returns:
+        dict | list | any | str: The fetched data (dictionary for profiles, list for
+        multiple rows/IDs, scalar for single values), or a string containing an error message.
+    """
     retVal = None
     caller_function = inspect.stack()[1].function
 

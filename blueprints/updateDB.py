@@ -13,6 +13,13 @@ bp_updateDB314 = Blueprint('updateDB314', __name__)
 
 @bp_updateDB.route('/updateDB', methods = ["GET","POST"])
 def updateDB():
+    """
+    Renders a work-in-progress page.
+
+    This function is a placeholder and is not yet fully implemented.
+    It is intended to be used for future development of database update
+    functionality.
+    """
     user = session.get('user') or session.get('userinfo')
     # Render the content template first
     main_content_html = render_template(
@@ -32,12 +39,48 @@ def updateDB():
 
 @bp_updateDB314.route('/updateDB314', methods=["GET", "POST"])
 def updateDB314():
-    """TIER 1: Initial registration - only basic user data"""
+    """
+    Handles the final step of Tier 1 user registration, creating the user in the database.
+
+    This function is called after a user submits the signup form. It gathers all the
+    necessary information from both the session (for users signing up via Google) and
+    the form fields.
+
+    The process includes:
+    1.  Cleaning and sanitizing all form inputs.
+    2.  Validating the data, which involves:
+        - Checking if the email already exists in the database.
+        - Verifying that the user's IP address is located in Portugal.
+        - Validating the format of the chosen username.
+    3.  Generating a secure hash for the user's password if one is provided.
+    4.  If validation fails, it stores an error message in the session and redirects
+        the user back to the signup page.
+    5.  On successful validation, it inserts the new user's data into the database,
+        creating records for the user, their IP address, and their connection history.
+    6.  Finally, it initializes the user's session with their basic (Tier 1) profile
+        information and redirects them to their new profile page.
+    """
     
     pprint('Creating Tier 1 user...')
     userinfo = session.get('userinfo', {})
     
     def get_clean(field: str, default: str = "") -> str:
+        """
+        Retrieves and sanitizes a field from the request form.
+
+        This helper function gets a value from the submitted form data,
+        cleans it using bleach to prevent XSS vulnerabilities, and returns
+        the sanitized string. If the form field is not found, it returns a
+        default value.
+
+        Args:
+            field (str): The name of the form field to retrieve.
+            default (str, optional): The default value if the field is missing.
+                                     Defaults to "".
+
+        Returns:
+            str: The sanitized form field value.
+        """
         return bleach.clean(request.form.get(field) or default)
     
     first_name = userinfo.get('given_name') or get_clean('given_name')

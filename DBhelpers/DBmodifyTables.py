@@ -1,9 +1,41 @@
+"""
+This module contains functions for modifying data in the database tables.
+
+NOTE: The functions `getQuestionIDsForYear` and `getQuestionFromQid` appear
+to be misplaced in this file. They are related to selecting quiz data and
+use a function `getValueFromAnotherValue` which is not defined here, suggesting
+they belong in a different module like `DBselectTables.py`.
+"""
 # import sqlite3
 from DBselectTables import getUserIdFromEmail
 from .DBbaseline import get_mysql_connection
 
 
 def updateValue(email, tableName, tableColumn, newValue=None):
+    """
+    Updates a specific field in the database for a given user.
+
+    This function provides a controlled way to update a single value in the
+    database. It includes a security measure, using a whitelist of allowed
+    table and column names to prevent SQL injection vulnerabilities.
+
+    It has special logic for handling updates to the 'thisloginip' column in the
+    'connection' table, which also updates login timestamps and history in
+    both the 'connection' and 'iplist' tables.
+
+    Args:
+        email (str): The email of the user whose data is to be updated.
+        tableName (str): The name of the table to update.
+        tableColumn (str): The name of the column to update.
+        newValue (any, optional): The new value to be set. Defaults to None.
+
+    Returns:
+        str: A status message indicating the success or failure of the update.
+
+    Raises:
+        ValueError: If the `tableName` or `tableColumn` is not in the allowed list.
+        ConnectionError: If the database connection fails.
+    """
     # Connect to database
     
     # Choose backend
@@ -68,6 +100,20 @@ def updateValue(email, tableName, tableColumn, newValue=None):
 
 
 def getQuestionIDsForYear(year):
+    """
+    Retrieves a list of question IDs for a given academic year for a quiz.
+
+    This function determines the number of questions to fetch from the specified
+    year and from previous years. It has a special case for year 5, where all
+    questions are from that year. It relies on an external function,
+    `getValueFromAnotherValue`, to execute the database query.
+
+    Args:
+        year (int): The academic year for which to retrieve question IDs.
+
+    Returns:
+        list | None: A list of question IDs, or None if an error occurs.
+    """
     nQuestionYear = 15
     nQuestionPrev = 15
     if year == 5:
@@ -83,8 +129,21 @@ def getQuestionIDsForYear(year):
 
 
 def getQuestionFromQid(qid):
+    """
+    Retrieves a full quiz question from the database by its row ID.
+
+    This function fetches all data for a single quiz question using its unique
+    identifier (`qid`). It relies on an external function, `getValueFromAnotherValue`,
+    to perform the database lookup.
+
+    Args:
+        qid (int): The unique row ID of the question to retrieve.
+
+    Returns:
+        dict | None: A dictionary containing the question's data, or None if the
+                     question is not found or an error occurs.
+    """
     retVal = getValueFromAnotherValue( selectFolder + "get_question_from_rowID.sql", value1=qid,dbName='quiz.db')
     if isinstance(retVal,str) and "Error" in retVal:
         return None
     return retVal
-

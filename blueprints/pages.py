@@ -14,6 +14,26 @@ bp_terms = Blueprint('terms', __name__, url_prefix='/terms')
 bp_adminDB = Blueprint('adminDB', __name__, url_prefix='/adminDB')
 
 def render_page(blueprint, route="/", template_name="home", page_title="Explicações em Lisboa", title="Explicações em Lisboa", metadata=None):
+    """
+    A factory function to create and register a Flask view for rendering static pages.
+
+    This function generates a view function that reads the content from a specified HTML file,
+    and then renders it within the main 'index.html' template. This allows for the
+    dynamic creation of routes for simple, static content pages without repetitive code.
+
+    Args:
+        blueprint (Blueprint): The Flask Blueprint to which the view function will be registered.
+        route (str, optional): The URL route for the page. Defaults to "/".
+        template_name (str, optional): The name of the HTML template file (without the .html extension)
+                                     located in the 'templates/content/' directory. Defaults to "home".
+        page_title (str, optional): The title of the page, used in the <title> tag.
+                                    Defaults to "Explicações em Lisboa".
+        title (str, optional): The main title displayed on the page. Defaults to "Explicações em Lisboa".
+        metadata (dict, optional): A dictionary of metadata to pass to the template. Defaults to None.
+
+    Returns:
+        function: The created view function.
+    """
     def view_func():
         with open(f'templates/content/{template_name}.html', 'r', encoding='utf-8') as file:
             if template_name == "maps":

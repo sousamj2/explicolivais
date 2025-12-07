@@ -11,7 +11,19 @@ bp_elevate_tier = Blueprint('elevate_tier', __name__)
 
 @bp_elevate_tier.route('/elevate-tier', methods=['GET', 'POST'])
 def elevate_tier():
-    """Handles the tier upgrade process"""
+    """
+    Handles the user account tier elevation process.
+
+    On a GET request, it displays the tier upgrade form, pre-filling the user's email.
+    If the user is not logged in (i.e., no email in the session), it redirects to the sign-in page.
+
+    On a POST request, it processes the submitted form data, which includes personal information
+    like address, phone number, and NIF (Portuguese tax identification number).
+    The function validates the NIF and cell phone number for correctness and uniqueness in the database.
+    If validation fails, it flashes an error message and redirects back to the form.
+    On successful validation, it inserts the new data into the database, updates the user's tier to 2,
+    refreshes the session data with the new information, and redirects to the user's profile page.
+    """
     
     if request.method == 'GET':
         # Show the upgrade form
@@ -40,6 +52,16 @@ def elevate_tier():
         
         # Helper: clean form input
         def get_clean(field: str, default: str = "") -> str:
+            """
+            Retrieves and sanitizes a field from the request form.
+
+            Args:
+                field (str): The name of the form field to retrieve.
+                default (str, optional): The default value to return if the field is not found. Defaults to "".
+
+            Returns:
+                str: The sanitized content of the form field.
+            """
             return bleach.clean(request.form.get(field) or default)
         
         address = get_clean('address')

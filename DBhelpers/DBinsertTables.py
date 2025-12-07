@@ -6,9 +6,23 @@ from .DBbaseline import get_mysql_connection
 
 def execute_insert_from_file(sql_file_path, params_dict):
     """
-    Executes an INSERT query from the SQL file at sql_file_path,
-    using the values in params_dict as parameters.
-    The dictionary keys should match the expected parameter order.
+    Executes a parameterized INSERT query from an SQL file.
+
+    This function reads an SQL INSERT statement from a file, connects to the
+    MySQL database, and executes the query using a dictionary of parameters.
+    The function replaces '?' placeholders in the SQL file with '%s' to ensure
+    compatibility with `pymysql`. The connection is automatically opened and
+    closed.
+
+    Args:
+        sql_file_path (str): The path to the .sql file containing the INSERT statement.
+        params_dict (dict): A dictionary where keys correspond to the data fields
+                            and values are the data to be inserted. The order of
+                            items in the dictionary is assumed to match the order
+                            of placeholders in the SQL query.
+
+    Returns:
+        str: A status message indicating the success or failure of the insert operation.
     """
     print(sql_file_path)
 
@@ -37,11 +51,30 @@ def execute_insert_from_file(sql_file_path, params_dict):
         status = f"Error inserting data: {e}"
         print(status)
     finally:
-        conn.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
     return status
 
 def insertNewUser(first,last,email,h_password=None, username=None):
+    """
+    Inserts a new user into the 'users' table.
+
+    This function prepares the data for a new user and calls the generic
+    `execute_insert_from_file` utility to perform the insertion. It handles
+    both standard and Google-based sign-ups by setting a `g_token` flag. If no
+    username is provided, it defaults to the user's email.
+
+    Args:
+        first (str): The user's first name.
+        last (str): The user's last name.
+        email (str): The user's email address.
+        h_password (str, optional): The hashed password for the user. Defaults to None.
+        username (str, optional): The user's chosen username. Defaults to the email.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
     print(f"Inserting user with email {email}")
 
     g_token=None
@@ -60,6 +93,27 @@ def insertNewUser(first,last,email,h_password=None, username=None):
     return status
         
 def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif):
+    """
+    Inserts a new record into the 'personal' table for a given user.
+
+    This function retrieves the user's ID based on their email, then inserts their
+    detailed personal information (address, NIF, etc.) into the database.
+
+    Args:
+        email (str): The email of the user to whom the data belongs.
+        address (str): The user's street address.
+        number (str): The building number.
+        floor (str): The floor.
+        door (str): The apartment/door number.
+        notes (str): Any additional notes.
+        zip_code1 (str): The first part of the ZIP code.
+        zip_code2 (str): The second part of the ZIP code.
+        cell_phone (str): The user's cell phone number.
+        nif (str): The user's NIF (tax identification number).
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
     insertFile = "insert_newPersonalData.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
@@ -80,6 +134,18 @@ def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,
 
 
 def insertNewIP(email,ipaddress):
+    """
+    Inserts a new IP address record into the 'iplist' table for a given user.
+
+    This function associates a new IP address with a user, identified by their email.
+
+    Args:
+        email (str): The email of the user.
+        ipaddress (str): The IP address to be recorded.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
     insertFile = "insert_newIPaddress.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
@@ -90,6 +156,21 @@ def insertNewIP(email,ipaddress):
     return status
 
 def insertNewConnectionData(email,ipaddress):
+    """
+    Inserts a new record into the 'connections' table for a given user.
+
+    This function logs initial connection data for a new user, setting the creation,
+    last login, and current login IP addresses to the same value. It also calls
+    `insertNewIP` to ensure the IP is recorded in the 'iplist' table.
+
+    Args:
+        email (str): The email of the user.
+        ipaddress (str): The user's current IP address.
+
+    Returns:
+        tuple[str, str]: A tuple containing the status of the connection data
+                         insertion and the combined status of both insertions.
+    """
     insertFile = "insert_newConnection.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
@@ -103,6 +184,17 @@ def insertNewConnectionData(email,ipaddress):
     return status, insertNewIP(email,ipaddress) + " " + status
 
 def insertNewDocument(email,docname, docurl):
+    """
+    Inserts a new document record into the 'documents' table for a given user.
+
+    Args:
+        email (str): The email of the user who owns the document.
+        docname (str): The name or title of the document.
+        docurl (str): The URL or path where the document is stored.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
     insertFile = "insert_newDocument.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
@@ -115,6 +207,18 @@ def insertNewDocument(email,docname, docurl):
     return status
 
 def insertNewClass(email, year, childName, disciplina="Matemática" ):
+    """
+    Inserts a new class registration into the 'classes' table for a given user.
+
+    Args:
+        email (str): The email of the parent/user registering the class.
+        year (int): The academic year of the class.
+        childName (str): The name of the child attending the class.
+        disciplina (str, optional): The subject of the class. Defaults to "Matemática".
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
     insertFile = "insert_newClass.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
@@ -128,6 +232,24 @@ def insertNewClass(email, year, childName, disciplina="Matemática" ):
     return status
 
 def insertNewResults(email,q_uuid,q_year,q_perc,q_resp,q_score,n_corr,n_inco,n_skip,start_ts):
+    """
+    Inserts a new quiz result into the 'qresults' table for a given user.
+
+    Args:
+        email (str): The email of the user who took the quiz.
+        q_uuid (str): The unique identifier for the quiz.
+        q_year (int): The academic year of the quiz.
+        q_perc (int): The percentage of questions from the current year.
+        q_resp (str): A representation of the user's responses.
+        q_score (int): The final score achieved.
+        n_corr (int): The number of correct answers.
+        n_inco (int): The number of incorrect answers.
+        n_skip (int): The number of skipped answers.
+        start_ts (any): The timestamp when the quiz was started.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
     insertFile = "insert_newResult.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
@@ -143,3 +265,7 @@ def insertNewResults(email,q_uuid,q_year,q_perc,q_resp,q_score,n_corr,n_inco,n_s
                   "user_id": user_id,
                   "start_ts": start_ts, 
     }
+    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    return status
+    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    return status

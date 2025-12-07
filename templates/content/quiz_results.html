@@ -58,7 +58,7 @@
     </div>
 
     <!-- Detailed results - ONLY for authenticated users -->
-    {% if not is_authenticated %}
+    {% if is_authenticated %}
     <div class="results-details">
         <h2>Detalhes das Respostas</h2>
         

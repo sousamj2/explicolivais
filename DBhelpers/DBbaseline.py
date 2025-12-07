@@ -4,7 +4,20 @@ import pymysql
 
 def get_mysql_connection(use_dict_cursor: bool = False):
     """
-    This function creates the connection to MySQL in AWS.
+    Establishes and returns a connection to the MySQL database.
+
+    This function retrieves database connection parameters (host, database name, user,
+    password, port) from the current Flask application's configuration. It then
+    uses these parameters to create and return a `pymysql` connection object.
+
+    Args:
+        use_dict_cursor (bool, optional): If True, the connection's cursor will
+            return rows as dictionaries instead of the default tuples.
+            Defaults to False.
+
+    Returns:
+        pymysql.Connection | None: A `pymysql` connection object on success, or
+        `None` if the connection fails.
     """
     # Load from env vars or AWS Secrets/Parameter Store
     MYSQL_HOST = current_app.config['MYSQL_HOST']
@@ -36,7 +49,20 @@ def get_mysql_connection(use_dict_cursor: bool = False):
 
 def setup_mysql_database():
     """
-    This function is used to setup the database at the beginning creating the database and the tables if they don't exist.
+    Initializes the application's database schema.
+
+    This setup utility connects to the MySQL server and performs the initial
+    database and table creation. It is intended to be run once to bootstrap the
+    database environment or for resetting it during development.
+
+    The function performs the following actions:
+    1.  Connects to the MySQL server using credentials from the development config.
+    2.  Executes a `CREATE DATABASE IF NOT EXISTS` statement to ensure the main
+        application database exists.
+    3.  Switches to the newly created or existing database.
+    4.  Calls a series of helper functions (`newTableUsers`, `newTableConnectionData`,
+        etc.) to create each of the application's tables.
+    5.  Prints progress and error messages to the console.
     """
     # # Load from env vars or AWS Secrets/Parameter Store
     # MYSQL_HOST = current_app.config['MYSQL_HOST']
