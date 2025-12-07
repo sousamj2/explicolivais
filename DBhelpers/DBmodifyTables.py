@@ -123,7 +123,7 @@ def getQuestionIDsForYear(year):
 
     retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')
     if isinstance(retVal,str) and "Error" in retVal:
-        print(retVal,arguments)
+        # print(retVal,arguments)
         return None
     return retVal
 
