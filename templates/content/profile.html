@@ -63,6 +63,30 @@
     </div>
     {% endif %}
 
+    <!-- Quiz History Section -->
+    {% if quiz_history %}
+    <div class="quiz-history-section">
+        <h3>Histórico de Quizzes</h3>
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Pontuação</th>
+                    <th>Resultados</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in quiz_history %}
+                <tr>
+                    <td>{{ quiz.quiz_date | format_data }}</td>
+                    <td>{{ "%.1f"|format(quiz.score_perc or 0.0) }}%</td>
+                    <td><a href="{{ url_for('quiz.view_quiz_result', quiz_uuid=quiz.q_uuid) }}">{{ quiz.q_uuid[:8] }}...</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 
     
 </div>

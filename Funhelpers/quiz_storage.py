@@ -1,5 +1,6 @@
 """
 Quiz results storage - Anonymous only
+- Authenticated users' history is saved to the main database.
 - Stores anonymous quiz results temporarily
 - 1-hour expiration checked lazily on /quiz access
 - No TTL field needed, just check timestamp age
@@ -12,6 +13,8 @@ import os
 from datetime import datetime, timedelta
 from uuid import uuid4
 from pathlib import Path
+
+from DBhelpers import save_quiz_history
 
 QUIZ_RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'quiz_results')
 Path(QUIZ_RESULTS_DIR).mkdir(exist_ok=True)
@@ -64,11 +67,39 @@ def save_quiz_result(user_answers, questions):
         # Write quiz result (anonymous, no email)
         writer.writerow([quiz_uuid, timestamp, answers_json])
     
-    # print(f"DEBUG: Saved anonymous quiz result")
-    # print(f"  UUID: {quiz_uuid}")
-    # print(f"  Timestamp: {timestamp}")
+    print(f"DEBUG: Saved anonymous quiz result")
+    print(f"  UUID: {quiz_uuid}")
+    print(f"  Timestamp: {timestamp}")
     
     return quiz_uuid
+
+def save_quiz_history_for_user(email, quiz_results, quiz_config):
+    """
+    Saves a completed quiz's results to the database for an authenticated user.
+
+    Args:
+        email (str): The user's email address.
+        quiz_results (dict): The dictionary of results from calculate_score.
+        quiz_config (dict): The quiz configuration dictionary from the session.
+
+    Returns:
+        bool: True if saving was successful, False otherwise.
+    """
+    if not email or not isinstance(quiz_results, dict):
+        return False
+
+    quiz_uuid = str(uuid4())
+
+    try:
+        save_quiz_history(
+            email=email,
+            results=quiz_results,
+            quiz_config=quiz_config,
+        )
+        return True
+    except Exception as e:
+        print(f"ERROR: Could not save quiz history for {email}: {e}")
+        return False
 
 def cleanup_expired_results():
     """

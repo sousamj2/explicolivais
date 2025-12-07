@@ -14,6 +14,10 @@ from .quizFunctions import (
     score_points_total,
 )
 
+from .quiz_storage import (
+    save_quiz_history_for_user,
+)
+
 __all__ = [
     "check_ip_in_portugal",
     "format_data",
@@ -27,5 +31,5 @@ __all__ = [
     "send_email",
     "score_counts",
     "score_points_total",
-
+    "save_quiz_history_for_user",
 ]

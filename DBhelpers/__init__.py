@@ -18,12 +18,12 @@ from .DBinsertTables import (
     insertNewDocument,
     insertNewIP,
     insertNewPersonalData,
+    save_quiz_history,
     insertNewUser,
     )
 from .DBselectTables import (
     get_user_profile_tier1,
     get_user_profile_tier2,
-    get_user_quiz,
     getDataFromCellNumber,
     getDataFromEmail,
     getDataFromIPcreated,
@@ -32,7 +32,9 @@ from .DBselectTables import (
     getHashFromEmail,
     getEmailFromUsername,
     getQuestionFromQid,
+    get_quiz_history_for_user,
     getQuestionIDsForYear,
+    get_quiz_history_by_uuid,
     )
 from .DBupdateTables import (refresh_last_login_and_ip)
 
@@ -61,9 +63,11 @@ __all__ = [
     "insertNewDocument",
     "insertNewIP",
     "insertNewPersonalData",
+    "save_quiz_history",
     "insertNewUser",
     "get_user_profile_tier1",
     "get_user_profile_tier2",
+    "get_quiz_history_for_user",
     "getDataFromCellNumber",
     "getDataFromEmail",
     "getDataFromIPcreated",
@@ -72,7 +76,6 @@ __all__ = [
     "refresh_last_login_and_ip",
     "getHashFromEmail",
     "getEmailFromUsername",
-    "get_user_quiz",
     "loadQanswers",
     "loadQaulas",
     "loadQcsvFiles",
@@ -81,4 +84,5 @@ __all__ = [
     "getQuestionFromQid",
     "getQuestionIDsForYear",
     "get_mysql_connection",
+    "get_quiz_history_by_uuid",
 ]

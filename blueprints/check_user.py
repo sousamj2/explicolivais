@@ -50,14 +50,14 @@ def check_user314():
     If the user exists, it updates their last login time and IP, stores their metadata in the session, and redirects to their profile.
     If the user does not exist, it redirects to the signup page.
     """
-    pprint('Checking user in the database...')
+    # pprint('Checking user in the database...')
 
     if request.method == 'POST':
         email = request.form.get('username','').lower()  # use 'username' if that's your form field name
         password = request.form.get('password','')
 
         if not email or not password:
-            flash('Missing email or password.')
+            flash('Falta o username/email ou a palavra-passe.')
             return redirect(url_for('signin314.signin314'))
 
         if '@' not in email: # case for user name
@@ -66,7 +66,7 @@ def check_user314():
         # Fetch the stored hash for this email
         hashval = getHashFromEmail(email)
         if hashval is None:
-            flash('User not found.')
+            flash('O username/email não existe ou a palavra-passe está incorreta.')
             return redirect(url_for('signin314.signin314'))
         
         # Verify password against hash
@@ -78,10 +78,10 @@ def check_user314():
                 # return redirect(url_for('profile.profile', source_method ='POST'))
                 return redirect(url_for('profile.profile'))
             else:
-                flash('Profile not found, please register.')
+                flash('O username/email não existe ou a palavra-passe está incorreta.')
                 return redirect(url_for('signup314.signup314'))
         else:
-            flash('Incorrect password.')
+            flash('O username/email não existe ou a palavra-passe está incorreta.')
             return redirect(url_for('signin314.signin314'))
         
     else:
@@ -103,6 +103,6 @@ def check_user314():
             # return redirect(url_for('profile.profile', source_method ='GET'))
             return redirect(url_for('profile.profile'))
         else:
-            flash('Profile not found, please register.')
+            flash('O username/email não existe ou a palavra-passe está incorreta.')
             # pprint('User not found, redirecting to signup.')
             return redirect(url_for('signup314.signup314'))

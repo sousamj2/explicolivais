@@ -26,7 +26,7 @@ def signup314():
     which is then embedded into the main 'index.html' layout for the user to complete
     their registration.
     """
-    pprint('Rendering signup page...')
+    # pprint('Rendering signup page...')
     if not session.get('metadata') :
         session['metadata'] = {}
     session["metadata"]["greeting"] = get_lisbon_greeting()

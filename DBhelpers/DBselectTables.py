@@ -15,7 +15,7 @@ def print_caller():
     """
     # Get the name of the caller (one level up the call stack)
     caller_name = inspect.stack()[1].function
-    print("Called by function:", caller_name)
+    # print("Called by function:", caller_name)
 
 def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais.db'):
     """
@@ -36,6 +36,7 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
             'get_user_profile', 'getDataFrom'), it attempts to return the result as a dictionary
             (using `DictCursor` for MySQL or `row_factory` for SQLite).
         -   For other queries, it typically returns the first column of the first row fetched.
+        -   Special handling for `get_quiz_history_for_user` (returns a list of dicts).
         -   Special handling for `getQuestionFromQid` (returns the full row) and
             `getQuestionIDsForYear` (returns the full list of fetched rows).
     -   **Error Handling**: Catches exceptions during execution and returns an error message string.
@@ -56,7 +57,7 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
 
     # Choose backend
     use_mysql = (dbName == 'explicolivais.db')
-    want_dict = use_mysql and ("get_user_profile" in caller_function or "getDataFrom" in caller_function)
+    want_dict = use_mysql and ("get_user_profile" in caller_function or "getDataFrom" in caller_function or "get_quiz_history_for_user" in caller_function)
     
     if use_mysql:
         conn = get_mysql_connection(use_dict_cursor=want_dict)
@@ -103,9 +104,16 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
 
 
         if "get_user_profile" in caller_function or "getDataFrom" in caller_function:
-            retVal = dict(cursor.fetchone())
+            output = cursor.fetchone()
+            if output:
+                retVal = dict(output)
+                # print("dict output:",retVal)
+
+        elif 'get_quiz_history_by_uuid' == caller_function or "get_quiz_history_for_user" in caller_function:
+            retVal = cursor.fetchall()
         else:
             output = cursor.fetchall()
+            # print("else output:",output)
             if output:
                 retVal = output[0][0]
             if 'getQuestionFromQid' == caller_function:
@@ -118,17 +126,21 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
 
     except Exception as e:
         retVal = f"Error retrieving data: {e}"
-        print(retVal)
+        # print(retVal)
     finally:
         conn.close()
     if 'getQuestionIDsForYear' == caller_function:
         return retVal
 
 
+    if "get_quiz_history_for_user" in caller_function :
+        return [dictify_real_dict_row(row) for row in retVal] if retVal else []
+    
     if not isinstance(retVal,str) or "Error" not in retVal:
         # print("----------------------------------------------------",retVal)
         retVal = dictify_real_dict_row(retVal)
         # print("----------------------------------------------------",retVal)
+    # print("retVal after dictify:",retVal)
 
     return retVal
 
@@ -150,8 +162,37 @@ def getEmailFromUsername(email):
         return None
     return retVal
 
-def get_user_quiz(email):
-    return False
+def get_quiz_history_for_user(email):
+    """Fetches all quiz history for a given user."""
+    # The SQL query in get_quiz_history_from_email.sql has been updated
+    # to calculate total_questions and score_perc directly.
+    # - total_questions is the sum of correct, wrong, and skipped.
+    # - score_perc is calculated from q_score and max_possible_points.
+    #   (Assuming max_possible_points is n_correct * 5, which is a simplification
+    #    but works if all correct answers are worth 5 points).
+    # If scoring is more complex, this logic might need adjustment.
+    retVal = getValueFromAnotherValue(selectFolder + "get_quiz_history_from_email.sql", email)
+    if isinstance(retVal, str) and "Error" in retVal:
+        return []
+    return retVal
+
+
+def get_quiz_history_by_uuid(email, quiz_uuid):
+    """
+    Args:
+        email (str): The user's email address.
+        quiz_uuid (str): The unique identifier for the quiz.
+
+    """
+    retVal = get_quiz_history_for_user(email)
+    # print("get_quiz_history_by_uuid",retVal)
+    if isinstance(retVal, str) and "Error" in retVal:
+        return []
+    for quiz in retVal:
+        if 'q_uuid' in quiz.keys() and quiz.get('q_uuid') == quiz_uuid:
+            return quiz
+    return []
+    
 
 def get_user_profile_tier2(email):
     # print("---------------------------------",email)
@@ -269,7 +310,7 @@ def getQuestionIDsForYear(year,num_exercises=20,current_year_percent=50):
     arguments = [year,nQuestionYear,nskip,year,nQuestionPrev]
 
     retVal = getValueFromAnotherValue( selectFolder + sqlfile, value1=arguments,dbName='quiz.db')
-    print(retVal)
+    # print(retVal)
     if isinstance(retVal,str) and "Error" in retVal:
         # print("------------------- getQuestionIDsForYear",retVal,arguments)
         return None
@@ -282,4 +323,3 @@ def getQuestionFromQid(qid):
         # print("getQuestionFromQid",retVal,qid)
         return None
     return retVal
-

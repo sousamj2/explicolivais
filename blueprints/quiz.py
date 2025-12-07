@@ -3,10 +3,12 @@ from DBhelpers import getQuestionIDsForYear, getQuestionFromQid
 from Funhelpers.quiz_helpers import calculate_score
 from Funhelpers.quiz_storage import (
     save_quiz_result,
-    get_quiz_result,
+    save_quiz_history_for_user,
+    # get_quiz_result,
     cleanup_expired_results
 )
 from urllib.parse import urljoin
+import json
 
 def split_top_level_commas_with_quotes(s: str):
     """
@@ -227,7 +229,7 @@ def start_quiz():
     num_exercises = request.args.get('num_exercises', 20, type=int)
     current_year_percent = request.args.get('current_year_percent', 50, type=int)
         
-    if num_exercises not in [20, 40, 60, 80, 100]:
+    if num_exercises not in [2, 20, 40, 60, 80, 100]:
         flash('Número de exercícios inválido.', 'error')
         return redirect(url_for('quiz.quiz_config'))
     
@@ -534,19 +536,12 @@ def results():
     quiz_uuid = None
 
     if not is_authenticated:
-        # Save the normalized version to keep structure stable if viewed later
-
-        # print()
-        # print(session)
-        # print("-----------------------------------------------------------")
-        # print(user_answers)
-        # print("-----------------------------------------------------------")
-        # print(question_ids)
-        # print("-----------------------------------------------------------")
-        # print()
-
         quiz_uuid = save_quiz_result(user_answers, question_ids)
         session['quiz_uuid'] = quiz_uuid
+    else:
+        # For authenticated users, save to their history
+        quiz_config = session.get('quiz_config', {})
+        save_quiz_history_for_user(email, quiz_results, quiz_config)
 
     # user = session.get('user')
     user = session and session.get("metadata")
@@ -596,54 +591,68 @@ def view_quiz_result(quiz_uuid):
     Returns:
         A rendered HTML page with the quiz results, or a redirect if the result is not found.
     """
-    from Funhelpers.quiz_storage import get_quiz_result
-    from DBhelpers import getQuestionFromQid
+    from Funhelpers.quiz_storage import get_quiz_result as get_anonymous_quiz_result
+    from DBhelpers import getQuestionFromQid, get_quiz_history_by_uuid
     
-    # Retrieve the quiz result (answers keyed by question_number)
-    quiz_data = get_quiz_result(quiz_uuid)
+    email = session.get('metadata', {}).get('email') if session.get('metadata') else ''
+    is_authenticated = bool(email)
+    quiz_data = None
+    
+    # 1. If authenticated, try to get result from user's history first
+    if is_authenticated:
+        quiz_data = get_quiz_history_by_uuid(email, quiz_uuid)
+    # print("quiz_data =", quiz_data)
+
+    # 2. If not found or not authenticated, fall back to anonymous results
+    if not quiz_data:
+        quiz_data = get_anonymous_quiz_result(quiz_uuid)
+        if quiz_data:
+            # Anonymous results have a different structure
+            quiz_data['answers'] = quiz_data.pop('answers_by_question_number', {})
     
     if not quiz_data:
         flash('Quiz não encontrado ou expirado. Os resultados têm validade de 1 hora.', 'error')
         return redirect(url_for('quiz.quiz_config'))
     
-    answers = quiz_data['answers_by_question_number']  # {question_number: [option_indices]}
-    timestamp = quiz_data['timestamp']
-    email = session.get('metadata', {}).get('email', '') if session.get('metadata') else ''
-    is_authenticated = bool(email)
+
+    # The key for answers is 'answers' for both DB and anonymous results now
+    answers = quiz_data.get('answers', {})
+    timestamp = quiz_data['quiz_date']
     
-    # Convert question_numbers to rowids, then fetch full questions
+    # Fetch full questions. The keys in 'answers' are question IDs (rowid).
     questions = []
     answers_by_index = {}  # Rebuild as {index: [options]} for calculate_score
     
-    for idx, (qnum, options) in enumerate(sorted(answers.items())):
-        # print(qnum)
-        qnum = int(qnum)
-        # print(qnum)
+    # Sort by question ID to maintain a consistent order
+    # print("answers:",answers)
+    answers = json.loads(answers)
+    sorted_qids = sorted([int(k) for k in answers.keys()])
 
-        question = getQuestionFromQid(qnum)
-        # print(question)
-
+    for idx, qid in enumerate(sorted_qids):
+        question = getQuestionFromQid(qid)
         if question:
             questions.append(question)
-            answers_by_index[str(idx)] = options
+            answers_by_index[str(idx)] = answers[str(qid)]
     
     if not questions:
         flash('Não foi possível carregar as perguntas do quiz.', 'error')
         return redirect(url_for('quiz.quiz_config'))
     
     # Calculate results
-    quiz_results = calculate_score(questions, answers_by_index)
+    # Convert sqlite3.Row to dict for calculate_score
+    questions_as_dicts = [dict(q) for q in questions]
+    quiz_results = calculate_score(questions_as_dicts, answers_by_index)
     
-    user = session.get('user', None)
+    user = session.get("metadata")
     
     content_html = render_template(
         'content/quiz_results.html',
         results=quiz_results,
-        questions=questions,
+        questions=questions_as_dicts,
         user_answers=answers_by_index,
         quiz_uuid=quiz_uuid,
         is_authenticated=is_authenticated,
-        email='',
+        email=email,
         timestamp=timestamp
     )
     

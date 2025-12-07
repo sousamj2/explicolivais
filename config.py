@@ -137,6 +137,13 @@ class Config:
     MYSQL_USER     = "admin"
     MYSQL_DBNAME   = "explicolivais"
     MYSQL_PORT     = 3306
+    # print(MYSQL_PASSWORD)
+    # print(MYSQL_HOST    )
+    # print(MYSQL_USER    )
+    # print(MYSQL_DBNAME  )
+    # print(MYSQL_PORT    )
+    # print()
+
 
     DEBUG = False
     TESTING = False

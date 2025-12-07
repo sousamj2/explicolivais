@@ -61,7 +61,7 @@ def updateDB314():
         information and redirects them to their new profile page.
     """
     
-    pprint('Creating Tier 1 user...')
+    # pprint('Creating Tier 1 user...')
     userinfo = session.get('userinfo', {})
     
     def get_clean(field: str, default: str = "") -> str:

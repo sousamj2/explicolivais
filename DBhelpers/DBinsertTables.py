@@ -1,4 +1,6 @@
 # import sqlite3
+import json
+from uuid import uuid4
 from DBhelpers.DBselectTables import getUserIdFromEmail
 insertFolder = "SQLiteQueries/insertHandler/"
 
@@ -24,12 +26,14 @@ def execute_insert_from_file(sql_file_path, params_dict):
     Returns:
         str: A status message indicating the success or failure of the insert operation.
     """
-    print(sql_file_path)
+    # print(sql_file_path)
 
     try:
         # Read SQL code from file
         with open(sql_file_path, 'r') as file:
             sql_code = file.read()
+
+            # print(sql_code.replace("?","%s"))
 
         # Connect to database
         conn = get_mysql_connection()
@@ -49,7 +53,7 @@ def execute_insert_from_file(sql_file_path, params_dict):
         status = "Insert successful"
     except Exception as e:
         status = f"Error inserting data: {e}"
-        print(status)
+        # print(status)
     finally:
         if 'conn' in locals() and conn:
             conn.close()
@@ -75,7 +79,7 @@ def insertNewUser(first,last,email,h_password=None, username=None):
     Returns:
         str: A status message from the database insertion operation.
     """
-    print(f"Inserting user with email {email}")
+    # print(f"Inserting user with email {email}")
 
     g_token=None
     # handling gmail token sign up
@@ -89,7 +93,7 @@ def insertNewUser(first,last,email,h_password=None, username=None):
     insertFile = "insert_newUser.sql"
     insertDict = {"first": first, "last": last, "email": email, 'username': username, 'h_password': h_password, 'g_token': g_token}
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
-    print("Insert user:",status)
+    # print("Insert user:",status)
     return status
         
 def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif):
@@ -129,7 +133,7 @@ def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,
                   "cell_phone":cell_phone,
                   "nfiscal":nif}
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
-    print("Insert personal:",status)
+    # print("Insert personal:",status)
     return status
 
 
@@ -231,41 +235,47 @@ def insertNewClass(email, year, childName, disciplina="Matemática" ):
     status = execute_insert_from_file(insertFolder+insertFile,insertDict)
     return status
 
-def insertNewResults(email,q_uuid,q_year,q_perc,q_resp,q_score,n_corr,n_inco,n_skip,start_ts):
+def save_quiz_history(email, results, quiz_config):
     """
-    Inserts a new quiz result into the 'qresults' table for a given user.
+    Saves a completed quiz's results to the database for an authenticated user.
 
     Args:
-        email (str): The email of the user who took the quiz.
-        q_uuid (str): The unique identifier for the quiz.
-        q_year (int): The academic year of the quiz.
-        q_perc (int): The percentage of questions from the current year.
-        q_resp (str): A representation of the user's responses.
-        q_score (int): The final score achieved.
-        n_corr (int): The number of correct answers.
-        n_inco (int): The number of incorrect answers.
-        n_skip (int): The number of skipped answers.
-        start_ts (any): The timestamp when the quiz was started.
+        email (str): The user's email address.
+        results (dict): The dictionary of results from calculate_score.
+        quiz_config (dict): The quiz configuration from the session.
 
     Returns:
         str: A status message from the database insertion operation.
     """
-    insertFile = "insert_newResult.sql"
     user_id = getUserIdFromEmail(email)
     if not user_id:
-        return "ERROR: There is no user with this email: {email}."
-    insertDict = {"q_uuid": q_uuid,
-                  "q_score": q_score,
-                  "q_year": q_year,
-                  "q_percent": q_perc,
-                  "q_resp": q_resp,
-                  "n_correct": n_corr,
-                  "n_wrong": n_inco,
-                  "n_skip": n_skip,
-                  "user_id": user_id,
-                  "start_ts": start_ts, 
+        return f"ERROR: There is no user with this email: {email}."
+
+    # Create a dictionary mapping the question's database ID (rowid) to the user's answer.
+    # This matches the format used for anonymous quiz results, ensuring consistency.
+    answers_by_q_id = {}
+    for res in results.get('question_results', []):
+        question_db_id = res.get('question', {}).get('db_id')
+        if question_db_id:
+            answers_by_q_id[str(question_db_id)] = res.get('user_answer', [])
+    q_resp_json = json.dumps(answers_by_q_id)
+
+    # generate uuid for this quiz result
+    q_uuid = str(uuid4())
+
+    insertFile = "save_quiz_history.sql"
+    insertDict = {
+        "q_uuid": q_uuid,
+        "user_id": user_id,
+        "q_score": results.get('total_points'),
+        "q_year": quiz_config.get('year'),
+        "q_percent": quiz_config.get('current_year_percent'),
+        "n_correct": results.get('n_correct'),
+        "n_wrong": results.get('n_wrong'),
+        "n_skip": results.get('n_skip'),
+        "q_resp": q_resp_json
     }
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
-    return status
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
+    # print("Save quiz history:", status)
     return status

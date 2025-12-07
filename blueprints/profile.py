@@ -2,10 +2,16 @@ from flask import Blueprint, render_template, session, redirect, url_for, reques
 from markupsafe import Markup
 from pprint import pprint
 
-from DBhelpers import get_user_profile_tier1,get_user_profile_tier2
-from Funhelpers import get_lisbon_greeting, format_data
+from DBhelpers import get_user_profile_tier1, get_user_profile_tier2, get_quiz_history_for_user
+from Funhelpers import get_lisbon_greeting
 
 bp_profile = Blueprint('profile', __name__, url_prefix='/profile')
+
+# Register the custom filter
+@bp_profile.app_template_filter()
+def format_data(value):
+    from Funhelpers.format_data import format_data as f_data
+    return f_data(value)
 
 @bp_profile.route('/')
 def profile():
@@ -67,6 +73,10 @@ def profile():
         # pprint(session)
         # print()
 
+        # Fetch quiz history for the user
+        quiz_history = get_quiz_history_for_user(email)
+        # print("Quiz history:", quiz_history)
+
         # Render content template with tier information
         main_content_html = render_template(
             'content/profile.html',
@@ -82,7 +92,8 @@ def profile():
             tier=user_tier,  # Pass tier to template
             vpn_check_color="green",
             primeiro_contacto_color="yellow",
-            primeira_aula_color="red"
+            primeira_aula_color="red",
+            quiz_history=quiz_history
         )
         
         return render_template('index.html',

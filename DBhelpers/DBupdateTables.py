@@ -29,4 +29,4 @@ def refresh_last_login_and_ip(email, current_ip):
     finally:
         conn.close()
 
-    print(status)
+    # print(status)

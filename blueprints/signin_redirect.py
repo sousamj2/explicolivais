@@ -26,7 +26,7 @@ def signin_redirect314():
         f'&prompt=consent'
         f'&state=secure_random_state'
     )
-    print(auth_url)
+    # print(auth_url)
     return redirect(auth_url)
 
 @bp_signin_redirect.route('/')
@@ -52,5 +52,5 @@ def signin_redirect():
         f'&prompt=consent'
         f'&state=secure_random_state'
     )
-    print(auth_url)
+    # print(auth_url)
     return redirect(auth_url)
