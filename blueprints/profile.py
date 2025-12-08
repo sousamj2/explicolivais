@@ -6,6 +6,7 @@ from flask import (
     url_for,
     request,
     current_app,
+    flash, # Import flash
 )
 from markupsafe import Markup
 from pprint import pprint
@@ -17,6 +18,7 @@ from DBhelpers import (
     get_quiz_history_for_user,
 )
 from Funhelpers import get_lisbon_greeting
+from Funhelpers.claim_quiz import claim_anonymous_quiz # Import claim_anonymous_quiz
 
 bp_profile = Blueprint("profile", __name__, url_prefix="/profile")
 
@@ -99,18 +101,31 @@ def profile():
         # pprint(session)
         # print()
 
+        # --- Claim anonymous quiz if present in session ---
+        quiz_uuid_to_claim = session.pop('pending_quiz_uuid', None)
+        if quiz_uuid_to_claim:
+            quiz_config = session.pop('quiz_config', {})
+            question_ids = session.pop('question_ids', [])
+            user_answers = session.pop('user_answers', {})
+
+            if claim_anonymous_quiz(email, quiz_uuid_to_claim, quiz_config, question_ids, user_answers):
+                flash('O quiz que realizou anonimamente foi adicionado ao seu histórico!', 'success')
+            else:
+                flash('Não foi possível associar o quiz que realizou anonimamente.', 'warning')
+        # --- End Claim anonymous quiz logic ---
+
         # Fetch quiz history for the user
         quiz_history_raw = get_quiz_history_for_user(email)
-        print("quiz_history_raw:", quiz_history_raw)
+        # print("quiz_history_raw:", quiz_history_raw)
         quiz_history = []
         if isinstance(quiz_history_raw, list):
             # Filter out any non-dictionary items just in case
             quiz_history = [item for item in quiz_history_raw if isinstance(item, dict)]
-            print("quiz_history:", quiz_history)
-            if len(quiz_history) != len(quiz_history_raw):
-                print(f"WARNING: Filtered out non-dictionary items from quiz_history.")
-        else:
-            print(f"WARNING: quiz_history was not a list, but type {type(quiz_history_raw)}. Forcing to empty list.")
+            # print("quiz_history:", quiz_history)
+            # if len(quiz_history) != len(quiz_history_raw):
+                # print(f"WARNING: Filtered out non-dictionary items from quiz_history.")
+        # else:
+            # print(f"WARNING: quiz_history was not a list, but type {type(quiz_history_raw)}. Forcing to empty list.")
             # quiz_history is already []
 
         # Pagination
@@ -121,6 +136,7 @@ def profile():
         start = (page - 1) * per_page
         end = start + per_page
         paginated_quiz_history = quiz_history[start:end]
+
 
         # Render content template with tier information
         main_content_html = render_template(

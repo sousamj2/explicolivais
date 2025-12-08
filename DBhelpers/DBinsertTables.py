@@ -1,6 +1,6 @@
-# import sqlite3
 import json
 from uuid import uuid4
+from datetime import datetime # Import datetime
 from DBhelpers.DBselectTables import getUserIdFromEmail
 insertFolder = "SQLiteQueries/insertHandler/"
 
@@ -30,10 +30,10 @@ def execute_insert_from_file(sql_file_path, params_dict):
 
     try:
         # Read SQL code from file
-        with open(sql_file_path, 'r') as file:
+        with open(sql_file_path, "r") as file:
             sql_code = file.read()
 
-            # print(sql_code.replace("?","%s"))
+            print(sql_code.replace("?","%s"))
 
         # Connect to database
         conn = get_mysql_connection()
@@ -46,8 +46,9 @@ def execute_insert_from_file(sql_file_path, params_dict):
         # Assuming params_dict is an OrderedDict or that order is known
         params = tuple(params_dict[key] for key in params_dict)
 
+        # print(params)
         # Execute the SQL INSERT
-        cursor.execute(sql_code.replace("?","%s"), params)
+        cursor.execute(sql_code.replace("?", "%s"), params)
         conn.commit()
 
         status = "Insert successful"
@@ -55,12 +56,13 @@ def execute_insert_from_file(sql_file_path, params_dict):
         status = f"Error inserting data: {e}"
         # print(status)
     finally:
-        if 'conn' in locals() and conn:
+        if "conn" in locals() and conn:
             conn.close()
 
     return status
 
-def insertNewUser(first,last,email,h_password=None, username=None):
+
+def insertNewUser(first, last, email, h_password=None, username=None):
     """
     Inserts a new user into the 'users' table.
 
@@ -81,7 +83,7 @@ def insertNewUser(first,last,email,h_password=None, username=None):
     """
     # print(f"Inserting user with email {email}")
 
-    g_token=None
+    g_token = None
     # handling gmail token sign up
     if username is None:
         username = email
@@ -89,14 +91,23 @@ def insertNewUser(first,last,email,h_password=None, username=None):
     else:
         g_token = 0
 
-
     insertFile = "insert_newUser.sql"
-    insertDict = {"first": first, "last": last, "email": email, 'username': username, 'h_password': h_password, 'g_token': g_token}
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    insertDict = {
+        "first": first,
+        "last": last,
+        "email": email,
+        "username": username,
+        "h_password": h_password,
+        "g_token": g_token,
+    }
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     # print("Insert user:",status)
     return status
-        
-def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif):
+
+
+def insertNewPersonalData(
+    email, address, number, floor, door, notes, zip_code1, zip_code2, cell_phone, nif
+):
     """
     Inserts a new record into the 'personal' table for a given user.
 
@@ -122,22 +133,24 @@ def insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,
     user_id = getUserIdFromEmail(email)
     if not user_id:
         return "ERROR: There is no user with this email: {email}."
-    insertDict = {"user_id": user_id,
-                  "address": address,
-                  "number": number,
-                  "floor": floor,
-                  "door": door,
-                  "notes": notes,
-                  "zip_code1": zip_code1,
-                  "zip_code2": zip_code2,
-                  "cell_phone":cell_phone,
-                  "nfiscal":nif}
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    insertDict = {
+        "user_id": user_id,
+        "address": address,
+        "number": number,
+        "floor": floor,
+        "door": door,
+        "notes": notes,
+        "zip_code1": zip_code1,
+        "zip_code2": zip_code2,
+        "cell_phone": cell_phone,
+        "nfiscal": nif,
+    }
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     # print("Insert personal:",status)
     return status
 
 
-def insertNewIP(email,ipaddress):
+def insertNewIP(email, ipaddress):
     """
     Inserts a new IP address record into the 'iplist' table for a given user.
 
@@ -154,12 +167,12 @@ def insertNewIP(email,ipaddress):
     user_id = getUserIdFromEmail(email)
     if not user_id:
         return "ERROR: There is no user with this email: {email}."
-    insertDict = {"user_id": user_id,
-                  "ipvalue": ipaddress}
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    insertDict = {"user_id": user_id, "ipvalue": ipaddress}
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     return status
 
-def insertNewConnectionData(email,ipaddress):
+
+def insertNewConnectionData(email, ipaddress):
     """
     Inserts a new record into the 'connections' table for a given user.
 
@@ -179,15 +192,17 @@ def insertNewConnectionData(email,ipaddress):
     user_id = getUserIdFromEmail(email)
     if not user_id:
         return "ERROR: There is no user with this email: {email}."
-    insertDict = {"user_id": user_id,
-                  "createdatip": ipaddress,
-                  "lastloginip": ipaddress,
-                  "thisloginip": ipaddress
-                  }
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
-    return status, insertNewIP(email,ipaddress) + " " + status
+    insertDict = {
+        "user_id": user_id,
+        "createdatip": ipaddress,
+        "lastloginip": ipaddress,
+        "thisloginip": ipaddress,
+    }
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
+    return status, insertNewIP(email, ipaddress) + " " + status
 
-def insertNewDocument(email,docname, docurl):
+
+def insertNewDocument(email, docname, docurl):
     """
     Inserts a new document record into the 'documents' table for a given user.
 
@@ -203,14 +218,12 @@ def insertNewDocument(email,docname, docurl):
     user_id = getUserIdFromEmail(email)
     if not user_id:
         return "ERROR: There is no user with this email: {email}."
-    insertDict = {"user_id": user_id,
-                  "docname": docname,
-                  "docurl": docurl
-                }
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    insertDict = {"user_id": user_id, "docname": docname, "docurl": docurl}
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     return status
 
-def insertNewClass(email, year, childName, disciplina="Matemática" ):
+
+def insertNewClass(email, year, childName, disciplina="Matemática"):
     """
     Inserts a new class registration into the 'classes' table for a given user.
 
@@ -227,15 +240,17 @@ def insertNewClass(email, year, childName, disciplina="Matemática" ):
     user_id = getUserIdFromEmail(email)
     if not user_id:
         return "ERROR: There is no user with this email: {email}."
-    insertDict = {"user_id": user_id,
-                  "year": year,
-                  "childName": childName,
-                  "disciplica": disciplina
+    insertDict = {
+        "user_id": user_id,
+        "year": year,
+        "childName": childName,
+        "disciplica": disciplina,
     }
-    status = execute_insert_from_file(insertFolder+insertFile,insertDict)
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     return status
 
-def save_quiz_history(email, results, quiz_config):
+
+def save_quiz_history(email, results, quiz_config, q_uuid=None, start_ts=None):
     """
     Saves a completed quiz's results to the database for an authenticated user.
 
@@ -243,6 +258,8 @@ def save_quiz_history(email, results, quiz_config):
         email (str): The user's email address.
         results (dict): The dictionary of results from calculate_score.
         quiz_config (dict): The quiz configuration from the session.
+        q_uuid (str, optional): An optional UUID to use for the quiz result. If None, a new UUID will be generated.
+        start_ts (str, optional): The start timestamp of the quiz. If None, the current timestamp is used.
 
     Returns:
         str: A status message from the database insertion operation.
@@ -254,26 +271,32 @@ def save_quiz_history(email, results, quiz_config):
     # Create a dictionary mapping the question's database ID (rowid) to the user's answer.
     # This matches the format used for anonymous quiz results, ensuring consistency.
     answers_by_q_id = {}
-    for res in results.get('question_results', []):
-        question_db_id = res.get('question', {}).get('db_id')
+    for res in results.get("question_results", []):
+        question_db_id = res.get("question", {}).get("db_id")
         if question_db_id:
-            answers_by_q_id[str(question_db_id)] = res.get('user_answer', [])
+            answers_by_q_id[str(question_db_id)] = res.get("user_answer", [])
     q_resp_json = json.dumps(answers_by_q_id)
 
-    # generate uuid for this quiz result
-    q_uuid = str(uuid4())
+    # Use provided UUID or generate a new one
+    if q_uuid is None:
+        q_uuid = str(uuid4())
 
-    insertFile = "save_quiz_history.sql"
+    # Use provided start_ts or generate a new one
+    if start_ts is None:
+        start_ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    insertFile = "insert_newResult.sql"
     insertDict = {
         "q_uuid": q_uuid,
+        "q_score": results.get("total_points"),
+        "q_year": quiz_config.get("year"),
+        "q_percent": quiz_config.get("current_year_percent"),
+        "q_resp": q_resp_json,
+        "n_correct": results.get("n_correct"),
+        "n_wrong": results.get("n_wrong"),
+        "n_skip": results.get("n_skip"),
         "user_id": user_id,
-        "q_score": results.get('total_points'),
-        "q_year": quiz_config.get('year'),
-        "q_percent": quiz_config.get('current_year_percent'),
-        "n_correct": results.get('n_correct'),
-        "n_wrong": results.get('n_wrong'),
-        "n_skip": results.get('n_skip'),
-        "q_resp": q_resp_json
+        "start_ts": start_ts,
     }
 
     status = execute_insert_from_file(insertFolder + insertFile, insertDict)

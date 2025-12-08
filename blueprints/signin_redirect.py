@@ -29,7 +29,8 @@ def signin_redirect314():
     # print(auth_url)
     return redirect(auth_url)
 
-@bp_signin_redirect.route('/')
+
+@bp_signin_redirect.route("/")
 def signin_redirect():
     """
     Constructs and redirects to a Google OAuth 2.0 authorization URL with a 'bogus' access type.
@@ -48,9 +49,9 @@ def signin_redirect():
         f'&client_id={current_app.config["CLIENT_ID"]}'
         f'&redirect_uri={current_app.config["REDIRECT_URI"]}'
         f'&scope={current_app.config["SCOPE"]}'
-        f'&access_type=bogus'
-        f'&prompt=consent'
-        f'&state=secure_random_state'
+        f"&access_type=bogus"
+        f"&prompt=consent"
+        f"&state=secure_random_state"
     )
     # print(auth_url)
     return redirect(auth_url)
