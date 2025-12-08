@@ -20,12 +20,17 @@
 <div class="quiz-results-container">
 <!-- Action buttons -->
 <div class="results-actions">
-    <a href="{{ url_for('quiz.start_quiz') }}" class="btn btn-primary">
-        Começar de novo
-    </a>
-    <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
-        Alterar configurações
-    </a>
+    {% if source == 'profile' %}
+        <a href="{{ url_for('profile.profile') }}" class="btn btn-secondary">Voltar ao perfil</a>
+        <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-primary">Fazer um novo quiz</a>
+    {% else %}
+        <a href="{{ url_for('quiz.start_quiz', year=config.year, num_exercises=config.num_exercises, current_year_percent=config.current_year_percent) }}" class="btn btn-primary">
+            Começar de novo
+        </a>
+        <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
+            Alterar configurações
+        </a>
+    {% endif %}
 </div>
 <br>
 <div class="quiz-results-container">
@@ -58,7 +63,7 @@
     </div>
 
     <!-- Detailed results - ONLY for authenticated users -->
-    {% if not is_authenticated %}
+    {% if is_authenticated %}
     <div class="results-details">
         <h2>Detalhes das Respostas</h2>
         
@@ -231,13 +236,18 @@
 
     <!-- Action buttons -->
     <div class="results-actions">
-        <a href="{{ url_for('quiz.start_quiz') }}" class="btn btn-primary">
+    {% if source == 'profile' %}
+        <a href="{{ url_for('profile.profile') }}" class="btn btn-secondary">Voltar ao perfil</a>
+        <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-primary">Fazer um novo quiz</a>
+    {% else %}
+        <a href="{{ url_for('quiz.start_quiz', year=config.year, num_exercises=config.num_exercises, current_year_percent=config.current_year_percent) }}" class="btn btn-primary">
             Começar de novo
         </a>
         <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
             Alterar configurações
         </a>
-    </div>
+    {% endif %}
+</div>
 </div>
 
 <!-- Add inline styles for the result options -->

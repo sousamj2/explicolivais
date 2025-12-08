@@ -21,12 +21,10 @@ def get_mysql_connection(use_dict_cursor: bool = False):
     """
     # Load from env vars or AWS Secrets/Parameter Store
     MYSQL_HOST = current_app.config['MYSQL_HOST']
-    # MYSQL_HOST = "localhost"
     MYSQL_NAME = current_app.config['MYSQL_DBNAME']
     MYSQL_USER = current_app.config['MYSQL_USER']
     MYSQL_PASS = current_app.config['MYSQL_PASSWORD']
     MYSQL_PORT = int(current_app.config['MYSQL_PORT'])
-    # MYSQL_PORT = 3307
 
     cursor_cls = pymysql.cursors.DictCursor if use_dict_cursor else pymysql.cursors.Cursor
 
@@ -73,12 +71,10 @@ def setup_mysql_database():
 
 
     MYSQL_HOST = DevelopmentConfig.MYSQL_HOST
-    # MYSQL_HOST = "localhost"
     MYSQL_NAME = DevelopmentConfig.MYSQL_DBNAME
     MYSQL_USER = DevelopmentConfig.MYSQL_USER
     MYSQL_PASS = DevelopmentConfig.MYSQL_PASSWORD
     MYSQL_PORT = DevelopmentConfig.MYSQL_PORT
-    # MYSQL_PORT = 3307
     
     # print()
     # print(MYSQL_HOST)

@@ -1,19 +1,35 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request, current_app
+from flask import (
+    Blueprint,
+    render_template,
+    session,
+    redirect,
+    url_for,
+    request,
+    current_app,
+)
 from markupsafe import Markup
 from pprint import pprint
+from math import ceil
 
-from DBhelpers import get_user_profile_tier1, get_user_profile_tier2, get_quiz_history_for_user
+from DBhelpers import (
+    get_user_profile_tier1,
+    get_user_profile_tier2,
+    get_quiz_history_for_user,
+)
 from Funhelpers import get_lisbon_greeting
 
-bp_profile = Blueprint('profile', __name__, url_prefix='/profile')
+bp_profile = Blueprint("profile", __name__, url_prefix="/profile")
+
 
 # Register the custom filter
 @bp_profile.app_template_filter()
 def format_data(value):
     from Funhelpers.format_data import format_data as f_data
+
     return f_data(value)
 
-@bp_profile.route('/')
+
+@bp_profile.route("/")
 def profile():
     """
     Renders the user's profile page with content tailored to their account tier.
@@ -31,21 +47,21 @@ def profile():
     retrieved information and embeds it within the main 'index.html' layout. The content
     displayed on the profile page is conditionally rendered based on the user's tier.
     """
-    source_method = request.args.get('source_method', 'GET')
+    source_method = request.args.get("source_method", "GET")
     email = None
-    mypict = ''
-    
+    mypict = ""
+
     if session and session.get("metadata"):
         email = session.get("metadata").get("email")
     else:
-        return redirect(url_for('signin.signin'))
-    
+        return redirect(url_for("signin.signin"))
+
     if session and session.get("userinfo"):
-        mypict = session.get("userinfo").get('picture', '')
-    
+        mypict = session.get("userinfo").get("picture", "")
+
     if email:
-        pprint('Rendering profile page...')
-        
+        pprint("Rendering profile page...")
+
         # Get full profile from DB
         session["metadata"] = get_user_profile_tier1(email)
         # GET USER TIER FROM DATABASE - critical for conditional rendering
@@ -58,7 +74,11 @@ def profile():
             # Build address
             g_address = session["metadata"]["address"]
             if session["metadata"]["number"] != "NA":
-                g_address = session["metadata"]["address"] + ", " + str(session["metadata"]["number"])
+                g_address = (
+                    session["metadata"]["address"]
+                    + ", "
+                    + str(session["metadata"]["number"])
+                )
             full_address = g_address
             if session["metadata"]["floor"] != "NA":
                 full_address = full_address + " " + str(session["metadata"]["floor"])
@@ -66,20 +86,45 @@ def profile():
                 full_address = full_address + " " + str(session["metadata"]["door"])
             session["metadata"]["full_address"] = full_address
             session["metadata"]["g_address"] = g_address
-            zip_full = str(session["metadata"].get("zip_code1", "")) + "-" + str(session["metadata"].get("zip_code2", ""))
-            
-        session["metadata"]["full_name"] = session["metadata"]["first_name"] + " " + session["metadata"]["last_name"]
+            zip_full = (
+                str(session["metadata"].get("zip_code1", ""))
+                + "-"
+                + str(session["metadata"].get("zip_code2", ""))
+            )
+
+        session["metadata"]["full_name"] = (
+            session["metadata"]["first_name"] + " " + session["metadata"]["last_name"]
+        )
         session["metadata"]["greeting"] = get_lisbon_greeting()
         # pprint(session)
         # print()
 
         # Fetch quiz history for the user
-        quiz_history = get_quiz_history_for_user(email)
-        # print("Quiz history:", quiz_history)
+        quiz_history_raw = get_quiz_history_for_user(email)
+        print("quiz_history_raw:", quiz_history_raw)
+        quiz_history = []
+        if isinstance(quiz_history_raw, list):
+            # Filter out any non-dictionary items just in case
+            quiz_history = [item for item in quiz_history_raw if isinstance(item, dict)]
+            print("quiz_history:", quiz_history)
+            if len(quiz_history) != len(quiz_history_raw):
+                print(f"WARNING: Filtered out non-dictionary items from quiz_history.")
+        else:
+            print(f"WARNING: quiz_history was not a list, but type {type(quiz_history_raw)}. Forcing to empty list.")
+            # quiz_history is already []
+
+        # Pagination
+        page = request.args.get("page", 1, type=int)
+        per_page = 10
+        total_items = len(quiz_history)
+        total_pages = ceil(total_items / per_page)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_quiz_history = quiz_history[start:end]
 
         # Render content template with tier information
         main_content_html = render_template(
-            'content/profile.html',
+            "content/profile.html",
             greeting=session["metadata"]["greeting"],
             full_name=session["metadata"].get("full_name", ""),
             email=session["metadata"].get("email", ""),
@@ -93,16 +138,20 @@ def profile():
             vpn_check_color="green",
             primeiro_contacto_color="yellow",
             primeira_aula_color="red",
-            quiz_history=quiz_history
+            quiz_history=paginated_quiz_history,
+            page=page,
+            total_pages=total_pages,
         )
-        
-        return render_template('index.html',
-            admin_email=current_app.config['ADMIN_EMAIL'],
+
+        return render_template(
+            "index.html",
+            admin_email=current_app.config["ADMIN_EMAIL"],
             user=session.get("userinfo"),
             metadata=session.get("metadata"),
             page_title="Explicações em Lisboa",
             title="Explicações em Lisboa",
-            main_content=Markup(main_content_html))
-    
+            main_content=Markup(main_content_html),
+        )
+
     else:
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))

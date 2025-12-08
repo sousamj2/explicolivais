@@ -445,14 +445,14 @@ def navigate():
     if action == 'next':
         next_question = current_question + 1
         if next_question >= total_questions:
-            return jsonify({'redirect': url_for('quiz.results')})
+            return jsonify({'redirect': url_for('quiz.results', source='quiz')})
         else:
             return jsonify({'redirect': url_for('quiz.question', question_num=next_question)})
     elif action == 'previous':
         prev_question = max(0, current_question - 1)
         return jsonify({'redirect': url_for('quiz.question', question_num=prev_question)})
     elif action == 'finish':
-        return jsonify({'redirect': url_for('quiz.results')})
+        return jsonify({'redirect': url_for('quiz.results', source='quiz')})
     
     return jsonify({'error': 'Ação inválida'}), 400
 
@@ -485,6 +485,9 @@ def results():
 
     question_ids = session['question_ids']
     user_answers = session['user_answers']
+    quiz_config = session.get('quiz_config', {})
+    source = request.args.get('source', 'unknown')
+
     # 2) Load raw questions (sqlite3.Row) and convert to dict
     raw_questions = []
     for qid in question_ids:
@@ -540,7 +543,6 @@ def results():
         session['quiz_uuid'] = quiz_uuid
     else:
         # For authenticated users, save to their history
-        quiz_config = session.get('quiz_config', {})
         save_quiz_history_for_user(email, quiz_results, quiz_config)
 
     # user = session.get('user')
@@ -554,7 +556,9 @@ def results():
         user_answers=user_answers,
         quiz_uuid=quiz_uuid,
         is_authenticated=is_authenticated,
-        email=email
+        email=email,
+        source=source,
+        config=quiz_config
     )
 
     # 7) Wrap in main layout
@@ -597,6 +601,7 @@ def view_quiz_result(quiz_uuid):
     email = session.get('metadata', {}).get('email') if session.get('metadata') else ''
     is_authenticated = bool(email)
     quiz_data = None
+    source = request.args.get('source', 'unknown')
     
     # 1. If authenticated, try to get result from user's history first
     if is_authenticated:
@@ -619,6 +624,9 @@ def view_quiz_result(quiz_uuid):
     answers = quiz_data.get('answers', {})
     timestamp = quiz_data['quiz_date']
     
+    # Pass an empty dictionary for config when viewing from profile, as it's not needed for the requested button logic
+    config = {}
+
     # Fetch full questions. The keys in 'answers' are question IDs (rowid).
     questions = []
     answers_by_index = {}  # Rebuild as {index: [options]} for calculate_score
@@ -653,7 +661,9 @@ def view_quiz_result(quiz_uuid):
         quiz_uuid=quiz_uuid,
         is_authenticated=is_authenticated,
         email=email,
-        timestamp=timestamp
+        timestamp=timestamp,
+        source=source,
+        config=config
     )
     
     return render_template(
