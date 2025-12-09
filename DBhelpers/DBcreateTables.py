@@ -116,3 +116,27 @@ def newTableUsers(cursor):
         cursor (pymysql.cursors.Cursor): The database cursor to use.
     """
     create_tables(sql_file_path=createFolder + "create_users.sql",cursor=cursor)
+
+def newTableBlacklistedEmails(cursor):
+    """
+    Creates the 'blacklisted_emails' table in the database.
+    
+    This function calls the generic `create_tables` utility to execute the
+    SQL script for creating the `blacklisted_emails` table.
+
+    Args:
+        cursor (pymysql.cursors.Cursor): The database cursor to use.
+    """
+    create_tables(sql_file_path=createFolder + "create_blacklisted_emails.sql",cursor=cursor)
+
+def newTableBlacklistedIPs(cursor):
+    """
+    Creates the 'blacklisted_ips' table in the database.
+    
+    This function calls the generic `create_tables` utility to execute the
+    SQL script for creating the `blacklisted_ips` table.
+
+    Args:
+        cursor (pymysql.cursors.Cursor): The database cursor to use.
+    """
+    create_tables(sql_file_path=createFolder + "create_blacklisted_ips.sql",cursor=cursor)

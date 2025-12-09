@@ -11,6 +11,8 @@ from .DBcreateTables import (
     newTablePersonalData,
     newTableUsers,
     newTableResults,
+    newTableBlacklistedEmails,
+    newTableBlacklistedIPs,
     )
 from .DBinsertTables import (
     insertNewClass,
@@ -20,6 +22,8 @@ from .DBinsertTables import (
     insertNewPersonalData,
     save_quiz_history,
     insertNewUser,
+    insertNewBlacklistedEmail,
+    insertNewBlacklistedIP, 
     )
 from .DBselectTables import (
     get_user_profile_tier1,
@@ -35,6 +39,7 @@ from .DBselectTables import (
     get_quiz_history_for_user,
     getQuestionIDsForYear,
     get_quiz_history_by_uuid,
+    isEmailBlacklisted,
     )
 from .DBupdateTables import (refresh_last_login_and_ip)
 
@@ -85,4 +90,8 @@ __all__ = [
     "getQuestionIDsForYear",
     "get_mysql_connection",
     "get_quiz_history_by_uuid",
+    "isEmailBlacklisted",
+    "insertNewBlacklistedEmail",
+    "insertNewBlacklistedIP",
+    
 ]

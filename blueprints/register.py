@@ -12,6 +12,9 @@ from flask import (
 from Funhelpers.registration_token import generate_token, confirm_token
 from Funhelpers.send_email import send_email
 from markupsafe import Markup
+from DBhelpers import insertNewBlacklistedEmail, insertNewBlacklistedIP, isEmailBlacklisted
+import re
+
 
 bp_register = Blueprint("register", __name__, url_prefix="/register")
 # bp_register314 = Blueprint("register314", __name__, url_prefix="/register314")
@@ -60,12 +63,30 @@ def request_confirmation():
     """
     if request.method == "POST":
         email = request.form.get("email")
+        
+        # Sanitize email
+        if email:
+            email = email.strip().lower()
 
         if not email:
-            flash("Please enter your email address.")
+            flash("Por favor insira um endereço de email válido.")
+            return redirect(url_for("register.request_confirmation"))
+        
+        # Validate email format (updated regex for common patterns)
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+            flash("Formato de email inválido. Por favor, insira um endereço de email válido.")
             return redirect(url_for("register.request_confirmation"))
 
-        # Optional: Check if email is blacklisted and reject if so
+        # Get real IP when behind reverse proxy
+        ip_addr = request.headers.get("X-Real-IP")
+        print("ip_addr", ip_addr)
+
+        # Check if email is blacklisted
+        if isEmailBlacklisted(email):
+            if ip_addr:
+                insertNewBlacklistedIP(ip_addr)
+            flash("Este endereço de email não poderá receber mais pedidos.")
+            return redirect(url_for("register.request_confirmation"))
 
         # Capture IP address for unsubscribe tracking
         # Get real IP when behind reverse proxy
@@ -81,18 +102,17 @@ def request_confirmation():
             "register.unsubscribe", email=email, ip=ip_addr, _external=True
         )
 
-        subject = "Confirm your email address"
+        subject = "Confirmar o endereço de email"
         html_message = f"""
-        <p>Please confirm your email by clicking the link below:</p>
+        <p>Para confirmar o endereço de email e criar uma conta, utiliza este link:</p>
         <p><a href="{confirm_url}">{confirm_url}</a></p>
-        <p>If you do not want to receive emails from us, you can unsubscribe here:</p>
-        <p><a href="{unsubscribe_url}">Unsubscribe</a></p>
-        <p>This confirmation link is valid for 1 hour.</p>
+        <p>O link de confirmação é válido por 1 hora.</p>
+        <p>Se não fez nenhum pedido, pode ignorar este email ou <a href="{unsubscribe_url}">pedir a remoção da base de dados.</a></p>
         """
 
         send_email(subject, email, html_message)
-
-        flash("Confirmation email sent. Please check your inbox.")
+        flash("Foi enviado um email para confirmar o endereço de email.")
+        flash("Veja também na página de lixo electrónico ou spam.")
         # return redirect(url_for('signin_redirect.signin_redirect'))
         return redirect(url_for("register.request_confirmation"))
 
@@ -169,7 +189,13 @@ def unsubscribe():
     email = request.args.get("email")
     ip = request.args.get("ip")
 
-    # Add logic to insert email & ip into your blacklist db or cache
+    # Add email and IP to the blacklist
+    if email:
+        insertNewBlacklistedEmail(email)
+    if ip:
+        insertNewBlacklistedIP(ip)
 
-    flash("You have been unsubscribed and will not receive further emails.")
+    flash("Este email foi removido da base de dados e não voltará a receber pedidos.")
+    flash("O endereço de IP também foi bloqueado da base de dados e não voltará a receber pedidos. Obrigado por ajudar a combater o envio de spam.")
+    flash("O link de confirmação fica ainda acessível até passar 1 hora depois do envio do email se mudar de ideias.")
     return redirect(url_for("signin.signin"))

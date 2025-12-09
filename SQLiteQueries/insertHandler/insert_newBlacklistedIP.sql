@@ -1,0 +1,1 @@
+INSERT INTO blacklisted_ips (ip_address) VALUES (%s)

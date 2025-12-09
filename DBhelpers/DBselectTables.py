@@ -323,3 +323,17 @@ def getQuestionFromQid(qid):
         # print("getQuestionFromQid",retVal,qid)
         return None
     return retVal
+
+
+def isEmailBlacklisted(email):
+    """
+    Checks if an email is in the 'blacklisted_emails' table.
+
+    Args:
+        email (str): The email to check.
+
+    Returns:
+        bool: True if the email is blacklisted, False otherwise.
+    """
+    retVal = getValueFromAnotherValue(selectFolder + "get_email_from_blacklisted_emails.sql", email)
+    return retVal is not None and not (isinstance(retVal, str) and "Error" in retVal)

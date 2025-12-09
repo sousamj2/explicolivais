@@ -302,3 +302,35 @@ def save_quiz_history(email, results, quiz_config, q_uuid=None, start_ts=None):
     status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     # print("Save quiz history:", status)
     return status
+
+
+def insertNewBlacklistedEmail(email):
+    """
+    Inserts a new email into the 'blacklisted_emails' table.
+
+    Args:
+        email (str): The email to be blacklisted.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
+    insertFile = "insert_newBlacklistedEmail.sql"
+    insertDict = {"email": email}
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
+    return status
+
+
+def insertNewBlacklistedIP(ip_address):
+    """
+    Inserts a new IP address into the 'blacklisted_ips' table.
+
+    Args:
+        ip_address (str): The IP address to be blacklisted.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
+    insertFile = "insert_newBlacklistedIP.sql"
+    insertDict = {"ip_address": ip_address}
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
+    return status
