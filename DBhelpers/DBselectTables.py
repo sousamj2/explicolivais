@@ -20,69 +20,41 @@ def print_caller():
 def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais.db'):
     """
     A highly versatile function for executing SQL SELECT queries from predefined .sql files.
-
-    This function dynamically connects to either a MySQL database (using `pymysql`)
-    or a SQLite database (using `sqlite3`), determined by the `dbName` parameter.
-    It reads an SQL query from the specified `sql_file_path`, substitutes parameters,
-    and executes the query.
-
-    Key features include:
-    -   **Dynamic Database Backend**: Connects to MySQL if `dbName` is 'explicolivais.db',
-        otherwise to SQLite.
-    -   **Flexible Parameter Handling**: Accepts a single value, a list, or a tuple for `value1`,
-        which is then formatted correctly for `pymysql` (using '%s') or `sqlite3` (using '?').
-    -   **Intelligent Result Formatting**:
-        -   If the calling function's name suggests it's fetching a user profile (e.g.,
-            'get_user_profile', 'getDataFrom'), it attempts to return the result as a dictionary
-            (using `DictCursor` for MySQL or `row_factory` for SQLite).
-        -   For other queries, it typically returns the first column of the first row fetched.
-        -   Special handling for `get_quiz_history_for_user` (returns a list of dicts).
-        -   Special handling for `getQuestionFromQid` (returns the full row) and
-            `getQuestionIDsForYear` (returns the full list of fetched rows).
-    -   **Error Handling**: Catches exceptions during execution and returns an error message string.
-
-    Args:
-        sql_file_path (str): The path to the .sql file containing the SELECT query.
-        value1 (any, optional): The parameter(s) to be passed to the SQL query. Can be
-                                a scalar, list, or tuple. Defaults to None.
-        dbName (str, optional): The name of the database to connect to. 'explicolivais.db'
-                                implies MySQL; otherwise, SQLite. Defaults to 'explicolivais.db'.
-
-    Returns:
-        dict | list | any | str: The fetched data (dictionary for profiles, list for
-        multiple rows/IDs, scalar for single values), or a string containing an error message.
     """
     retVal = None
     caller_function = inspect.stack()[1].function
 
-    # Choose backend
     use_mysql = (dbName == 'explicolivais.db')
-    want_dict = use_mysql and (
-        "get_user_profile" in caller_function
-        or "getDataFrom" in caller_function
-        or "get_quiz_history_for_user" in caller_function
-        or "getRegistrationToken" in caller_function
-        or "getRegistrationTokenByEmailOrIP" in caller_function
+    
+    single_dict_funcs = [
+        "get_user_profile", 
+        "getDataFrom", 
+        "getRegistrationToken",
+        "getRegistrationTokenByEmailOrIP"
+    ]
+    multi_dict_funcs = ["get_quiz_history_for_user"]
+
+    want_dict_cursor = use_mysql and (
+        any(func in caller_function for func in single_dict_funcs) or
+        any(func in caller_function for func in multi_dict_funcs)
     )
 
     if use_mysql:
-        conn = get_mysql_connection(use_dict_cursor=want_dict)
+        conn = get_mysql_connection(use_dict_cursor=want_dict_cursor)
         if not conn:
             raise ConnectionError("Could not connect to MySQL database")
     else:
         conn = sqlite3.connect(dbName)
 
     try:
-        with open(sql_file_path, "r") as file:
+        with open(sql_file_path, 'r') as file:
             sql_code = file.read()
             if use_mysql:
-                sql_code = sql_code.replace("?", "%s")
+                sql_code = sql_code.replace("?","%s")
 
-        if not use_mysql and "getQuestionFromQid" == caller_function:
-            # SQLite: keep row_factory
+        if not use_mysql and 'getQuestionFromQid' == caller_function:
             conn.row_factory = sqlite3.Row
-
-        # Default tuple cursor for all
+        
         cursor = conn.cursor()
 
         def ensure_sequence_params(param):
@@ -91,31 +63,26 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
             if isinstance(param, (list, tuple)):
                 return tuple(param)
             return (param,)
-
         value1 = ensure_sequence_params(value1)
 
         if value1 is not None:
-            cursor.execute(sql_code, value1)
+            cursor.execute(sql_code,value1)
         else:
             cursor.execute(sql_code)
 
-        if want_dict:
+        if any(func in caller_function for func in single_dict_funcs):
             output = cursor.fetchone()
             if output:
                 retVal = dict(output)
-
-        elif (
-            "get_quiz_history_by_uuid" == caller_function
-            or "get_quiz_history_for_user" in caller_function
-        ):
+        elif any(func in caller_function for func in multi_dict_funcs) or 'get_quiz_history_by_uuid' == caller_function:
             retVal = cursor.fetchall()
         else:
             output = cursor.fetchall()
             if output:
                 retVal = output[0][0]
-            if "getQuestionFromQid" == caller_function:
+            if 'getQuestionFromQid' == caller_function:
                 retVal = output[0]
-            if "getQuestionIDsForYear" == caller_function:
+            if 'getQuestionIDsForYear' == caller_function:
                 retVal = output
 
     except Exception as e:
@@ -123,14 +90,10 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
     finally:
         conn.close()
 
-    if "getQuestionIDsForYear" == caller_function:
+    if 'getQuestionIDsForYear' == caller_function:
         return retVal
 
-    if "get_quiz_history_for_user" in caller_function:
-        return [dictify_real_dict_row(row) for row in retVal] if retVal else []
-
-    if not isinstance(retVal, str) or "Error" not in retVal:
-        retVal = dictify_real_dict_row(retVal)
+        # print("retVal after dictify:",retVal)
 
     return retVal
 
@@ -363,7 +326,6 @@ def getRegistrationTokenByEmailOrIP(email, ip_address):
     if isinstance(retVal, str) and "Error" in retVal:
         return None
     return retVal
-
 
 def isIpBlacklisted(ip_address):
     """
