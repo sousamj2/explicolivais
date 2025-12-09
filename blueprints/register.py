@@ -21,6 +21,7 @@ from DBhelpers import (
     getRegistrationTokenByEmailOrIP,
     deleteRegistrationToken,
     deleteExpiredRegistrationTokens,
+    isIpBlacklisted,
 )
 import re
 
@@ -49,6 +50,10 @@ def request_confirmation():
             return redirect(url_for("register.request_confirmation"))
 
         ip_addr = request.headers.get("X-Real-IP")
+
+        if ip_addr and isIpBlacklisted(ip_addr):
+            flash("Este IP não pode fazer mais pedidos.")
+            return redirect(url_for("register.request_confirmation"))
 
         if isEmailBlacklisted(email):
             if ip_addr:

@@ -44,6 +44,7 @@ from .DBselectTables import (
     isEmailBlacklisted,
     getRegistrationToken,
     getRegistrationTokenByEmailOrIP,
+    isIpBlacklisted,
 )
 from .DBdeleteTables import (
     deleteRegistrationToken,
@@ -109,4 +110,5 @@ __all__ = [
     "getRegistrationTokenByEmailOrIP",
     "deleteRegistrationToken",
     "deleteExpiredRegistrationTokens",
+    "isIpBlacklisted",
 ]

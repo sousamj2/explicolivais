@@ -363,19 +363,3 @@ def getRegistrationTokenByEmailOrIP(email, ip_address):
     if isinstance(retVal, str) and "Error" in retVal:
         return None
     return retVal
-
-
-def isIpBlacklisted(ip_address):
-    """
-    Checks if an IP address is in the 'blacklisted_ips' table.
-
-    Args:
-        ip_address (str): The IP address to check.
-
-    Returns:
-        bool: True if the IP is blacklisted, False otherwise.
-    """
-    retVal = getValueFromAnotherValue(
-        selectFolder + "get_ip_from_blacklisted_ips.sql", ip_address
-    )
-    return retVal is not None and not (isinstance(retVal, str) and "Error" in retVal)
