@@ -6,6 +6,17 @@ bp_oauth2callback = Blueprint('oauth2callback', __name__, url_prefix='/oauth2cal
 
 @bp_oauth2callback.route('/')
 def oauth2callback():
+    """
+    Handles the OAuth2 callback from the authorization server.
+
+    This function is triggered after the user authorizes the application. It receives an
+    authorization code from the request arguments, which it then exchanges for an access token
+    and an ID token from the token endpoint.
+
+    The obtained tokens and user information (fetched from the userinfo endpoint) are stored
+    in the session. Finally, it redirects the user to the `check_user` blueprint to
+    complete the login or registration process.
+    """
     code = request.args.get('code')
     # Exchange code for tokens
     data = {
@@ -32,4 +43,4 @@ def oauth2callback():
     # print()
     # pprint(tokens)  # For debugging purposes
     print( 'Authentication successful, tokens acquired!')
-    return redirect(url_for('check_user314.check_user314'))
+    return redirect(url_for('check_user.check_user'))

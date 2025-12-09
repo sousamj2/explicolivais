@@ -1,0 +1,1 @@
+DELETE FROM registration_tokens WHERE created_at < NOW() - INTERVAL 1 HOUR

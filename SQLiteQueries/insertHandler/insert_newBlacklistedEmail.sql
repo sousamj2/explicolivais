@@ -1,0 +1,1 @@
+INSERT INTO blacklisted_emails (email) VALUES (%s)

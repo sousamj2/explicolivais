@@ -1,24 +1,35 @@
-from .DBbaseline import getAllUsers
+from .DBbaseline import (
+    setup_mysql_database,
+    get_mysql_connection,
+)
 from .DBcreateTables import (
-    handle_tables,
+    create_tables,
     newTableClass,
     newTableConnectionData,
     newTableDocuments,
     newTableIPs,
     newTablePersonalData,
     newTableUsers,
-    )
+    newTableResults,
+    newTableBlacklistedEmails,
+    newTableBlacklistedIPs,
+    newTableRegistrationTokens,
+)
 from .DBinsertTables import (
     insertNewClass,
     insertNewConnectionData,
     insertNewDocument,
     insertNewIP,
     insertNewPersonalData,
+    save_quiz_history,
     insertNewUser,
-    )
+    insertNewBlacklistedEmail,
+    insertNewBlacklistedIP,
+    insertNewRegistrationToken,
+)
 from .DBselectTables import (
-    get_user_profile,
-    get_user_quiz,
+    get_user_profile_tier1,
+    get_user_profile_tier2,
     getDataFromCellNumber,
     getDataFromEmail,
     getDataFromIPcreated,
@@ -27,9 +38,19 @@ from .DBselectTables import (
     getHashFromEmail,
     getEmailFromUsername,
     getQuestionFromQid,
+    get_quiz_history_for_user,
     getQuestionIDsForYear,
-    )
-from .DBupdateTables import (refresh_last_login_and_ip)
+    get_quiz_history_by_uuid,
+    isEmailBlacklisted,
+    getRegistrationToken,
+    getRegistrationTokenByEmailOrIP,
+    isIpBlacklisted,
+)
+from .DBdeleteTables import (
+    deleteRegistrationToken,
+    deleteExpiredRegistrationTokens,
+)
+from .DBupdateTables import refresh_last_login_and_ip
 
 from .DBloadQuiz import (
     loadQanswers,
@@ -37,26 +58,33 @@ from .DBloadQuiz import (
     loadQcsvFiles,
     loadQlinks,
     loadQtemas,
-    )
+)
 
 # from .DBmodifyTables import updateValue
 
 __all__ = [
-    "getAllUsers",
-    "handle_tables",
+    "setup_mysql_database",
+    "create_tables",
     "newTableClass",
     "newTableConnectionData",
     "newTableDocuments",
     "newTableIPs",
     "newTablePersonalData",
     "newTableUsers",
+    "newTableResults",
+    "newTableBlacklistedEmails",
+    "newTableBlacklistedIPs",
+    "newTableRegistrationTokens",
     "insertNewClass",
     "insertNewConnectionData",
     "insertNewDocument",
     "insertNewIP",
     "insertNewPersonalData",
+    "save_quiz_history",
     "insertNewUser",
-    "get_user_profile",
+    "get_user_profile_tier1",
+    "get_user_profile_tier2",
+    "get_quiz_history_for_user",
     "getDataFromCellNumber",
     "getDataFromEmail",
     "getDataFromIPcreated",
@@ -65,7 +93,6 @@ __all__ = [
     "refresh_last_login_and_ip",
     "getHashFromEmail",
     "getEmailFromUsername",
-    "get_user_quiz",
     "loadQanswers",
     "loadQaulas",
     "loadQcsvFiles",
@@ -73,4 +100,15 @@ __all__ = [
     "loadQtemas",
     "getQuestionFromQid",
     "getQuestionIDsForYear",
+    "get_mysql_connection",
+    "get_quiz_history_by_uuid",
+    "isEmailBlacklisted",
+    "insertNewBlacklistedEmail",
+    "insertNewBlacklistedIP",
+    "insertNewRegistrationToken",
+    "getRegistrationToken",
+    "getRegistrationTokenByEmailOrIP",
+    "deleteRegistrationToken",
+    "deleteExpiredRegistrationTokens",
+    "isIpBlacklisted",
 ]

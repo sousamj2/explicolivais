@@ -1,9 +1,43 @@
-import sqlite3
-from DBhelpers.DBselectTables import getUserIdFromEmail
+"""
+This module contains functions for modifying data in the database tables.
+
+"""
+# import sqlite3
+from DBselectTables import getUserIdFromEmail
+from .DBbaseline import get_mysql_connection
 
 def updateValue(email, tableName, tableColumn, newValue=None):
+    """
+    Updates a specific field in the database for a given user.
+
+    This function provides a controlled way to update a single value in the
+    database. It includes a security measure, using a whitelist of allowed
+    table and column names to prevent SQL injection vulnerabilities.
+
+    It has special logic for handling updates to the 'thisloginip' column in the
+    'connection' table, which also updates login timestamps and history in
+    both the 'connection' and 'iplist' tables.
+
+    Args:
+        email (str): The email of the user whose data is to be updated.
+        tableName (str): The name of the table to update.
+        tableColumn (str): The name of the column to update.
+        newValue (any, optional): The new value to be set. Defaults to None.
+
+    Returns:
+        str: A status message indicating the success or failure of the update.
+
+    Raises:
+        ValueError: If the `tableName` or `tableColumn` is not in the allowed list.
+        ConnectionError: If the database connection fails.
+    """
     # Connect to database
-    conn = sqlite3.connect('explicolivais.db')  # Adjust your DB path
+    
+    # Choose backend
+    conn = get_mysql_connection()
+    if not conn:
+        raise ConnectionError("Could not connect to MySQL database")
+
     cursor = conn.cursor()
 
     user_id = getUserIdFromEmail(email)
@@ -30,25 +64,26 @@ def updateValue(email, tableName, tableColumn, newValue=None):
 
     try:
         if "thisloginip" == tableColumn:
-            sql = "UPDATE connection SET lastlogindt = thislogindt       WHERE user_id = ?;"
+            sql = "UPDATE connection SET lastlogindt = thislogindt       WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
-            sql = "UPDATE connection SET lastloginip = thisloginip       WHERE user_id = ?;"
+            sql = "UPDATE connection SET lastloginip = thisloginip       WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
-            sql = "UPDATE connection SET thislogindt = CURRENT_TIMESTAMP WHERE user_id = ?;"
+            sql = "UPDATE connection SET thislogindt = CURRENT_TIMESTAMP WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
-            sql = "UPDATE connection SET thisloginip = ?                 WHERE user_id = ?;"
+            sql = "UPDATE connection SET thisloginip = %s                WHERE user_id = %s;"
             cursor.execute(sql, (newValue,user_id))
-            sql = "UPDATE connection SET logincount = logincount + 1     WHERE user_id = ?;"
+            sql = "UPDATE connection SET logincount = logincount + 1     WHERE user_id = %s;"
             cursor.execute(sql, (user_id,))
             sql = """
             INSERT INTO iplist (user_id, ipValue)
-            VALUES (?, ?)
+            VALUES (%s, %s)
             ON CONFLICT(user_id, ipValue) DO UPDATE SET
                 logincount = logincount + 1;
             """
+            
             cursor.execute(sql, (user_id, newValue))
         else:
-            sql = "UPDATE {tableName} SET {tableColumn} = ? WHERE user_id = ?;"
+            sql = "UPDATE {tableName} SET {tableColumn} = %s WHERE user_id = %s;"
             cursor.execute(sql, (newValue, user_id))
         conn.commit()
     except Exception as e:
@@ -57,26 +92,3 @@ def updateValue(email, tableName, tableColumn, newValue=None):
         conn.close()
     return status
     
-
-
-def getQuestionIDsForYear(year):
-    nQuestionYear = 15
-    nQuestionPrev = 15
-    if year == 5:
-        nQuestionYear = 30
-        nQuestionPrev = 0
-    arguments = [year,nQuestionYear,year,nQuestionPrev]
-
-    retVal = getValueFromAnotherValue( selectFolder + "get_questionIDs_from_year.sql", value1=arguments,dbName='quiz.db')
-    if isinstance(retVal,str) and "Error" in retVal:
-        print(retVal,arguments)
-        return None
-    return retVal
-
-
-def getQuestionFromQid(qid):
-    retVal = getValueFromAnotherValue( selectFolder + "get_question_from_rowID.sql", value1=qid,dbName='quiz.db')
-    if isinstance(retVal,str) and "Error" in retVal:
-        return None
-    return retVal
-

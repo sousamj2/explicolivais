@@ -1,5 +1,6 @@
 """
 Quiz results storage - Anonymous only
+- Authenticated users' history is saved to the main database.
 - Stores anonymous quiz results temporarily
 - 1-hour expiration checked lazily on /quiz access
 - No TTL field needed, just check timestamp age
@@ -13,10 +14,12 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from pathlib import Path
 
+from DBhelpers import save_quiz_history
+
 QUIZ_RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'quiz_results')
 Path(QUIZ_RESULTS_DIR).mkdir(exist_ok=True)
 
-def save_quiz_result(user_answers, questions=None):
+def save_quiz_result(user_answers, questions):
     """
     Save anonymous quiz results to CSV
     Registered users save to their own area instead
@@ -37,12 +40,15 @@ def save_quiz_result(user_answers, questions=None):
     
     # Convert index-based answers to question_number-based
     answers_by_question_number = {}
+    questions = [x[0] for x in questions]
+
     if questions:
-        for question_idx_str, answer_indices in user_answers.items():
-            question_idx = int(question_idx_str)
-            if question_idx < len(questions):
-                question_number = questions[question_idx]['question_number']
-                answers_by_question_number[str(question_number)] = answer_indices
+        for idx,q_num in enumerate(questions):            
+            try:
+                answers_by_question_number[str(q_num)] = user_answers[str(idx)]
+            except Exception as e:
+                print(e)
+                answers_by_question_number[str(q_num)] = "0"
     else:
         answers_by_question_number = user_answers
     
@@ -66,6 +72,34 @@ def save_quiz_result(user_answers, questions=None):
     # print(f"  Timestamp: {timestamp}")
     
     return quiz_uuid
+
+def save_quiz_history_for_user(email, quiz_results, quiz_config):
+    """
+    Saves a completed quiz's results to the database for an authenticated user.
+
+    Args:
+        email (str): The user's email address.
+        quiz_results (dict): The dictionary of results from calculate_score.
+        quiz_config (dict): The quiz configuration dictionary from the session.
+
+    Returns:
+        bool: True if saving was successful, False otherwise.
+    """
+    if not email or not isinstance(quiz_results, dict):
+        return False
+
+    quiz_uuid = str(uuid4())
+
+    try:
+        save_quiz_history(
+            email=email,
+            results=quiz_results,
+            quiz_config=quiz_config,
+        )
+        return True
+    except Exception as e:
+        print(f"ERROR: Could not save quiz history for {email}: {e}")
+        return False
 
 def cleanup_expired_results():
     """

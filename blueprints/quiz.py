@@ -3,12 +3,28 @@ from DBhelpers import getQuestionIDsForYear, getQuestionFromQid
 from Funhelpers.quiz_helpers import calculate_score
 from Funhelpers.quiz_storage import (
     save_quiz_result,
-    get_quiz_result,
+    save_quiz_history_for_user,
+    # get_quiz_result,
     cleanup_expired_results
 )
 from urllib.parse import urljoin
+import json
 
 def split_top_level_commas_with_quotes(s: str):
+    """
+    Splits a string by top-level commas, ignoring commas within curly braces and single quotes.
+
+    This function is designed to parse comma-separated fields that may contain nested
+    structures (e.g., JSON-like objects) or string literals. It correctly handles nested
+    braces and quoted sections, ensuring that only commas at the top level are used as
+    delimiters.
+
+    Args:
+        s (str): The string to be split.
+
+    Returns:
+        list[str]: A list of strings, representing the split parts of the input string.
+    """
     parts = []
     buf = []
     depth = 0          # { } nesting
@@ -39,6 +55,19 @@ def split_top_level_commas_with_quotes(s: str):
     return parts
 
 def split_top_level_commas(s: str):
+    """
+    Splits a string by top-level commas, ignoring commas within curly braces.
+
+    This utility function is used to parse comma-separated strings that may contain
+    nested structures enclosed in curly braces, such as simple object representations.
+    It only splits by commas that are not inside any level of brace nesting.
+
+    Args:
+        s (str): The string to be split.
+
+    Returns:
+        list[str]: A list of strings, representing the split parts of the input string.
+    """
     parts = []
     buf = []
     depth = 0  # tracks nesting of { }
@@ -59,7 +88,19 @@ def split_top_level_commas(s: str):
     return parts
 
 def make_url_dev(rel: str) -> str:
-    """Development URL - serve from local quiz-time folder"""
+    """
+    Generates a URL for a quiz asset in a development environment.
+
+    This helper function constructs a local URL for serving quiz assets from the
+    'quiz-time' folder during development. It returns an empty string if the
+    relative path is empty.
+
+    Args:
+        rel (str): The relative path to the asset.
+
+    Returns:
+        str: The development URL for the asset.
+    """
     if not rel:
         return ""
     # url = f"/quiz-time/{rel}"
@@ -67,14 +108,41 @@ def make_url_dev(rel: str) -> str:
     return url
 
 def make_url_prod(rel: str) -> str:
-    """Production URL - serve from remote CDN/web server"""
+    """
+    Generates a production-ready URL for a quiz asset.
+
+    This function constructs an absolute URL for serving quiz assets from a production
+    environment, such as a CDN or a dedicated web server. It retrieves the base URL
+    from the application's configuration ('QUIZ_ASSETS_PROD_URL'). If the base URL
+    is not set, it falls back to the development URL structure.
+
+    Args:
+        rel (str): The relative path to the asset.
+
+    Returns:
+        str: The absolute production URL for the asset.
+    """
     prod_base = current_app.config.get('QUIZ_ASSETS_PROD_URL', '')
     if not prod_base:
         return make_url_dev(rel)
     return urljoin(prod_base, rel.lstrip('/'))
 
 def make_url(rel: str) -> str:
-    """Environment-aware URL builder"""
+    """
+    Creates an environment-aware URL for a quiz asset.
+
+    This function acts as a dispatcher, generating the appropriate URL for an asset based
+    on the application's current environment, which is determined by the
+    'QUIZ_ASSETS_SOURCE' configuration variable. It will call either `make_url_prod` for
+    'prod' environments or `make_url_dev` for any other case.
+
+    Args:
+        rel (str): The relative path to the asset.
+
+    Returns:
+        str: The full URL (either local or remote) for the asset, or an empty string
+             if the relative path is empty.
+    """
     if not rel:
         return ""
     source = current_app.config.get('QUIZ_ASSETS_SOURCE', 'dev').lower()
@@ -82,6 +150,21 @@ def make_url(rel: str) -> str:
 
 
 def parse_possible_answers(field: str):
+    """
+    Parses a string of comma-separated possible answers for a quiz question.
+
+    This function takes a raw string from the database, which contains the possible
+    answers for a question, and processes it into a list of clean, individual answer
+    options. It uses `split_top_level_commas_with_quotes` to correctly handle answers
+    that may contain commas or other special characters. It also strips leading/trailing
+    whitespace and removes any surrounding single quotes from each answer.
+
+    Args:
+        field (str): The raw string containing the possible answers.
+
+    Returns:
+        list[str]: A list of cleaned answer strings.
+    """
     items = split_top_level_commas_with_quotes(field)
     # strip outer single quotes if present
     cleaned = []
@@ -96,13 +179,28 @@ quiz_bp = Blueprint('quiz', __name__)
 
 @quiz_bp.route('/quiz-config')
 def quiz_config():
-    """Display quiz configuration page"""
-    user = session.get('user', None)
-    
+    """
+    Renders the quiz configuration page.
+
+    This view function displays the page where users can configure their quiz settings,
+    such as the academic year and the number of questions. The page is rendered using
+    the 'quiz_config.html' template, which is then embedded into the main 'index.html'
+    layout. It uses the configuration from the session to pre-select the options.
+    """
+    user = session.get("metadata")
+
+    # Get configuration from session or use defaults if not present
+    quiz_config_data = session.get('quiz_config', {
+        'year': 7,
+        'num_exercises': 20,
+        'current_year_percent': 50
+    })
+
     content_html = render_template(
-        'content/quiz_config.html'
+        'content/quiz_config.html',
+        quiz_config=quiz_config_data
     )
-    
+
     return render_template(
         'index.html',
         admin_email=current_app.config.get('ADMIN_EMAIL', ''),
@@ -116,7 +214,22 @@ def quiz_config():
 
 @quiz_bp.route('/quiz')
 def start_quiz():
-    """Initialize quiz - cleanup expired results"""
+    """
+    Initializes a new quiz session based on user-selected configuration.
+
+    This function serves as the entry point for starting a quiz. It performs the following steps:
+    1.  Cleans up any expired, anonymously saved quiz results.
+    2.  Retrieves quiz configuration settings (year, number of exercises, etc.) from the
+        request's query parameters, with default values as fallbacks.
+    3.  Validates the provided configuration, flashing an error and redirecting if the
+        parameters are invalid.
+    4.  Auto-adjusts the `current_year_percent` for certain edge-case years (e.g., year 5
+        or years under construction).
+    5.  Stores the final, validated configuration in the user's session.
+    6.  Fetches the list of question IDs for the configured quiz from the database.
+    7.  Initializes the quiz state in the session (question IDs, current question index, etc.).
+    8.  Redirects the user to the first question of the quiz.
+    """
     cleanup_expired_results()
     
     # Get configuration from query parameters or use defaults
@@ -124,7 +237,7 @@ def start_quiz():
     num_exercises = request.args.get('num_exercises', 20, type=int)
     current_year_percent = request.args.get('current_year_percent', 50, type=int)
         
-    if num_exercises not in [20, 40, 60, 80, 100]:
+    if num_exercises not in [2, 20, 40, 60, 80, 100]:
         flash('Número de exercícios inválido.', 'error')
         return redirect(url_for('quiz.quiz_config'))
     
@@ -171,10 +284,30 @@ def start_quiz():
 
 @quiz_bp.route('/quiz/<int:question_num>')
 def question(question_num):
-    """Display a specific question"""
+    """
+    Displays a specific quiz question based on its number in the sequence.
+
+    This function is responsible for rendering a single question page. It performs the following steps:
+    1.  Validates that a quiz session is active; otherwise, redirects to the config page.
+    2.  Checks if the requested `question_num` is within the valid range of the current quiz.
+    3.  Retrieves the question's unique ID from the session's list of question IDs.
+    4.  Fetches the full question data from the database using the ID.
+    5.  Processes the raw question data:
+        - Parses the possible answer options.
+        - Unescapes characters for special formatting like LaTeX.
+        - Constructs additional instructions for 'composed' problems.
+    6.  Renders the 'quiz_question.html' template with the processed data.
+    7.  Embeds the rendered content into the main 'index.html' layout.
+
+    Args:
+        question_num (int): The zero-based index of the question in the current quiz.
+
+    Returns:
+        A rendered HTML page for the specific question, or a redirect if an error occurs.
+    """
     if 'question_ids' not in session:  # ✓ CHANGED FROM 'quiz_question_ids'
         flash('Erro: Sessão de quiz não encontrada. Por favor, inicie um novo quiz.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     question_ids = session['question_ids']  # ✓ CHANGED FROM 'quiz_question_ids'
     # print("question_ids =", question_ids)
@@ -182,7 +315,7 @@ def question(question_num):
     # Validate question number
     if question_num < 0 or question_num >= len(question_ids):
         flash('Pergunta não encontrada.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     # Fetch the actual question data by ID
     qid = question_ids[question_num]
@@ -193,7 +326,7 @@ def question(question_num):
 
     if not question_data:
         flash('Erro ao carregar pergunta.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     question_path = f"{question_data['ano']}/{question_data['nome_tema']}/{question_data['aula_title']}/{question_data['num_aula']}/{question_data['uuid']}"
     imageName = question_data['imagem']#.replace('ano','anos/ano').replace('aula',f'tema{question_data['num_tema']}/aula').replace('.jpg','.png')
@@ -240,8 +373,11 @@ def question(question_num):
     
     user_answers = session.get('user_answers', {})
     current_answer = user_answers.get(str(question_num), [])
-    user = session.get('user', None)
-    
+    # user = session.get('user', None)
+    user = session and session.get("metadata")
+
+
+
     content_html = render_template(
         'content/quiz_question.html',
         question=current_question,
@@ -262,7 +398,20 @@ def question(question_num):
 
 @quiz_bp.route('/quiz/submit', methods=['POST'])
 def submit_answer():
-    """Handle answer submission"""
+    """
+    Handles the submission of a user's answer for a specific question.
+
+    This endpoint is called via a POST request (typically using JavaScript) when a user
+    submits an answer to a question. It retrieves the question number and the submitted
+    answer(s) from the form data.
+
+    The function then stores the answer in the `user_answers` dictionary within the session,
+    keyed by the question number. It marks the session as modified to ensure the data is
+    saved.
+
+    Returns:
+        A JSON response indicating the success or failure of the operation.
+    """
     if 'question_ids' not in session:  # ✓ CHANGED
         return jsonify({'error': 'Sessão de quiz não encontrada'}), 400
     
@@ -279,7 +428,21 @@ def submit_answer():
 
 @quiz_bp.route('/quiz/navigate', methods=['POST'])
 def navigate():
-    """Handle navigation between questions"""
+    """
+    Handles navigation between quiz questions (next, previous, finish).
+
+    This endpoint is called via a POST request from the quiz interface to handle user
+    navigation. It processes the 'action' from the form data ('next', 'previous', or
+    'finish') and determines the appropriate URL to redirect the user to.
+
+    - 'next': Moves to the next question or to the results page if it's the last question.
+    - 'previous': Moves to the previous question.
+    - 'finish': Proceeds directly to the results page.
+
+    Returns:
+        A JSON response containing the URL for the next page, or an error if the action
+        is invalid or the session is missing.
+    """
     if 'question_ids' not in session:  # ✓ CHANGED
         return jsonify({'error': 'Sessão de quiz não encontrada'}), 400
     
@@ -290,31 +453,48 @@ def navigate():
     if action == 'next':
         next_question = current_question + 1
         if next_question >= total_questions:
-            return jsonify({'redirect': url_for('quiz.results')})
+            return jsonify({'redirect': url_for('quiz.results', source='quiz')})
         else:
             return jsonify({'redirect': url_for('quiz.question', question_num=next_question)})
     elif action == 'previous':
         prev_question = max(0, current_question - 1)
         return jsonify({'redirect': url_for('quiz.question', question_num=prev_question)})
     elif action == 'finish':
-        return jsonify({'redirect': url_for('quiz.results')})
+        return jsonify({'redirect': url_for('quiz.results', source='quiz')})
     
     return jsonify({'error': 'Ação inválida'}), 400
 
-# @quiz_bp.route('/results')
 @quiz_bp.route('/results', methods=['GET'])
 def results():
     """
-    Display quiz results with robust question normalization so templates
-    always have image data available.
+    Calculates and displays the final results of the quiz.
+
+    This function orchestrates the end of the quiz process. It performs these steps:
+    1.  Validates that the necessary quiz data (question IDs, user answers) exists in the session.
+    2.  Fetches the full data for each question from the database.
+    3.  Normalizes the question data into a consistent view model, ensuring that essential keys
+        like 'image_url' and 'options' are always present to prevent template errors.
+    4.  Calculates the user's score by passing the normalized questions and user answers to the
+        `calculate_score` helper function.
+    5.  Handles both authenticated and anonymous users:
+        - If the user is not authenticated, it saves the quiz results to temporary storage
+          and generates a unique UUID for them to view later.
+    6.  Renders the 'content/quiz_results.html' template, passing in the score, the list of
+        questions, user answers, and authentication status.
+    7.  Embeds the rendered content into the main 'index.html' layout.
+
+    Returns:
+        A rendered HTML page with the quiz results, or a redirect if the session is invalid.
     """
     # 1) Validate session payload
     if 'question_ids' not in session or 'user_answers' not in session:
         flash('Erro: Dados do quiz não encontrados. Por favor, inicie um novo quiz.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
 
     question_ids = session['question_ids']
     user_answers = session['user_answers']
+    quiz_config = session.get('quiz_config', {})
+    source = request.args.get('source', 'unknown')
 
     # 2) Load raw questions (sqlite3.Row) and convert to dict
     raw_questions = []
@@ -367,11 +547,14 @@ def results():
     quiz_uuid = None
 
     if not is_authenticated:
-        # Save the normalized version to keep structure stable if viewed later
-        quiz_uuid = save_quiz_result(user_answers, questions_fixed)
+        quiz_uuid = save_quiz_result(user_answers, question_ids)
         session['quiz_uuid'] = quiz_uuid
+    else:
+        # For authenticated users, save to their history
+        save_quiz_history_for_user(email, quiz_results, quiz_config)
 
-    user = session.get('user')
+    # user = session.get('user')
+    user = session and session.get("metadata")
 
     # 6) Render the results content
     content_html = render_template(
@@ -381,7 +564,9 @@ def results():
         user_answers=user_answers,
         quiz_uuid=quiz_uuid,
         is_authenticated=is_authenticated,
-        email=email
+        email=email,
+        source=source,
+        config=quiz_config
     )
 
     # 7) Wrap in main layout
@@ -398,56 +583,95 @@ def results():
 @quiz_bp.route('/results/<quiz_uuid>')
 def view_quiz_result(quiz_uuid):
     """
-    Display a previously saved anonymous quiz result by UUID.
-    Results expire after 1 hour.
+    Displays a previously saved anonymous quiz result using its UUID.
+
+    This function allows users to view the results of a quiz they completed anonymously.
+    The results are retrieved from temporary storage using the unique identifier provided
+    in the URL. These saved results are configured to expire after one hour.
+
+    The process is as follows:
+    1.  Retrieves the saved quiz data (answers and timestamp) using the `quiz_uuid`.
+    2.  If the result is not found or has expired, it redirects to the quiz config page.
+    3.  Fetches the full question data from the database based on the IDs stored in the result.
+    4.  Recalculates the score using the retrieved questions and answers.
+    5.  Renders the 'content/quiz_results.html' template with the calculated results,
+        original questions, and user answers.
+
+    Args:
+        quiz_uuid (str): The unique identifier for the saved quiz result.
+
+    Returns:
+        A rendered HTML page with the quiz results, or a redirect if the result is not found.
     """
-    from Funhelpers.quiz_storage import get_quiz_result
-    from DBhelpers import getQuestionFromQid
+    from Funhelpers.quiz_storage import get_quiz_result as get_anonymous_quiz_result
+    from DBhelpers import getQuestionFromQid, get_quiz_history_by_uuid
     
-    # Retrieve the quiz result (answers keyed by question_number)
-    quiz_data = get_quiz_result(quiz_uuid)
+    email = session.get('metadata', {}).get('email') if session.get('metadata') else ''
+    is_authenticated = bool(email)
+    quiz_data = None
+    source = request.args.get('source', 'unknown')
+    
+    # 1. If authenticated, try to get result from user's history first
+    if is_authenticated:
+        quiz_data = get_quiz_history_by_uuid(email, quiz_uuid)
+    # print("quiz_data =", quiz_data)
+
+    # 2. If not found or not authenticated, fall back to anonymous results
+    if not quiz_data:
+        quiz_data = get_anonymous_quiz_result(quiz_uuid)
+        if quiz_data:
+            # Anonymous results have a different structure
+            quiz_data['answers'] = quiz_data.pop('answers_by_question_number', {})
     
     if not quiz_data:
         flash('Quiz não encontrado ou expirado. Os resultados têm validade de 1 hora.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
-    answers = quiz_data['answers_by_question_number']  # {question_number: [option_indices]}
-    timestamp = quiz_data['timestamp']
+
+    # The key for answers is 'answers' for both DB and anonymous results now
+    answers = quiz_data.get('answers', {})
+    timestamp = quiz_data['quiz_date']
     
-    # Convert question_numbers to rowids, then fetch full questions
+    # Pass an empty dictionary for config when viewing from profile, as it's not needed for the requested button logic
+    config = {}
+
+    # Fetch full questions. The keys in 'answers' are question IDs (rowid).
     questions = []
     answers_by_index = {}  # Rebuild as {index: [options]} for calculate_score
     
-    for idx, (qnum, options) in enumerate(sorted(answers.items())):
-        # print(qnum)
-        qnum = int(qnum)
-        # print(qnum)
+    # Sort by question ID to maintain a consistent order
+    # print("answers:",answers)
+    answers = json.loads(answers)
+    sorted_qids = sorted([int(k) for k in answers.keys()])
 
-        question = getQuestionFromQid(qnum)
-        # print(question)
-
+    for idx, qid in enumerate(sorted_qids):
+        question = getQuestionFromQid(qid)
         if question:
             questions.append(question)
-            answers_by_index[str(idx)] = options
+            answers_by_index[str(idx)] = answers[str(qid)]
     
     if not questions:
         flash('Não foi possível carregar as perguntas do quiz.', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.quiz_config'))
     
     # Calculate results
-    quiz_results = calculate_score(questions, answers_by_index)
+    # Convert sqlite3.Row to dict for calculate_score
+    questions_as_dicts = [dict(q) for q in questions]
+    quiz_results = calculate_score(questions_as_dicts, answers_by_index)
     
-    user = session.get('user', None)
+    user = session.get("metadata")
     
     content_html = render_template(
         'content/quiz_results.html',
         results=quiz_results,
-        questions=questions,
+        questions=questions_as_dicts,
         user_answers=answers_by_index,
         quiz_uuid=quiz_uuid,
-        is_authenticated=False,
-        email='',
-        timestamp=timestamp
+        is_authenticated=is_authenticated,
+        email=email,
+        timestamp=timestamp,
+        source=source,
+        config=config
     )
     
     return render_template(
@@ -462,7 +686,16 @@ def view_quiz_result(quiz_uuid):
 
 @quiz_bp.route('/quiz/restart')
 def restart_quiz():
-    """Clear quiz session and start over"""
+    """
+    Clears all quiz-related data from the session to allow the user to start over.
+
+    This function removes all data associated with the current quiz from the user's session,
+    including the list of question IDs, the current question index, all user answers, and
+    any UUID from a saved anonymous result.
+
+    After clearing the session, it flashes a success message and redirects the user back
+    to the quiz configuration page, allowing them to start a fresh quiz.
+    """
     session.pop('quiz_questions', None)
     session.pop('current_question', None)
     session.pop('user_answers', None)
@@ -470,4 +703,4 @@ def restart_quiz():
     session.pop('quiz_uuid', None)
     
     flash('Quiz reiniciado com sucesso!', 'success')
-    return redirect(url_for('quiz.start_quiz'))
+    return redirect(url_for('quiz.quiz_config'))

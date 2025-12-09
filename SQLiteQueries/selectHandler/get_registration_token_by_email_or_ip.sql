@@ -1,0 +1,1 @@
+SELECT * FROM registration_tokens WHERE email = %s OR ip_address = %s

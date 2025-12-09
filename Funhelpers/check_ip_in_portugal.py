@@ -9,7 +9,7 @@ def check_ip_in_portugal(ip):
         if response.status_code == 200:
             data = response.json()
             if data.get("bogon", True):
-                pprint(f"Bogon IP detected: {ip}")
+                # pprint(f"Bogon IP detected: {ip}")
                 return True  # Bogon IPs are treated as local/trusted
 
             country_code = data.get("country", "").upper()

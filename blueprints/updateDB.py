@@ -1,154 +1,150 @@
-from flask import Blueprint, request, session, redirect, url_for,current_app, render_template
+from flask import (
+    Blueprint,
+    request,
+    session,
+    redirect,
+    url_for,
+    current_app,
+    render_template,
+    flash,
+)
 from pprint import pprint
 import bleach
-from Funhelpers import check_ip_in_portugal, valid_cellphone,valid_NIF, mask_email
+from Funhelpers import check_ip_in_portugal, valid_cellphone, valid_NIF, mask_email
 from DBhelpers import *
 from typing import Any, Mapping, cast
 from werkzeug.security import generate_password_hash
 import re
 from markupsafe import Markup
 
-bp_updateDB = Blueprint('updateDB', __name__)
-bp_updateDB314 = Blueprint('updateDB314', __name__)
+bp_updateDB = Blueprint("updateDB", __name__)
+# bp_updateDB314 = Blueprint("updateDB314", __name__)
 
-@bp_updateDB.route('/updateDB', methods = ["GET","POST"])
+
+@bp_updateDB.route("/updateDB", methods=["GET", "POST"])
 def updateDB():
-    user = session.get('user') or session.get('userinfo')
-    # Render the content template first
-    main_content_html = render_template(
-        'content/wip.html',
-    )
-    user = None
+#     """
+#     Renders a work-in-progress page.
 
-    # Then render the main template with the content
-    return render_template(
-        'index.html',
-        admin_email=current_app.config['ADMIN_EMAIL'],
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=Markup(main_content_html))
+#     This function is a placeholder and is not yet fully implemented.
+#     It is intended to be used for future development of database update
+#     functionality.
+#     """
+#     user = session.get("user") or session.get("userinfo")
+#     # Render the content template first
+#     main_content_html = render_template(
+#         "content/wip.html",
+#     )
+#     user = None
+
+#     # Then render the main template with the content
+#     return render_template(
+#         "index.html",
+#         admin_email=current_app.config["ADMIN_EMAIL"],
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=Markup(main_content_html),
+#     )
 
 
+# @bp_updateDB314.route("/updateDB314", methods=["GET", "POST"])
+# def updateDB314():
+    """
+    Handles the final step of Tier 1 user registration, creating the user in the database.
 
-@bp_updateDB314.route('/updateDB314', methods = ["GET","POST"])
-def updateDB314():
-    pprint('Updating user in the database...')
-    userinfo = session.get('userinfo', {})
-    # pprint(userinfo)
+    This function is called after a user submits the signup form. It gathers all the
+    necessary information from both the session (for users signing up via Google) and
+    the form fields.
 
-    notes = "NA"
+    The process includes:
+    1.  Cleaning and sanitizing all form inputs.
+    2.  Validating the data, which involves:
+        - Checking if the email already exists in the database.
+        - Verifying that the user's IP address is located in Portugal.
+        - Validating the format of the chosen username.
+    3.  Generating a secure hash for the user's password if one is provided.
+    4.  If validation fails, it stores an error message in the session and redirects
+        the user back to the signup page.
+    5.  On successful validation, it inserts the new user's data into the database,
+        creating records for the user, their IP address, and their connection history.
+    6.  Finally, it initializes the user's session with their basic (Tier 1) profile
+        information and redirects them to their new profile page.
+    """
 
-    # Helper: request.form.get can return None; coerce to empty string before cleaning
+    # pprint('Creating Tier 1 user...')
+    userinfo = session.get("userinfo", {})
+
     def get_clean(field: str, default: str = "") -> str:
+        """
+        Retrieves and sanitizes a field from the request form.
+
+        This helper function gets a value from the submitted form data,
+        cleans it using bleach to prevent XSS vulnerabilities, and returns
+        the sanitized string. If the form field is not found, it returns a
+        default value.
+
+        Args:
+            field (str): The name of the form field to retrieve.
+            default (str, optional): The default value if the field is missing.
+                                     Defaults to "".
+
+        Returns:
+            str: The sanitized form field value.
+        """
         return bleach.clean(request.form.get(field) or default)
 
-    first_name = userinfo.get('given_name')
-    if not first_name:
-        first_name = get_clean('given_name')
-    last_name = userinfo.get('family_name')
-    if not last_name:
-        last_name = get_clean('family_name')
-    email = userinfo.get('email')
-    if not email:
-        email = get_clean('email')
-
-    email = email.lower()
-
+    first_name = userinfo.get("given_name") or get_clean("given_name")
+    last_name = userinfo.get("family_name") or get_clean("family_name")
+    email = (userinfo.get("email") or get_clean("email")).lower()
     errorMessage = ""
+
     username = None
-    if userinfo.get('email'):
+    if userinfo.get("email"):
         username = email
     else:
-        username = get_clean('username').lower()
-        if username == email:
-            pass
-        elif not re.match(r'^[A-Za-z0-9._-]+$', username):
-            errorMessage += "O username pode conter letras, números ou os símbolos '.' , '-' ou '_' <br> \n"
+        username = get_clean("username").lower()
+        if username != email and not re.match(r"^[A-Za-z0-9._-]+$", username):
+            errorMessage += "O username pode conter letras, números ou os símbolos '.' , '-' ou '_'\n"
             errorMessage += "Em alternativa pode utilizar o email como username."
 
     h_password = None
-    password = get_clean('password') or None
+    password = get_clean("password") or None
     if password:
         h_password = generate_password_hash(password)
 
-    address = get_clean('address')
-    number = get_clean('number') or "NA"
-    floor = get_clean('floor') or "NA"
-    door = get_clean('door') or "NA"
-    zip_code1 = get_clean('zip_code1')
-    zip_code2 = get_clean('zip_code2')
-    cell_phone = get_clean('cell_phone')
-    nif = get_clean('nfiscal')
-    g_address = address
-    if number != "NA":
-        g_address = address + ", " + str(number)
-    full_address = g_address
-    if floor != "NA":
-        full_address += ", " + str(floor)
-    if door != "NA":
-        full_address += " " + str(door)
-    session['metadata'] = {
-        'name': (first_name or "") + " " + (last_name or ""),
-        'first_name': first_name,
-        'last_name': last_name,
-        'email': email,
-        'full_address': full_address,
-        'g_address': g_address,
-        'address': address,
-        'number': number,
-        'floor': floor,
-        'door': door,
-        'notes': notes,
-        'zip_code1': str(zip_code1),
-        'zip_code2': str(zip_code2),
-        'zip_code': str(zip_code1) + "-" + str(zip_code2),
-        'cell_phone': cell_phone,
-        'nfiscal': nif
-    }
-    session['error_message'] = ""
-    # print("------------------------------------------------")
+    register_ip = request.headers.get("X-Real-IP")
+    if not register_ip:
+        register_ip = request.remote_addr
+
+    # Validation
     sameEmail = getDataFromEmail(email)
-    print("sameEmail", sameEmail)
     if sameEmail:
         sameEmail_map = cast(Mapping[str, Any], sameEmail)
-        errorMessage += f"Este email ({sameEmail_map.get('email','')}) já tem uma conta aqui criada em {sameEmail_map.get('createdatts','')}. <br>\n"
-    register_ip = request.headers.get('X-Real-IP')
-    # sameIP = getDataFromIPcreated(register_ip)
-    # print("sameIP",sameIP)
-    # if sameIP:
-    #     errorMessage += f"Este IP ({register_ip}) já registou o email {mask_email(sameIP["email"])} em {sameIP["createdatts"]}.<br>\n"
-    sameNIF = getDataFromNIF(nif)
-    # print("sameNIF",sameNIF)
-    if sameNIF:
-        sameNIF_map = cast(Mapping[str, Any], sameNIF)
-        errorMessage += f"Este NIF ({nif}) já pertence a uma conta com o email {mask_email(sameNIF_map.get('email',''))} em {sameNIF_map.get('createdatts','')}.<br>\n"
-    sameCell = getDataFromCellNumber(cell_phone)
-    # print("sameCell",sameCell)
-    if sameCell:
-        sameCell_map = cast(Mapping[str, Any], sameCell)
-        errorMessage += f"Este Telemóvel ({cell_phone}) já pertence a uma conta com o email {mask_email(sameCell_map.get('email',''))} em {sameCell_map.get('createdatts','')}.<br>\n"
+        errorMessage += f"Este email ({sameEmail_map.get('email','')}) já tem uma conta aqui criada em {sameEmail_map.get('createdatts','')}.\n"
+
     if not check_ip_in_portugal(register_ip):
-        # pprint(f"IP {register_ip} is not from Lisboa/Portugal.")
-        errorMessage += f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar. <br> Nota: só é necessário para o registro não para o acesso.<br>\n"
-    if not valid_NIF (nif):
-        errorMessage += f"Este NIF ({nif}) não é válido. <br> \n"
-    if not valid_cellphone (cell_phone):
-        errorMessage += f"Este telemóvel ({cell_phone}) não é válido. <br> \n"
-    # print("------------------------------------------------")
+        errorMessage += f"Este endereço de IP {register_ip} está localizado fora de Lisboa. Tente de novo quando voltar.\n"
 
     if len(errorMessage) > 0:
-        session['metadata']['error_message'] = errorMessage
+        session["metadata"]["error_message"] = errorMessage
         print(errorMessage)
-        return redirect(url_for('signup314.signup314',email = email))
+        return redirect(url_for("signup.signup", email=email))
 
-    successUser = insertNewUser(first_name,last_name,email,h_password,username)
-    successPers = insertNewPersonalData(email, address, number, floor, door, notes, zip_code1,zip_code2,cell_phone,nif)
-    successIP   = insertNewIP(email,register_ip)
-    successConn = insertNewConnectionData(email,register_ip)
-    if successPers and successUser and successIP and successConn:
+    # TIER 1: Only these three functions
+    successUser = insertNewUser(first_name, last_name, email, h_password, username)
+    successIP = insertNewIP(email, register_ip)
+    successConn = insertNewConnectionData(email, register_ip)
 
-        return redirect(url_for('profile.profile'))
+    if successUser and successIP and successConn:
+        # Store in session and redirect to profile
+        session["metadata"] = {
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "tier": 1,  # New user starts at tier 1
+        }
+        session.modified = True
+        return redirect(url_for("profile.profile"))
     else:
         return "Error registering user", 500
-

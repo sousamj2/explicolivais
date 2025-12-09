@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS users (
+  user_id    INT PRIMARY KEY AUTO_INCREMENT,
+  first_name VARCHAR(100) NOT NULL,
+  last_name  VARCHAR(100) NOT NULL,
+  email      VARCHAR(255) NOT NULL,
+  username   VARCHAR(100) NOT NULL,
+  h_password VARCHAR(255),
+  g_token    BOOLEAN NOT NULL DEFAULT TRUE,
+  tier       TINYINT DEFAULT 1
+) ENGINE=InnoDB;

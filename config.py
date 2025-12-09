@@ -91,6 +91,10 @@ class Config:
     # OAuth2 (Google)
     CLIENT_ID = _get("SECRET_CLIENT_KEY")
     CLIENT_SECRET = _get("SECRET_CLIENT_SECRET")
+
+    # print(CLIENT_ID)
+    # print(CLIENT_SECRET)
+
     # Use separate redirect for production if provided, else default local
     REDIRECT_URI = _get("OAUTH_REDIRECT_URI", "http://localhost:8080/oauth2callback")
 
@@ -126,6 +130,20 @@ class Config:
         5: [("08:00", "10:00"), ("10:00", "12:00"), ("14:00", "16:00"), ("16:00", "18:00"), ("18:00", "20:00")],
         6: [("08:00", "10:00"), ("10:00", "12:00"), ("13:00", "15:00")],
     }
+
+    # RDS Connection to MySQL
+    MYSQL_PASSWORD = _get("MYSQL_PASSWORD")
+    MYSQL_HOST     = _get("MYSQL_HOST")
+    MYSQL_USER     = "admin"
+    MYSQL_DBNAME   = "explicolivais"
+    MYSQL_PORT     = 3306
+    # print(MYSQL_PASSWORD)
+    # print(MYSQL_HOST    )
+    # print(MYSQL_USER    )
+    # print(MYSQL_DBNAME  )
+    # print(MYSQL_PORT    )
+    # print()
+
 
     DEBUG = False
     TESTING = False

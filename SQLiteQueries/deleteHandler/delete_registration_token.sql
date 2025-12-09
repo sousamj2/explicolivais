@@ -1,0 +1,1 @@
+DELETE FROM registration_tokens WHERE token = %s

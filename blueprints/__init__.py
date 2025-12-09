@@ -1,18 +1,19 @@
 
 # Import and export all blueprints
-from .check_user import bp_check_user,bp_check_user314
+from .check_user import bp_check_user #,bp_check_user314
 from .logout import bp_logout
 from .oauth2callback import bp_oauth2callback
 from .profile import bp_profile
-from .signin_redirect import bp_signin_redirect,bp_signin_redirect314
-from .signin import bp_signin,bp_signin314
-from .signup import bp_signup,bp_signup314
-from .updateDB import bp_updateDB,bp_updateDB314
+from .signin_redirect import bp_signin_redirect #,bp_signin_redirect314
+from .signin import bp_signin #,bp_signin314
+from .signup import bp_signup #,bp_signup314
+from .updateDB import bp_updateDB #,bp_updateDB314
 from .pages import bp_home, bp_maps, bp_prices, bp_calendar, bp_terms, bp_adminDB
-from .register import bp_register,bp_register314
+from .register import bp_register #,bp_register314
 from .request_new_user import bp_request_new_user
 from .quiz import quiz_bp
 from .quiz_assets import quiz_assets_bp
+from .elevate_tier import bp_elevate_tier,bp_elevate_tier314
 
 
 __all__ = [
@@ -34,10 +35,12 @@ __all__ = [
     'bp_request_new_user',
     'quiz_bp',
     'quiz_assets_bp',
-    'bp_check_user314',
-    'bp_signin314',
-    'bp_updateDB314',
-    'bp_register314',
-    'bp_signup314',
-    'bp_signin_redirect314',
+    'bp_elevate_tier',
+    'bp_elevate_tier314',
+    # 'bp_signin314',
+    # 'bp_check_user314',
+    # 'bp_updateDB314',
+    # 'bp_register314',
+    # 'bp_signup314',
+    # 'bp_signin_redirect314',
     ]

@@ -3,11 +3,20 @@ import locale
 import pytz
 
 def format_data(timestampUTC):
-    # print("-----------------------",timestampUTC)
+    # print(f"-----------------------[{timestampUTC}]----------",type(timestampUTC))
+    
+    if isinstance(timestampUTC, datetime):
+        timestampUTC_str = timestampUTC.isoformat()
+    elif isinstance(timestampUTC, str):
+        timestampUTC_str = timestampUTC
+    else:
+        # If it's neither string nor datetime, return empty string or handle as an error
+        return ""
+
     try:
         locale.setlocale(locale.LC_TIME, 'pt_PT.UTF-8')
         
-        dt = datetime.fromisoformat(timestampUTC)
+        dt = datetime.fromisoformat(timestampUTC_str)
         dt = dt - timedelta(hours=1)
         lisbon_tz = pytz.timezone('Europe/Lisbon')
         

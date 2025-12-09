@@ -29,10 +29,15 @@ def create_app(config_name=None):
     
     # Initialize Flask-Mail via the extension pattern to avoid assigning new attributes on Flask
     mail.init_app(app)
-    print("Mail state after init_app:", mail.state)
+    # print("Mail state after init_app:", mail.state)
+    
+    # Favicon route
+    @app.route('/favicon.ico')
+    def favicon():
+        return app.send_static_file('images/favicon.png')
     
     app.register_blueprint(bp_check_user)
-    app.register_blueprint(bp_check_user314)
+    # app.register_blueprint(bp_check_user314)
     app.register_blueprint(bp_logout)
     app.register_blueprint(bp_oauth2callback)
     app.register_blueprint(bp_home)
@@ -43,17 +48,20 @@ def create_app(config_name=None):
     app.register_blueprint(bp_adminDB)
     app.register_blueprint(bp_profile)
     app.register_blueprint(bp_signin_redirect)
-    app.register_blueprint(bp_signin_redirect314)
+    # app.register_blueprint(bp_signin_redirect314)
     app.register_blueprint(bp_signin)
-    app.register_blueprint(bp_signin314)
+    # app.register_blueprint(bp_signin314)
     app.register_blueprint(bp_signup)
-    app.register_blueprint(bp_signup314)
+    # app.register_blueprint(bp_signup314)
     app.register_blueprint(bp_updateDB)
-    app.register_blueprint(bp_updateDB314)
+    # app.register_blueprint(bp_updateDB314)
     app.register_blueprint(bp_register)
-    app.register_blueprint(bp_register314)
+    # app.register_blueprint(bp_register314)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(quiz_assets_bp)
+    app.register_blueprint(bp_elevate_tier)
+    app.register_blueprint(bp_elevate_tier314)
+    
     
     # Main route: redirect to /pages/ (home)
     @app.route('/')

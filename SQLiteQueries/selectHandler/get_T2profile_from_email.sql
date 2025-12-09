@@ -1,5 +1,5 @@
 SELECT 
-u.first_name, u.last_name, u.email,
+u.first_name, u.last_name, u.email,u.tier,
 p.address, p.number, p.floor, p.door, p.zip_code1, p.zip_code2, p.cell_phone, p.nfiscal, p.notes,
 co.lastloginip, co.lastlogints, co.vpn_check
 -- cl.course, cl.child_name, cl.year, cl.first_contact, cl.first_class,

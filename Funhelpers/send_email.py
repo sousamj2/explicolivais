@@ -9,11 +9,11 @@ def send_email(subject: str, email_to: str, html_message: str) -> None:
     This is a simple helper (no blueprint). Call it from your application code
     or background jobs: `from Funhelpers import send_email`.
     """
-    print()
-    print(current_app.config)
-    print()
-    print(mail.state)
-    print()
+    # print()
+    # print(current_app.config)
+    # print()
+    # print(mail.state)
+    # print()
     with current_app.app_context():
         msg = Message(subject=subject, recipients=[email_to])
         msg.html = html_message
