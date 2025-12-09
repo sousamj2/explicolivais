@@ -111,7 +111,8 @@ def setup_mysql_database():
         newTablePersonalData,
         newTableUsers,
         newTableBlacklistedEmails,
-        newTableBlacklistedIPs
+        newTableBlacklistedIPs,
+        newTableRegistrationTokens,
     )
 
     try:
@@ -142,6 +143,8 @@ def setup_mysql_database():
         print("Table blacklisted_emails created correctly")
         newTableBlacklistedIPs(cursor)
         print("Table blacklisted_ips created correctly")
+        newTableRegistrationTokens(cursor)
+        print("Table registration_tokens created correctly")
         
         # Commit the changes
         print("Database setup completed successfully!")

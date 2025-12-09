@@ -140,3 +140,15 @@ def newTableBlacklistedIPs(cursor):
         cursor (pymysql.cursors.Cursor): The database cursor to use.
     """
     create_tables(sql_file_path=createFolder + "create_blacklisted_ips.sql",cursor=cursor)
+
+def newTableRegistrationTokens(cursor):
+    """
+    Creates the 'registration_tokens' table in the database.
+    
+    This function calls the generic `create_tables` utility to execute the
+    SQL script for creating the `registration_tokens` table.
+
+    Args:
+        cursor (pymysql.cursors.Cursor): The database cursor to use.
+    """
+    create_tables(sql_file_path=createFolder + "create_registration_tokens.sql",cursor=cursor)

@@ -334,3 +334,21 @@ def insertNewBlacklistedIP(ip_address):
     insertDict = {"ip_address": ip_address}
     status = execute_insert_from_file(insertFolder + insertFile, insertDict)
     return status
+
+
+def insertNewRegistrationToken(token, ip_address, email):
+    """
+    Inserts a new registration token into the 'registration_tokens' table.
+
+    Args:
+        token (str): The registration token.
+        ip_address (str): The user's IP address.
+        email (str): The user's email address.
+
+    Returns:
+        str: A status message from the database insertion operation.
+    """
+    insertFile = "insert_newRegistrationToken.sql"
+    insertDict = {"token": token, "ip_address": ip_address, "email": email}
+    status = execute_insert_from_file(insertFolder + insertFile, insertDict)
+    return status

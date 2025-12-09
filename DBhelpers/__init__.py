@@ -13,7 +13,8 @@ from .DBcreateTables import (
     newTableResults,
     newTableBlacklistedEmails,
     newTableBlacklistedIPs,
-    )
+    newTableRegistrationTokens,
+)
 from .DBinsertTables import (
     insertNewClass,
     insertNewConnectionData,
@@ -23,8 +24,9 @@ from .DBinsertTables import (
     save_quiz_history,
     insertNewUser,
     insertNewBlacklistedEmail,
-    insertNewBlacklistedIP, 
-    )
+    insertNewBlacklistedIP,
+    insertNewRegistrationToken,
+)
 from .DBselectTables import (
     get_user_profile_tier1,
     get_user_profile_tier2,
@@ -40,8 +42,14 @@ from .DBselectTables import (
     getQuestionIDsForYear,
     get_quiz_history_by_uuid,
     isEmailBlacklisted,
-    )
-from .DBupdateTables import (refresh_last_login_and_ip)
+    getRegistrationToken,
+    getRegistrationTokenByEmailOrIP,
+)
+from .DBdeleteTables import (
+    deleteRegistrationToken,
+    deleteExpiredRegistrationTokens,
+)
+from .DBupdateTables import refresh_last_login_and_ip
 
 from .DBloadQuiz import (
     loadQanswers,
@@ -49,7 +57,7 @@ from .DBloadQuiz import (
     loadQcsvFiles,
     loadQlinks,
     loadQtemas,
-    )
+)
 
 # from .DBmodifyTables import updateValue
 
@@ -63,6 +71,9 @@ __all__ = [
     "newTablePersonalData",
     "newTableUsers",
     "newTableResults",
+    "newTableBlacklistedEmails",
+    "newTableBlacklistedIPs",
+    "newTableRegistrationTokens",
     "insertNewClass",
     "insertNewConnectionData",
     "insertNewDocument",
@@ -93,5 +104,9 @@ __all__ = [
     "isEmailBlacklisted",
     "insertNewBlacklistedEmail",
     "insertNewBlacklistedIP",
-    
+    "insertNewRegistrationToken",
+    "getRegistrationToken",
+    "getRegistrationTokenByEmailOrIP",
+    "deleteRegistrationToken",
+    "deleteExpiredRegistrationTokens",
 ]

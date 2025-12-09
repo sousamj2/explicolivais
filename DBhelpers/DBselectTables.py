@@ -337,3 +337,39 @@ def isEmailBlacklisted(email):
     """
     retVal = getValueFromAnotherValue(selectFolder + "get_email_from_blacklisted_emails.sql", email)
     return retVal is not None and not (isinstance(retVal, str) and "Error" in retVal)
+
+
+def getRegistrationToken(token):
+    """
+    Retrieves a registration token from the 'registration_tokens' table.
+
+    Args:
+        token (str): The token to retrieve.
+
+    Returns:
+        dict: A dictionary containing the token data, or None if not found.
+    """
+    retVal = getValueFromAnotherValue(selectFolder + "get_registration_token.sql", token)
+    if isinstance(retVal, str) and "Error" in retVal:
+        return None
+    return retVal
+
+
+def getRegistrationTokenByEmailOrIP(email, ip_address):
+    """
+    Retrieves a registration token by email or IP address.
+
+    Args:
+        email (str): The email to check.
+        ip_address (str): The IP address to check.
+
+    Returns:
+        dict: A dictionary containing the token data, or None if not found.
+    """
+    retVal = getValueFromAnotherValue(
+        selectFolder + "get_registration_token_by_email_or_ip.sql",
+        (email, ip_address),
+    )
+    if isinstance(retVal, str) and "Error" in retVal:
+        return None
+    return retVal
