@@ -185,26 +185,22 @@ def quiz_config():
     This view function displays the page where users can configure their quiz settings,
     such as the academic year and the number of questions. The page is rendered using
     the 'quiz_config.html' template, which is then embedded into the main 'index.html'
-    layout.
+    layout. It uses the configuration from the session to pre-select the options.
     """
-    # user = session.get('user', None)
-    user = session and session.get("metadata")    
+    user = session.get("metadata")
+
+    # Get configuration from session or use defaults if not present
+    quiz_config_data = session.get('quiz_config', {
+        'year': 7,
+        'num_exercises': 20,
+        'current_year_percent': 50
+    })
+
     content_html = render_template(
-        'content/quiz_config.html'
+        'content/quiz_config.html',
+        quiz_config=quiz_config_data
     )
 
-    # Get configuration from query parameters or use defaults
-    year = request.args.get('year', 7, type=int)
-    num_exercises = request.args.get('num_exercises', 20, type=int)
-    current_year_percent = request.args.get('current_year_percent', 50, type=int)
-
-    # Store configuration in session
-    session['quiz_config'] = {
-        'year': year,
-        'num_exercises': num_exercises,
-        'current_year_percent': current_year_percent
-    }
-    
     return render_template(
         'index.html',
         admin_email=current_app.config.get('ADMIN_EMAIL', ''),

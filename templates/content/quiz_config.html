@@ -12,14 +12,14 @@
         <div class="form-group">
             <label for="year">Selecione o ano:</label>
             <select id="year" name="year">
-                <option value="5">5º Ano</option>
-                <option value="6">6º Ano</option>
-                <option value="7" selected>7º Ano</option>
-                <option value="8">8º Ano (em construção)</option>
-                <option value="9">9º Ano (em construção)</option>
-                <option value="10">10º Ano (em construção)</option>
-                <option value="11">11º Ano (em construção)</option>
-                <option value="12">12º Ano (em construção)</option>
+                <option value="5" {% if quiz_config.year == 5 %}selected{% endif %}>5º Ano</option>
+                <option value="6" {% if quiz_config.year == 6 %}selected{% endif %}>6º Ano</option>
+                <option value="7" {% if quiz_config.year == 7 %}selected{% endif %}>7º Ano</option>
+                <option value="8" {% if quiz_config.year == 8 %}selected{% endif %}>8º Ano (em construção)</option>
+                <option value="9" {% if quiz_config.year == 9 %}selected{% endif %}>9º Ano (em construção)</option>
+                <option value="10" {% if quiz_config.year == 10 %}selected{% endif %}>10º Ano (em construção)</option>
+                <option value="11" {% if quiz_config.year == 11 %}selected{% endif %}>11º Ano (em construção)</option>
+                <option value="12" {% if quiz_config.year == 12 %}selected{% endif %}>12º Ano (em construção)</option>
             </select>
         </div>
     </div>
@@ -29,12 +29,12 @@
         <div class="form-group">
             <label for="num_exercises">Quantos exercícios pretende resolver?</label>
             <select id="num_exercises" name="num_exercises">
-                <option value="2" selected>2 exercícios</option>
-                <option value="20">20 exercícios</option>
-                <option value="40">40 exercícios</option>
-                <option value="60">60 exercícios</option>
-                <option value="80">80 exercícios</option>
-                <option value="100">100 exercícios</option>
+                <option value="2" {% if quiz_config.num_exercises == 2 %}selected{% endif %}>2 exercícios</option>
+                <option value="20" {% if quiz_config.num_exercises == 20 %}selected{% endif %}>20 exercícios</option>
+                <option value="40" {% if quiz_config.num_exercises == 40 %}selected{% endif %}>40 exercícios</option>
+                <option value="60" {% if quiz_config.num_exercises == 60 %}selected{% endif %}>60 exercícios</option>
+                <option value="80" {% if quiz_config.num_exercises == 80 %}selected{% endif %}>80 exercícios</option>
+                <option value="100" {% if quiz_config.num_exercises == 100 %}selected{% endif %}>100 exercícios</option>
             </select>
         </div>
     </div>
@@ -44,9 +44,9 @@
         <div class="form-group">
             <label for="current_year_percent">Percentagem de exercícios do ano atual:</label>
             <select id="current_year_percent" name="current_year_percent">
-                <option value="25">25% do ano atual</option>
-                <option value="50" selected>50% do ano atual</option>
-                <option value="75">75% do ano atual</option>
+                <option value="25" {% if quiz_config.current_year_percent == 25 %}selected{% endif %}>25% do ano atual</option>
+                <option value="50" {% if quiz_config.current_year_percent == 50 %}selected{% endif %}>50% do ano atual</option>
+                <option value="75" {% if quiz_config.current_year_percent == 75 %}selected{% endif %}>75% do ano atual</option>
             </select>
             <p class="info-text" id="distribution-info">Os restantes exercícios serão de anos anteriores para revisão.</p>
             <p class="warning-text" id="distribution-warning" style="display: none;"></p>

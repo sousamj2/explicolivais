@@ -8,9 +8,39 @@ from DBhelpers import insertNewPersonalData, getDataFromNIF, getDataFromCellNumb
 import re
 
 bp_elevate_tier = Blueprint('elevate_tier', __name__)
+bp_elevate_tier314 = Blueprint('elevate_tier314', __name__)
 
-@bp_elevate_tier.route('/elevate-tier', methods=['GET', 'POST'])
+
+@bp_elevate_tier.route("/elevate-tier")
 def elevate_tier():
+    """
+    Renders a work-in-progress page.
+
+    This function is a placeholder and is not yet fully implemented.
+    It is intended to be used for future development of an alternative
+    sign-in process.
+    """
+    user = session.get("user") or session.get("userinfo")
+    # Render the content template first
+    main_content_html = render_template(
+        "content/wip.html",
+    )
+    # user = None
+
+    # Then render the main template with the content
+    return render_template(
+        "index.html",
+        admin_email=current_app.config["ADMIN_EMAIL"],
+        user=user,
+        page_title="Explicações em Lisboa",
+        title="Explicações em Lisboa",
+        main_content=Markup(main_content_html),
+    )
+
+
+
+@bp_elevate_tier314.route('/elevate-tier314', methods=['GET', 'POST'])
+def elevate_tier314():
     """
     Handles the user account tier elevation process.
 

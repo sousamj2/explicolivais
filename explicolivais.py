@@ -31,6 +31,11 @@ def create_app(config_name=None):
     mail.init_app(app)
     print("Mail state after init_app:", mail.state)
     
+    # Favicon route
+    @app.route('/favicon.ico')
+    def favicon():
+        return app.send_static_file('images/favicon.png')
+    
     app.register_blueprint(bp_check_user)
     # app.register_blueprint(bp_check_user314)
     app.register_blueprint(bp_logout)
@@ -55,6 +60,8 @@ def create_app(config_name=None):
     app.register_blueprint(quiz_bp)
     app.register_blueprint(quiz_assets_bp)
     app.register_blueprint(bp_elevate_tier)
+    app.register_blueprint(bp_elevate_tier314)
+    
     
     # Main route: redirect to /pages/ (home)
     @app.route('/')

@@ -27,7 +27,7 @@
         <a href="{{ url_for('quiz.start_quiz', year=config.year, num_exercises=config.num_exercises, current_year_percent=config.current_year_percent) }}" class="btn btn-primary">
             Começar de novo
         </a>
-        <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
+        <a href="{{ url_for('quiz.quiz_config', year=config.year, num_exercises=config.num_exercises, current_year_percent=config.current_year_percent) }}" class="btn btn-secondary">
             Alterar configurações
         </a>
     {% endif %}
