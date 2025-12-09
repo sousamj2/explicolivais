@@ -29,7 +29,7 @@ def create_app(config_name=None):
     
     # Initialize Flask-Mail via the extension pattern to avoid assigning new attributes on Flask
     mail.init_app(app)
-    print("Mail state after init_app:", mail.state)
+    # print("Mail state after init_app:", mail.state)
     
     # Favicon route
     @app.route('/favicon.ico')

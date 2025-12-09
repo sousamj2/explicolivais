@@ -58,7 +58,7 @@ def claim_anonymous_quiz(email, quiz_uuid, quiz_config, question_ids_raw, user_a
         start_ts = anonymous_quiz_data['timestamp']
 
     # 3. Save to user's permanent history in the database.
-    print(f"DEBUG: Attempting to save quiz {quiz_uuid} for {email}...")
+    # print(f"DEBUG: Attempting to save quiz {quiz_uuid} for {email}...")
     was_saved_status = save_quiz_history(
         email=email,
         results=quiz_results,
@@ -66,16 +66,16 @@ def claim_anonymous_quiz(email, quiz_uuid, quiz_config, question_ids_raw, user_a
         q_uuid=quiz_uuid,
         start_ts=start_ts # Pass the original timestamp
     )
-    print(f"DEBUG: save_quiz_history returned: {was_saved_status}")
+    # print(f"DEBUG: save_quiz_history returned: {was_saved_status}")
 
     if "ERROR" in was_saved_status:
-        print(f"DEBUG: Error saving quiz {quiz_uuid}: {was_saved_status}")
+        # print(f"DEBUG: Error saving quiz {quiz_uuid}: {was_saved_status}")
         return False
 
     # DEBUG: Attempt to retrieve the quiz immediately after saving
     from DBhelpers import get_quiz_history_by_uuid
     retrieved_quiz = get_quiz_history_by_uuid(email, quiz_uuid)
-    print(f"DEBUG: Immediately retrieved quiz from DB: {retrieved_quiz}")
+    # print(f"DEBUG: Immediately retrieved quiz from DB: {retrieved_quiz}")
 
     # 4. Delete the claimed quiz from the CSV file.
     QUIZ_RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'quiz_results')

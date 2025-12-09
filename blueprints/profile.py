@@ -62,7 +62,7 @@ def profile():
         mypict = session.get("userinfo").get("picture", "")
 
     if email:
-        pprint("Rendering profile page...")
+        # pprint("Rendering profile page...")
 
         # Get full profile from DB
         session["metadata"] = get_user_profile_tier1(email)

@@ -67,9 +67,9 @@ def save_quiz_result(user_answers, questions):
         # Write quiz result (anonymous, no email)
         writer.writerow([quiz_uuid, timestamp, answers_json])
     
-    print(f"DEBUG: Saved anonymous quiz result")
-    print(f"  UUID: {quiz_uuid}")
-    print(f"  Timestamp: {timestamp}")
+    # print(f"DEBUG: Saved anonymous quiz result")
+    # print(f"  UUID: {quiz_uuid}")
+    # print(f"  Timestamp: {timestamp}")
     
     return quiz_uuid
 

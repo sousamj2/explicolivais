@@ -29,7 +29,7 @@ def create_tables(sql_file_path,cursor):
         status = "Table created successfully"
     except Exception as e:
         status = f"Error creating table: {e} from {sql_file_path}"
-        print(status)
+        # print(status)
 
     return status
 
