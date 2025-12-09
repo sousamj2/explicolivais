@@ -138,7 +138,7 @@ def get_quiz_history_by_uuid(email, quiz_uuid):
 
     """
     retVal = get_quiz_history_for_user(email)
-    # print("get_quiz_history_by_uuid",retVal)
+    print("get_quiz_history_by_uuid",retVal)
     if isinstance(retVal, str) and "Error" in retVal:
         return []
     for quiz in retVal:
