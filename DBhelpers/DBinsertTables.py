@@ -33,7 +33,7 @@ def execute_insert_from_file(sql_file_path, params_dict):
         with open(sql_file_path, "r") as file:
             sql_code = file.read()
 
-            print(sql_code.replace("?","%s"))
+            # print(sql_code.replace("?","%s"))
 
         # Connect to database
         conn = get_mysql_connection()

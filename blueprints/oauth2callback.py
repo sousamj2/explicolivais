@@ -14,7 +14,7 @@ def oauth2callback():
     and an ID token from the token endpoint.
 
     The obtained tokens and user information (fetched from the userinfo endpoint) are stored
-    in the session. Finally, it redirects the user to the `check_user314` blueprint to
+    in the session. Finally, it redirects the user to the `check_user` blueprint to
     complete the login or registration process.
     """
     code = request.args.get('code')
@@ -43,4 +43,4 @@ def oauth2callback():
     # print()
     # pprint(tokens)  # For debugging purposes
     print( 'Authentication successful, tokens acquired!')
-    return redirect(url_for('check_user314.check_user314'))
+    return redirect(url_for('check_user.check_user'))

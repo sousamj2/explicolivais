@@ -218,8 +218,8 @@
             <div class="locked-message">
                 <h3>🔒 Detalhes das Respostas</h3>
                 <p>Para ver os detalhes de suas respostas e manter um histórico permanente, 
-                   <a href="{{ url_for('signin.signin') }}">faça login</a> ou 
-                   <a href="{{ url_for('signin.signin') }}">crie uma conta</a>.</p>
+                   <a href="{{ url_for('signin.signin', next_uuid=quiz_uuid) }}">faça login</a> ou 
+                   <a href="{{ url_for('signin.signin', next_uuid=quiz_uuid) }}">crie uma conta</a>.</p>
                 {% if quiz_uuid %}
                 <p class="uuid-info">
                     ID do Quiz: <code>{{ quiz_uuid }}</code><br>
@@ -243,7 +243,7 @@
         <a href="{{ url_for('quiz.start_quiz', year=config.year, num_exercises=config.num_exercises, current_year_percent=config.current_year_percent) }}" class="btn btn-primary">
             Começar de novo
         </a>
-        <a href="{{ url_for('quiz.quiz_config') }}" class="btn btn-secondary">
+        <a href="{{ url_for('quiz.quiz_config', year=config.year, num_exercises=config.num_exercises, current_year_percent=config.current_year_percent) }}" class="btn btn-secondary">
             Alterar configurações
         </a>
     {% endif %}

@@ -18,38 +18,38 @@ import re
 from markupsafe import Markup
 
 bp_updateDB = Blueprint("updateDB", __name__)
-bp_updateDB314 = Blueprint("updateDB314", __name__)
+# bp_updateDB314 = Blueprint("updateDB314", __name__)
 
 
 @bp_updateDB.route("/updateDB", methods=["GET", "POST"])
 def updateDB():
-    """
-    Renders a work-in-progress page.
+#     """
+#     Renders a work-in-progress page.
 
-    This function is a placeholder and is not yet fully implemented.
-    It is intended to be used for future development of database update
-    functionality.
-    """
-    user = session.get("user") or session.get("userinfo")
-    # Render the content template first
-    main_content_html = render_template(
-        "content/wip.html",
-    )
-    user = None
+#     This function is a placeholder and is not yet fully implemented.
+#     It is intended to be used for future development of database update
+#     functionality.
+#     """
+#     user = session.get("user") or session.get("userinfo")
+#     # Render the content template first
+#     main_content_html = render_template(
+#         "content/wip.html",
+#     )
+#     user = None
 
-    # Then render the main template with the content
-    return render_template(
-        "index.html",
-        admin_email=current_app.config["ADMIN_EMAIL"],
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=Markup(main_content_html),
-    )
+#     # Then render the main template with the content
+#     return render_template(
+#         "index.html",
+#         admin_email=current_app.config["ADMIN_EMAIL"],
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=Markup(main_content_html),
+#     )
 
 
-@bp_updateDB314.route("/updateDB314", methods=["GET", "POST"])
-def updateDB314():
+# @bp_updateDB314.route("/updateDB314", methods=["GET", "POST"])
+# def updateDB314():
     """
     Handles the final step of Tier 1 user registration, creating the user in the database.
 
@@ -129,7 +129,7 @@ def updateDB314():
     if len(errorMessage) > 0:
         session["metadata"]["error_message"] = errorMessage
         print(errorMessage)
-        return redirect(url_for("signup314.signup314", email=email))
+        return redirect(url_for("signup.signup", email=email))
 
     # TIER 1: Only these three functions
     successUser = insertNewUser(first_name, last_name, email, h_password, username)

@@ -23,37 +23,37 @@ from DBhelpers import (
 from markupsafe import Markup
 
 bp_check_user = Blueprint("check_user", __name__, url_prefix="/check_user")
-bp_check_user314 = Blueprint("check_user314", __name__, url_prefix="/check_user314")
+# bp_check_user314 = Blueprint("check_user314", __name__, url_prefix="/check_user314")
 
 
 @bp_check_user.route("/", methods=["GET", "POST"])
 def check_user():
-    """
-    Renders a work-in-progress page.
+#     """
+#     Renders a work-in-progress page.
 
-    This function is a placeholder and is not yet fully implemented.
-    It is intended to be used for future development.
-    """
-    user = session.get("user") or session.get("userinfo")
-    # Render the content template first
-    main_content_html = render_template(
-        "content/wip.html",
-    )
-    user = None
+#     This function is a placeholder and is not yet fully implemented.
+#     It is intended to be used for future development.
+#     """
+#     user = session.get("user") or session.get("userinfo")
+#     # Render the content template first
+#     main_content_html = render_template(
+#         "content/wip.html",
+#     )
+#     user = None
 
-    # Then render the main template with the content
-    return render_template(
-        "index.html",
-        admin_email=current_app.config["ADMIN_EMAIL"],
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=Markup(main_content_html),
-    )
+#     # Then render the main template with the content
+#     return render_template(
+#         "index.html",
+#         admin_email=current_app.config["ADMIN_EMAIL"],
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=Markup(main_content_html),
+#     )
 
 
-@bp_check_user314.route("/", methods=["GET", "POST"])
-def check_user314():
+# @bp_check_user314.route("/", methods=["GET", "POST"])
+# def check_user314():
     """
     Handles user authentication.
 
@@ -77,7 +77,7 @@ def check_user314():
 
         if not email or not password:
             flash("Falta o username/email ou a palavra-passe.")
-            return redirect(url_for("signin314.signin314"))
+            return redirect(url_for("signin.signin"))
 
         if "@" not in email:  # case for user name
             email = getEmailFromUsername(email)
@@ -86,7 +86,7 @@ def check_user314():
         hashval = getHashFromEmail(email)
         if hashval is None:
             flash("O username/email não existe ou a palavra-passe está incorreta.")
-            return redirect(url_for("signin314.signin314"))
+            return redirect(url_for("signin.signin"))
 
         # Verify password against hash
         if check_password_hash(hashval, password):
@@ -98,17 +98,17 @@ def check_user314():
                 return redirect(url_for('profile.profile'))
             else:
                 flash("O username/email não existe ou a palavra-passe está incorreta.")
-                return redirect(url_for("signup314.signup314"))
+                return redirect(url_for("signup.signup"))
         else:
             flash("O username/email não existe ou a palavra-passe está incorreta.")
-            return redirect(url_for("signin314.signin314"))
+            return redirect(url_for("signin.signin"))
 
     else:
         userinfo = session.get("userinfo")
         # pprint(userinfo)
         # pprint(session)["metadata"])
         if not userinfo or "email" not in userinfo:
-            return redirect(url_for("signup314.signup314"))
+            return redirect(url_for("signup.signup"))
 
         email = userinfo["email"]
 
@@ -124,4 +124,4 @@ def check_user314():
         else:
             flash("O username/email não existe ou a palavra-passe está incorreta.")
             # pprint('User not found, redirecting to signup.')
-            return redirect(url_for("signup314.signup314"))
+            return redirect(url_for("signup.signup"))

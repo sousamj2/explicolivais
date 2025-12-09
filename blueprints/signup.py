@@ -12,12 +12,12 @@ from pprint import pprint
 from Funhelpers import get_lisbon_greeting, render_profile_template
 
 
-bp_signup314 = Blueprint("signup314", __name__)
+# bp_signup314 = Blueprint("signup314", __name__)
 bp_signup = Blueprint("signup", __name__)
 
 
-@bp_signup314.route("/signup314", methods=["GET", "POST"])
-def signup314():
+@bp_signup.route("/signup", methods=["GET", "POST"])
+def signup():
     """
     Manages the user signup form, pre-filling data from different sources.
 
@@ -47,6 +47,7 @@ def signup314():
     if request.method == "POST":
         email = request.form.get("email", "")
     elif request.method == "GET":
+        # print("session", session)
         user = session.get("user") or session.get("userinfo")
         email = user["email"]
         given_name = user["given_name"]
@@ -54,7 +55,7 @@ def signup314():
         is_google = True
 
     if len(email) == 0:
-        return redirect(url_for("signin314.signin314"))
+        return redirect(url_for("signin.signin"))
 
     # print(email)
     # error_message = session.get("metadata").get("error_message",'')
@@ -83,28 +84,28 @@ def signup314():
     )
 
 
-@bp_signup.route("/")
-def signup():
-    """
-    Renders a work-in-progress page.
+# @bp_signup.route("/")
+# def signup():
+#     """
+#     Renders a work-in-progress page.
 
-    This function is a placeholder and is not yet fully implemented.
-    It is intended to be used for future development of an alternative
-    signup process.
-    """
-    user = session.get("user") or session.get("userinfo")
-    # Render the content template first
-    main_content_html = render_template(
-        "content/wip.html",
-    )
-    user = None
+#     This function is a placeholder and is not yet fully implemented.
+#     It is intended to be used for future development of an alternative
+#     signup process.
+#     """
+#     user = session.get("user") or session.get("userinfo")
+#     # Render the content template first
+#     main_content_html = render_template(
+#         "content/wip.html",
+#     )
+#     user = None
 
-    # Then render the main template with the content
-    return render_template(
-        "index.html",
-        admin_email=current_app.config["ADMIN_EMAIL"],
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=Markup(main_content_html),
-    )
+#     # Then render the main template with the content
+#     return render_template(
+#         "index.html",
+#         admin_email=current_app.config["ADMIN_EMAIL"],
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=Markup(main_content_html),
+#     )

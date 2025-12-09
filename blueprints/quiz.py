@@ -192,6 +192,18 @@ def quiz_config():
     content_html = render_template(
         'content/quiz_config.html'
     )
+
+    # Get configuration from query parameters or use defaults
+    year = request.args.get('year', 7, type=int)
+    num_exercises = request.args.get('num_exercises', 20, type=int)
+    current_year_percent = request.args.get('current_year_percent', 50, type=int)
+
+    # Store configuration in session
+    session['quiz_config'] = {
+        'year': year,
+        'num_exercises': num_exercises,
+        'current_year_percent': current_year_percent
+    }
     
     return render_template(
         'index.html',

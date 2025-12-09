@@ -14,37 +14,37 @@ from Funhelpers.send_email import send_email
 from markupsafe import Markup
 
 bp_register = Blueprint("register", __name__, url_prefix="/register")
-bp_register314 = Blueprint("register314", __name__, url_prefix="/register314")
+# bp_register314 = Blueprint("register314", __name__, url_prefix="/register314")
 
 
-@bp_register.route("/")
-def signin():
-    """
-    Renders a work-in-progress page.
+# @bp_register.route("/")
+# def signin():
+#     """
+#     Renders a work-in-progress page.
 
-    This function is a placeholder and is not yet fully implemented.
-    It is intended to be used for future development of the sign-in process.
-    """
-    user = session.get("user") or session.get("userinfo")
-    # Render the content template first
-    main_content_html = render_template(
-        "content/wip.html",
-    )
-    user = None
+#     This function is a placeholder and is not yet fully implemented.
+#     It is intended to be used for future development of the sign-in process.
+#     """
+#     user = session.get("user") or session.get("userinfo")
+#     # Render the content template first
+#     main_content_html = render_template(
+#         "content/wip.html",
+#     )
+#     user = None
 
-    # Then render the main template with the content
-    return render_template(
-        "index.html",
-        admin_email=current_app.config["ADMIN_EMAIL"],
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=Markup(main_content_html),
-    )
+#     # Then render the main template with the content
+#     return render_template(
+#         "index.html",
+#         admin_email=current_app.config["ADMIN_EMAIL"],
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=Markup(main_content_html),
+#     )
 
 
-@bp_register314.route("/", methods=["GET", "POST"])
-def request_confirmation314():
+@bp_register.route("/", methods=["GET", "POST"])
+def request_confirmation():
     """
     Handles the initial step of user registration by requesting email confirmation.
 
@@ -63,7 +63,7 @@ def request_confirmation314():
 
         if not email:
             flash("Please enter your email address.")
-            return redirect(url_for("register314.request_confirmation314"))
+            return redirect(url_for("register.request_confirmation"))
 
         # Optional: Check if email is blacklisted and reject if so
 
@@ -75,10 +75,10 @@ def request_confirmation314():
         token = generate_token(email)
 
         confirm_url = url_for(
-            "register314.confirm_email314", token=token, _external=True
+            "register.confirm_email", token=token, _external=True
         )
         unsubscribe_url = url_for(
-            "register314.unsubscribe314", email=email, ip=ip_addr, _external=True
+            "register.unsubscribe", email=email, ip=ip_addr, _external=True
         )
 
         subject = "Confirm your email address"
@@ -94,7 +94,7 @@ def request_confirmation314():
 
         flash("Confirmation email sent. Please check your inbox.")
         # return redirect(url_for('signin_redirect.signin_redirect'))
-        return redirect(url_for("register314.request_confirmation314"))
+        return redirect(url_for("register.request_confirmation"))
 
     main_content_html = render_template("content/request_new_user.html")
     return render_template(
@@ -110,8 +110,8 @@ def request_confirmation314():
     # return render_template('content/request_new_user.html')
 
 
-@bp_register314.route("/confirm/<token>")
-def confirm_email314(token):
+@bp_register.route("/confirm/<token>")
+def confirm_email(token):
     """
     Confirms a user's email address using a secure token.
 
@@ -121,7 +121,7 @@ def confirm_email314(token):
 
     Instead of a simple redirect, this function renders an HTML page with a hidden,
     auto-submitting form. This form sends the confirmed email address via a POST request
-    to the main signup page (`signup314.signup314`), securely transferring the user
+    to the main signup page (`signup.signup`), securely transferring the user
     to the final step of registration.
 
     Args:
@@ -134,14 +134,14 @@ def confirm_email314(token):
     email = confirm_token(token)
     if not email:
         flash("Invalid or expired confirmation token.")
-        return redirect(url_for("register314.request_confirmation314"))
+        return redirect(url_for("register.request_confirmation"))
 
     # Redirect to signup page with email prefilled or in URL for completion
     # return redirect(url_for('signup.signup', email=email))
     # Render a form that auto-submits via POST to the signup page with email hidden field
     return render_template_string(
         """
-        <form id="postform" method="post" action="{{ url_for('signup314.signup314') }}">
+        <form id="postform" method="post" action="{{ url_for('signup.signup') }}">
             <input type="hidden" name="email" value="{{ email }}">
         </form>
         <script type="text/javascript">
@@ -152,8 +152,8 @@ def confirm_email314(token):
     )
 
 
-@bp_register314.route("/unsubscribe")
-def unsubscribe314():
+@bp_register.route("/unsubscribe")
+def unsubscribe():
     """
     Handles user unsubscribe requests.
 
@@ -172,4 +172,4 @@ def unsubscribe314():
     # Add logic to insert email & ip into your blacklist db or cache
 
     flash("You have been unsubscribed and will not receive further emails.")
-    return redirect(url_for("signin314.signin314"))
+    return redirect(url_for("signin.signin"))
