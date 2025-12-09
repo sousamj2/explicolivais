@@ -50,7 +50,7 @@ def create_app(config_name=None):
     app.register_blueprint(bp_signin_redirect)
     # app.register_blueprint(bp_signin_redirect314)
     app.register_blueprint(bp_signin)
-    app.register_blueprint(bp_signin314)
+    # app.register_blueprint(bp_signin314)
     app.register_blueprint(bp_signup)
     # app.register_blueprint(bp_signup314)
     app.register_blueprint(bp_updateDB)

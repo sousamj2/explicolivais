@@ -3,7 +3,7 @@ import locale
 import pytz
 
 def format_data(timestampUTC):
-    print(f"-----------------------[{timestampUTC}]----------",type(timestampUTC))
+    # print(f"-----------------------[{timestampUTC}]----------",type(timestampUTC))
     
     if isinstance(timestampUTC, datetime):
         timestampUTC_str = timestampUTC.isoformat()

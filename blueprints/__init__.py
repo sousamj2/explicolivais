@@ -5,7 +5,7 @@ from .logout import bp_logout
 from .oauth2callback import bp_oauth2callback
 from .profile import bp_profile
 from .signin_redirect import bp_signin_redirect #,bp_signin_redirect314
-from .signin import bp_signin ,bp_signin314
+from .signin import bp_signin #,bp_signin314
 from .signup import bp_signup #,bp_signup314
 from .updateDB import bp_updateDB #,bp_updateDB314
 from .pages import bp_home, bp_maps, bp_prices, bp_calendar, bp_terms, bp_adminDB
@@ -37,7 +37,7 @@ __all__ = [
     'quiz_assets_bp',
     'bp_elevate_tier',
     'bp_elevate_tier314',
-    'bp_signin314',
+    # 'bp_signin314',
     # 'bp_check_user314',
     # 'bp_updateDB314',
     # 'bp_register314',

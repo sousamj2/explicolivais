@@ -2,11 +2,11 @@ from flask import Blueprint, render_template, session, url_for, current_app, req
 from markupsafe import Markup
 
 bp_signin = Blueprint("signin", __name__, url_prefix="/signin")
-bp_signin314 = Blueprint("signin314", __name__, url_prefix="/signin314")
+# bp_signin314 = Blueprint("signin314", __name__, url_prefix="/signin314")
 
 
-@bp_signin314.route("/")
-def signin314():
+@bp_signin.route("/")
+def signin():
     """
     Renders the main sign-in page for the application.
 
@@ -39,28 +39,28 @@ def signin314():
     )
 
 
-@bp_signin.route("/")
-def signin():
-    """
-    Renders a work-in-progress page.
+# @bp_signin.route("/")
+# def signin():
+#     """
+#     Renders a work-in-progress page.
 
-    This function is a placeholder and is not yet fully implemented.
-    It is intended to be used for future development of an alternative
-    sign-in process.
-    """
-    user = session.get("user") or session.get("userinfo")
-    # Render the content template first
-    main_content_html = render_template(
-        "content/wip.html",
-    )
-    user = None
+#     This function is a placeholder and is not yet fully implemented.
+#     It is intended to be used for future development of an alternative
+#     sign-in process.
+#     """
+#     user = session.get("user") or session.get("userinfo")
+#     # Render the content template first
+#     main_content_html = render_template(
+#         "content/wip.html",
+#     )
+#     user = None
 
-    # Then render the main template with the content
-    return render_template(
-        "index.html",
-        admin_email=current_app.config["ADMIN_EMAIL"],
-        user=user,
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
-        main_content=Markup(main_content_html),
-    )
+#     # Then render the main template with the content
+#     return render_template(
+#         "index.html",
+#         admin_email=current_app.config["ADMIN_EMAIL"],
+#         user=user,
+#         page_title="Explicações em Lisboa",
+#         title="Explicações em Lisboa",
+#         main_content=Markup(main_content_html),
+#     )
