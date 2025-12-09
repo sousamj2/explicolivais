@@ -57,8 +57,14 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
 
     # Choose backend
     use_mysql = (dbName == 'explicolivais.db')
-    want_dict = use_mysql and ("get_user_profile" in caller_function or "getDataFrom" in caller_function or "get_quiz_history_for_user" in caller_function)
-    
+    want_dict = use_mysql and (
+        "get_user_profile" in caller_function
+        or "getDataFrom" in caller_function
+        or "get_quiz_history_for_user" in caller_function
+        or "getRegistrationToken" in caller_function
+        or "getRegistrationTokenByEmailOrIP" in caller_function
+    )
+
     if use_mysql:
         conn = get_mysql_connection(use_dict_cursor=want_dict)
         if not conn:
@@ -67,80 +73,64 @@ def getValueFromAnotherValue(sql_file_path, value1=None , dbName ='explicolivais
         conn = sqlite3.connect(dbName)
 
     try:
-        with open(sql_file_path, 'r') as file:
+        with open(sql_file_path, "r") as file:
             sql_code = file.read()
             if use_mysql:
-                sql_code = sql_code.replace("?","%s")
+                sql_code = sql_code.replace("?", "%s")
 
-        if not use_mysql and 'getQuestionFromQid' == caller_function:
+        if not use_mysql and "getQuestionFromQid" == caller_function:
             # SQLite: keep row_factory
             conn.row_factory = sqlite3.Row
-        
+
         # Default tuple cursor for all
         cursor = conn.cursor()
 
-        # if "get_user_profile" in caller_function or "getDataFrom" in caller_function  or 'getQuestionFromQid' == caller_function:
-        #     conn.row_factory = sqlite3.Row
-        # cursor = conn.cursor()
-
         def ensure_sequence_params(param):
-                # Normalize parameters:
-                # - None => no parameters
-                # - non-sequence scalar => single-element tuple
-                # - list/tuple => pass through (flatten one level)
-                if param is None:
-                    return None
-                if isinstance(param, (list, tuple)):
-                    return tuple(param)
-                return (param,)
+            if param is None:
+                return None
+            if isinstance(param, (list, tuple)):
+                return tuple(param)
+            return (param,)
+
         value1 = ensure_sequence_params(value1)
-        # print("sql_file_path,value1,sql_code",sql_file_path,value1,'\n',sql_code)
 
         if value1 is not None:
-            cursor.execute(sql_code,value1)
-            # print(sql_code,value1)
+            cursor.execute(sql_code, value1)
         else:
             cursor.execute(sql_code)
 
-
-        if "get_user_profile" in caller_function or "getDataFrom" in caller_function:
+        if want_dict:
             output = cursor.fetchone()
             if output:
                 retVal = dict(output)
-                # print("dict output:",retVal)
 
-        elif 'get_quiz_history_by_uuid' == caller_function or "get_quiz_history_for_user" in caller_function:
+        elif (
+            "get_quiz_history_by_uuid" == caller_function
+            or "get_quiz_history_for_user" in caller_function
+        ):
             retVal = cursor.fetchall()
         else:
             output = cursor.fetchall()
-            # print("else output:",output)
             if output:
                 retVal = output[0][0]
-            if 'getQuestionFromQid' == caller_function:
+            if "getQuestionFromQid" == caller_function:
                 retVal = output[0]
-            if 'getQuestionIDsForYear' == caller_function:
+            if "getQuestionIDsForYear" == caller_function:
                 retVal = output
-
-
-
 
     except Exception as e:
         retVal = f"Error retrieving data: {e}"
-        # print(retVal)
     finally:
         conn.close()
-    if 'getQuestionIDsForYear' == caller_function:
+
+    if "getQuestionIDsForYear" == caller_function:
         return retVal
 
-
-    if "get_quiz_history_for_user" in caller_function :
+    if "get_quiz_history_for_user" in caller_function:
         return [dictify_real_dict_row(row) for row in retVal] if retVal else []
-    
-    if not isinstance(retVal,str) or "Error" not in retVal:
-        # print("----------------------------------------------------",retVal)
+
+    if not isinstance(retVal, str) or "Error" not in retVal:
         retVal = dictify_real_dict_row(retVal)
-        # print("----------------------------------------------------",retVal)
-    # print("retVal after dictify:",retVal)
 
     return retVal
 
