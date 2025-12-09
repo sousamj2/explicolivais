@@ -88,10 +88,6 @@ def request_confirmation():
             flash("Este endereço de email não poderá receber mais pedidos.")
             return redirect(url_for("register.request_confirmation"))
 
-        # Capture IP address for unsubscribe tracking
-        # Get real IP when behind reverse proxy
-        ip_addr = request.headers.get("X-Real-IP")
-
         # Generate token for email verification
         token = generate_token(email)
 
