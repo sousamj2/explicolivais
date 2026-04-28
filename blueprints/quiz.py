@@ -191,7 +191,7 @@ def quiz_config():
 
     # Get configuration from session or use defaults if not present
     quiz_config_data = session.get('quiz_config', {
-        'year': 7,
+        'year': 8,
         'num_exercises': 20,
         'current_year_percent': 50
     })
@@ -233,7 +233,7 @@ def start_quiz():
     cleanup_expired_results()
     
     # Get configuration from query parameters or use defaults
-    year = request.args.get('year', 7, type=int)
+    year = request.args.get('year', 8, type=int)
     num_exercises = request.args.get('num_exercises', 20, type=int)
     current_year_percent = request.args.get('current_year_percent', 50, type=int)
         
@@ -244,11 +244,11 @@ def start_quiz():
     # Auto-adjust percentage for edge cases
     if year == 5:
         current_year_percent = 100  # Force 100% for year 5 (no previous years)
-    elif year > 7:
+    elif year > 8:
         current_year_percent = 0  # Force 0% for years under construction (use previous years only)
     
-    # Validate percentage (only if year is 6 or 7)
-    if year in [6, 7]:
+    # Validate percentage (only if year is 6, 7 or 8)
+    if year in [6, 7, 8]:
         if current_year_percent not in [25, 50, 75]:
             flash('Percentagem inválida.', 'error')
             return redirect(url_for('quiz.quiz_config'))
