@@ -109,8 +109,8 @@
             distributionWarning.style.display = 'block';
             distributionWarning.textContent = '5º Ano: Apenas exercícios do ano atual (não há anos anteriores).';
             
-        } else if (year > 7) {
-            // Years 8-12: Force 0%, disable selection
+        } else if (year > 8) {
+            // Years 9-12: Force 0%, disable selection
             currentYearPercent = 0;
             percentSelect.value = '0';
             percentSelect.disabled = true;
@@ -126,7 +126,7 @@
             
             distributionInfo.style.display = 'none';
             distributionWarning.style.display = 'block';
-            distributionWarning.textContent = 'Anos 8-12 em construção: Apenas exercícios de anos anteriores (5º-7º ano).';
+            distributionWarning.textContent = 'Anos 9-12 em construção: Apenas exercícios de anos anteriores (5º-7º ano).';
             
         } else {
             // Years 6-7: Normal operation, enable selection
