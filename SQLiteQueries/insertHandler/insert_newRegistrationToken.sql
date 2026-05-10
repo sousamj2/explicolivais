@@ -1,1 +1,0 @@
-INSERT INTO registration_tokens (token, ip_address, email) VALUES (%s, %s, %s)

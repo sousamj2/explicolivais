@@ -10,10 +10,12 @@ echo -e "   🚀 Creating tables if they don't exit"
 
 python -c "import os;\
 import sys;\
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '../mysql')));\
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '../mysql/DBhelpers')));\
 sys.path.insert(0, os.getcwd() + '/DBhelpers');\
 import DBbaseline;\
 import DBloadQuiz;\
-DBbaseline.setup_mysql_database();\
+DBbaseline.setup_mysql_database(app_name=\"explicolivais\");\
 DBloadQuiz.loadQanswers();\
 DBloadQuiz.loadQlinks();\
 DBloadQuiz.loadQtemas();\

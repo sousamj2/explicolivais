@@ -1,9 +1,0 @@
-CREATE TABLE IF NOT EXISTS documents (
-docu_id   INTEGER PRIMARY KEY AUTOINCREMENT,
-user_id   INTEGER,
-visible   INTEGER DEFAULT FALSE,
-docname   TEXT,
-docurl    TEXT,
-created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-FOREIGN KEY (user_id) REFERENCES users(user_id)
-);

@@ -64,7 +64,13 @@ def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
 
 def _settings() -> Dict[str, str]:
     if _is_aws_host():
-        return _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
+        try:
+            print("[CONFIG] Attempting to load explicolivais credentials from AWS SSM Parameter Store...", flush=True)
+            return _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
+        except Exception as e:
+            print(f"[CONFIG] WARNING: AWS SSM Parameter Store is unavailable. Falling back to local .env variables. Error: {e}", flush=True)
+    
+    print("[CONFIG] Loading explicolivais credentials from local .env", flush=True)
     return _load_from_env()
 
 # Centralized lookup dictionary
@@ -132,17 +138,16 @@ class Config:
     }
 
     # RDS Connection to MySQL
-    MYSQL_PASSWORD = _get("MYSQL_PASSWORD")
+    MYSQL_PASSWORD = _get("EXPL_MYSQL_PASSWORD") or _get("MYSQL_PASSWORD")
     MYSQL_HOST     = _get("MYSQL_HOST")
-    MYSQL_USER     = "admin"
-    MYSQL_DBNAME   = "explicolivais"
-    MYSQL_PORT     = 3306
-    # print(MYSQL_PASSWORD)
-    # print(MYSQL_HOST    )
-    # print(MYSQL_USER    )
-    # print(MYSQL_DBNAME  )
-    # print(MYSQL_PORT    )
-    # print()
+    MYSQL_USER     = _get("EXPL_MYSQL_USER") or _get("MYSQL_USER") or "admin"
+    MYSQL_DBNAME   = _get("EXPL_MYSQL_DBNAME") or _get("MYSQL_DBNAME") or "explicolivais"
+    MYSQL_PORT     = int(_get("MYSQL_PORT", "3306"))
+    
+    if not MYSQL_PASSWORD or not MYSQL_USER:
+        print("[CONFIG] CRITICAL ERROR: explicolivais Database credentials (MYSQL_USER or MYSQL_PASSWORD) are missing. Please check AWS SSM or local .env.", flush=True)
+        import sys
+        sys.exit(1)
 
 
     DEBUG = False

@@ -2,8 +2,9 @@ from waitress import serve
 from explicolivais import app
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql/DBhelpers')))
 sys.path.insert(0,os.getcwd()+"/DBhelpers")
-
 import DBbaseline
 import DBloadQuiz
 
@@ -15,7 +16,7 @@ logging.getLogger('waitress.queue').setLevel(logging.ERROR)
 
 
 if __name__ == '__main__':
-    DBbaseline.setup_mysql_database();
+    DBbaseline.setup_mysql_database(app_name="explicolivais");
     DBloadQuiz.loadQanswers();
     DBloadQuiz.loadQlinks();
     DBloadQuiz.loadQtemas();

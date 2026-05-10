@@ -7,10 +7,14 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 load_dotenv()
 
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql/DBhelpers')))
+sys.path.insert(0,os.getcwd()+"/DBhelpers")
+
 # from DBhelpers import *
 from blueprints import *
 # check_user_bp,logout_bp,oauth2callback_bp,pages_bp, profile_bp, signin_redirect_bp,signin_bp,signup_bp,updateDB_bp
-
 
 def create_app(config_name=None):
     """Application factory pattern"""
