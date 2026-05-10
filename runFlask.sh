@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Move to the script's directory to ensure relative paths work
+cd "$(dirname "$0")"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -8,12 +11,16 @@ NC='\033[0m' # No Color
 
 echo -e "   🚀 Creating tables if they don't exit"
 
-python -c "import os;\
+# Get absolute path to the virtual environment
+VENV_PATH=$(realpath ../app-env)
+
+export APP_ENV=local
+
+$VENV_PATH/bin/python -c "import os;\
 import sys;\
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..')));\
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '../mysql')));\
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '../mysql/DBhelpers')));\
-sys.path.insert(0, os.getcwd() + '/DBhelpers');\
-import DBbaseline;\
+from DBhelpers import DBbaseline;\
 import DBloadQuiz;\
 DBbaseline.setup_mysql_database(app_name=\"explicolivais\");\
 DBloadQuiz.loadQanswers();\
@@ -32,6 +39,7 @@ echo -e "${GREEN}🚀 Starting Flask Development Server${NC}"
 export FLASK_APP=explicolivais.py
 export FLASK_ENV=development
 export FLASK_DEBUG=1
+export APP_ENV=local
 
 # Get public IP for easy access
 # PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "unknown")
@@ -50,5 +58,5 @@ echo -e "${RED}Press Ctrl+C to stop${NC}"
 echo ""
 
 # Start Flask
-# flask run --host=0.0.0.0 --port=8080
-flask run --host=localhost --port=8080
+# $VENV_PATH/bin/flask run --host=0.0.0.0 --port=8080
+$VENV_PATH/bin/flask run --host=localhost --port=8080

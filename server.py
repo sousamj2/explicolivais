@@ -2,10 +2,9 @@ from waitress import serve
 from explicolivais import app
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql/DBhelpers')))
-sys.path.insert(0,os.getcwd()+"/DBhelpers")
-import DBbaseline
+from DBhelpers import DBbaseline
 import DBloadQuiz
 
 import os

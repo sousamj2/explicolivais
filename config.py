@@ -84,7 +84,7 @@ def _get(key: str, default: Optional[str] = None, required: bool = False) -> Opt
 
 class Config:
     # Flask
-    SECRET_KEY = _get("FLASK_SECRET_KEY", required=True)
+    SECRET_KEY = _get("SECRET_KEY") or _get("FLASK_SECRET_KEY", required=True)
 
     # Admin config
     ADMIN_EMAIL = _get("ADMINDB_EMAIL", required=True)
@@ -95,14 +95,14 @@ class Config:
     DATABASE_URI = _get("DATABASE_URI", "sqlite:///default.db")
 
     # OAuth2 (Google)
-    CLIENT_ID = _get("SECRET_CLIENT_KEY")
-    CLIENT_SECRET = _get("SECRET_CLIENT_SECRET")
+    CLIENT_ID = _get("EXPL_SECRET_CLIENT_KEY") or _get("SECRET_CLIENT_KEY")
+    CLIENT_SECRET = _get("EXPL_SECRET_CLIENT_SECRET") or _get("SECRET_CLIENT_SECRET")
 
     # print(CLIENT_ID)
     # print(CLIENT_SECRET)
 
     # Use separate redirect for production if provided, else default local
-    REDIRECT_URI = _get("OAUTH_REDIRECT_URI", "http://localhost:8080/oauth2callback")
+    REDIRECT_URI = _get("EXPL_OAUTH_REDIRECT_URI") or _get("OAUTH_REDIRECT_URI", "http://localhost:8080/oauth2callback")
 
     AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
     TOKEN_URL = "https://oauth2.googleapis.com/token"
