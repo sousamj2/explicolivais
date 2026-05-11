@@ -45,9 +45,9 @@ export APP_ENV=local
 # PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || echo "unknown")
 
 echo -e "${YELLOW}📍 Access URLs:${NC}"
-echo -e "   Direct: http://$PUBLIC_IP:8080"
+echo -e "   Direct: http://[$PUBLIC_IP]:8080"
 echo -e "   Domain: https://www.explicolivais.com"
-echo -e "   Local:  http://localhost:8080"
+echo -e "   Local:  http://[::1]:8080"
 echo ""
 echo -e "${YELLOW}💡 Features enabled:${NC}"
 echo -e "   ✅ Auto-reload on file changes"
@@ -58,5 +58,4 @@ echo -e "${RED}Press Ctrl+C to stop${NC}"
 echo ""
 
 # Start Flask
-# $VENV_PATH/bin/flask run --host=0.0.0.0 --port=8080
-$VENV_PATH/bin/flask run --host=localhost --port=8080
+$VENV_PATH/bin/flask run --host=:: --port=8080
