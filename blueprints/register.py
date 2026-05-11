@@ -79,18 +79,56 @@ def request_confirmation():
         <p>Se não fez nenhum pedido, pode ignorar este email ou <a href="{unsubscribe_url}">pedir a remoção da base de dados.</a></p>
         """
 
-        send_email(subject, email, html_message)
-        flash("Foi enviado um email para confirmar o endereço de email.")
+        # 1. Detect which domain is being used
+        host = request.host
+        alt_domain = current_app.config.get("ALT_DOMAIN")
+        alt_sender = current_app.config.get("ALT_MAIL_SENDER")
+        alt_server = current_app.config.get("ALT_MAIL_SERVER")
+        alt_port = current_app.config.get("ALT_MAIL_PORT")
+        alt_password = current_app.config.get("ALT_MAIL_PASSWORD")
+        
+        current_sender = current_app.config["MAIL_DEFAULT_SENDER"]
+        current_server = None
+        current_port = None
+        current_password = None
+        current_site_name = "Explicações em Lisboa" # Default
+
+        if alt_domain and alt_domain in host:
+            if alt_sender:
+                current_sender = alt_sender
+            current_server = alt_server
+            current_port = alt_port
+            current_password = alt_password
+            current_site_name = "Explicacoes Lisboa PT" # Or whatever the alt name should be
+
+        send_email(
+            subject, 
+            email, 
+            html_message, 
+            sender=current_sender,
+            server=current_server,
+            port=current_port,
+            password=current_password
+        )
+        
+        flash(f"Foi enviado um email para confirmar o endereço de email (enviado por {current_sender}).")
         flash("Veja também na página de lixo electrónico ou spam.")
         return redirect(url_for("register.request_confirmation"))
+
+    # Detect site name for template
+    host = request.host
+    alt_domain = current_app.config.get("ALT_DOMAIN")
+    current_site_name = "Explicações em Lisboa"
+    if alt_domain and alt_domain in host:
+        current_site_name = "Explicacoes Lisboa PT"
 
     main_content_html = render_template("content/request_new_user.html")
     return render_template(
         "index.html",
         admin_email=current_app.config["ADMIN_EMAIL"],
         user=session.get("userinfo"),
-        page_title="Explicações em Lisboa",
-        title="Explicações em Lisboa",
+        page_title=current_site_name,
+        title=current_site_name,
         main_content=Markup(main_content_html),
     )
 

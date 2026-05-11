@@ -144,6 +144,13 @@ class Config:
     MYSQL_DBNAME   = _get("EXPL_MYSQL_DBNAME") or "explicolivais"
     MYSQL_PORT     = int(_get("EXPL_MYSQL_PORT") or _get("MYSQL_PORT") or "3306")
     
+    # Domain-specific settings
+    ALT_DOMAIN = _get("EXPL_ALT_DOMAIN")
+    ALT_MAIL_SERVER = _get("EXPL_ALT_MAIL_SERVER")
+    ALT_MAIL_SENDER = _get("EXPL_ALT_MAIL_DEFAULT_SENDER")
+    ALT_MAIL_PASSWORD = _get("EXPL_ALT_MAIL_PASSWORD")
+    ALT_MAIL_PORT = int(_get("EXPL_ALT_MAIL_PORT") or "465")
+    
     if not MYSQL_PASSWORD or not MYSQL_USER:
         print("[CONFIG] CRITICAL ERROR: explicolivais Database credentials (MYSQL_USER or MYSQL_PASSWORD) are missing. Please check AWS SSM or local .env.", flush=True)
         import sys
