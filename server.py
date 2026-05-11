@@ -24,4 +24,4 @@ if __name__ == '__main__':
     # For production use waitress to serve the app
 
     # serve(app, host="localhost", port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )
-    serve(app, host='::', port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )
+    serve(app, host='*', port=8080, threads=8, channel_timeout=120,connection_limit=100,backlog=2048 )
