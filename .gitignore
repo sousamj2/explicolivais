@@ -20,3 +20,4 @@ Profile_picture.png
 AWShelpers
 CODEBASE_CONTEXT.md
 .kiro
+*/__pycache__
