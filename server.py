@@ -21,18 +21,6 @@ if __name__ == '__main__':
     DBloadQuiz.loadQtemas();
     DBloadQuiz.loadQaulas();
     
-    # Debug middleware to see what Apache is sending
-    @app.before_request
-    def log_request_info():
-        from flask import request
-        # Only log for authentication routes to keep logs clean
-        if 'signin' in request.path or 'oauth2' in request.path:
-            print(f"\n[DEBUG] --- EXPLICOLIVAIS Request: {request.path} ---", flush=True)
-            print(f"[DEBUG] Host Header: {request.headers.get('Host')}", flush=True)
-            print(f"[DEBUG] X-Forwarded-Proto: {request.headers.get('X-Forwarded-Proto')}", flush=True)
-            print(f"[DEBUG] X-Forwarded-Host: {request.headers.get('X-Forwarded-Host')}", flush=True)
-            print(f"[DEBUG] Flask thinks URL is: {request.url}", flush=True)
-
     # For production use waitress to serve the app
     print("🚀 Starting Explicolivais Waitress Server on port 8080...", flush=True)
     serve(
