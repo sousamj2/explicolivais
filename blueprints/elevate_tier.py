@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, current_app
 from markupsafe import Markup
-from pprint import pprint
 import bleach
 from werkzeug.security import generate_password_hash
 from Funhelpers import valid_cellphone, valid_NIF, mask_email

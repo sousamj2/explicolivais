@@ -9,7 +9,6 @@ from flask import (
     flash, # Import flash
 )
 from markupsafe import Markup
-from pprint import pprint
 from math import ceil
 
 from DBhelpers import (

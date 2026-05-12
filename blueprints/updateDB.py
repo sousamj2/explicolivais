@@ -8,7 +8,6 @@ from flask import (
     render_template,
     flash,
 )
-from pprint import pprint
 import bleach
 from Funhelpers import check_ip_in_portugal, valid_cellphone, valid_NIF, mask_email
 from DBhelpers import *

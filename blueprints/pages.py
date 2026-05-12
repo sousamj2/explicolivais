@@ -1,7 +1,6 @@
 
 from flask import Blueprint, render_template, session, redirect, url_for, current_app
 from markupsafe import Markup
-from pprint import pprint
 
 from Funhelpers.render_profile_template import render_profile_template
 
