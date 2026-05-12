@@ -64,6 +64,23 @@ def create_app(config_name=None):
     app.register_blueprint(bp_elevate_tier)
     app.register_blueprint(bp_elevate_tier314)
     
+    @app.context_processor
+    def inject_copyright():
+        from flask import request
+        host = request.host
+        alt_domain = app.config.get("ALT_DOMAIN", "explicacoeslisboa.pt")
+        
+        # Determine display name based on domain
+        if alt_domain and alt_domain in host:
+            display_name = alt_domain.upper()
+        else:
+            display_name = "MJCRAFTS.PT"
+            
+        return {
+            'current_year': 2026,
+            'copyright_name': display_name
+        }
+    
     
     # Main route: redirect to /pages/ (home)
     @app.route('/')
