@@ -1,16 +1,17 @@
+import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../mysql')))
+
 from flask import Flask, redirect, render_template
-from pprint import pprint
 from Funhelpers import mail
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from dotenv import load_dotenv
 load_dotenv()
-
 # from DBhelpers import *
 from blueprints import *
 # check_user_bp,logout_bp,oauth2callback_bp,pages_bp, profile_bp, signin_redirect_bp,signin_bp,signup_bp,updateDB_bp
-
 
 def create_app(config_name=None):
     """Application factory pattern"""
@@ -26,6 +27,7 @@ def create_app(config_name=None):
     # Load configuration
     from config import config
     app.config.from_object(config[config_name])
+    app.config["PREFERRED_URL_SCHEME"] = "https"
     
     # Initialize Flask-Mail via the extension pattern to avoid assigning new attributes on Flask
     mail.init_app(app)
@@ -61,6 +63,23 @@ def create_app(config_name=None):
     app.register_blueprint(quiz_assets_bp)
     app.register_blueprint(bp_elevate_tier)
     app.register_blueprint(bp_elevate_tier314)
+    
+    @app.context_processor
+    def inject_copyright():
+        from flask import request
+        host = request.host
+        alt_domain = app.config.get("ALT_DOMAIN", "explicacoeslisboa.pt")
+        
+        # Determine display name based on domain
+        if alt_domain and alt_domain in host:
+            display_name = alt_domain.upper()
+        else:
+            display_name = "MJCRAFTS.PT"
+            
+        return {
+            'current_year': 2026,
+            'copyright_name': display_name
+        }
     
     
     # Main route: redirect to /pages/ (home)

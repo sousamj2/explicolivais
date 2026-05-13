@@ -1,1 +1,0 @@
-SELECT email FROM blacklisted_emails WHERE email = %s
