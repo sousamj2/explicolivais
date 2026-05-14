@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REMOTE_DB_IP="10.0.14.15" # Reverted to the IP you tested manually
+REMOTE_DB_IP="10.0.10.243" # Reverted to your manual setting
 SSH_KEY="/home/ec2-user/.ssh/ec2_internal"
 AWS_REGION="eu-south-2"
 
@@ -21,7 +21,7 @@ export APP_ENV=dev # Enable SSM loading
 if [[ "${APP_ENV}" == "dev" ]]; then
     echo -e "${YELLOW}📡 Signaling remote database on ${REMOTE_DB_IP}...${NC}"
     # We MUST succeed in signaling the remote machine before we wait for the port
-    if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl start mcwebapp-db"; then
+    if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl start mcwebapp-db.service"; then
         echo -e "${RED}   ✗ CRITICAL: Could not reach remote machine or start DB service.${NC}"
         echo -e "${RED}     Please verify IP ${REMOTE_DB_IP} and SSH keys.${NC}"
         exit 1
