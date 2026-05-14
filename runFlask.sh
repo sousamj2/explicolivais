@@ -37,17 +37,13 @@ if [[ "${APP_ENV}" == "dev" ]]; then
     else
         echo -e "${GREEN}   ✓ Credentials fetched and remote DB signaled.${NC}"
         
-        # Ensure Docker is up (using docker-compose for compatibility)
-        echo -e "${YELLOW}🐳 Ensuring local Docker containers are up...${NC}"
-        (cd .. && docker-compose up -d || docker compose up -d)
-
-        # Wait for MariaDB to be ready
-        echo -e "${YELLOW}⏳ Waiting for local MariaDB to be ready...${NC}"
+        # Wait for the REMOTE MariaDB to be ready
+        echo -e "${YELLOW}⏳ Waiting for remote MariaDB on ${REMOTE_DB_IP} to be ready...${NC}"
         for i in {1..30}; do
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                 nc -z -w 1 localhost 3307 && break
-            else
-                 nc -z localhost 3307 && break
+            # Use the remote DB port (usually 3306 or 3307 depending on your setup)
+            # Based on your .env, the remote MariaDB on the other machine is at port 3307
+            if nc -z -w 1 "${REMOTE_DB_IP}" 3307; then
+                 break
             fi
             echo -n "."
             sleep 1
