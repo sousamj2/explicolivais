@@ -9,17 +9,24 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Configuration
+REMOTE_DB_IP="10.0.14.15" # Reverted to the IP you tested manually
+SSH_KEY="/home/ec2-user/.ssh/ec2_internal"
+AWS_REGION="eu-south-2"
+
 # Set environment
 export APP_ENV=dev # Enable SSM loading
 
 # Remote Database and Credential Assurance
 if [[ "${APP_ENV}" == "dev" ]]; then
-    REMOTE_DB_IP="10.0.10.243"
-    SSH_KEY="/home/ec2-user/.ssh/ec2_internal"
-    AWS_REGION="eu-south-2"
-    
-    echo -e "${YELLOW}📡 Ensuring remote database on ${REMOTE_DB_IP} is running...${NC}"
-    ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl start mcwebapp-db"
+    echo -e "${YELLOW}📡 Signaling remote database on ${REMOTE_DB_IP}...${NC}"
+    # We MUST succeed in signaling the remote machine before we wait for the port
+    if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl start mcwebapp-db"; then
+        echo -e "${RED}   ✗ CRITICAL: Could not reach remote machine or start DB service.${NC}"
+        echo -e "${RED}     Please verify IP ${REMOTE_DB_IP} and SSH keys.${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}   ✓ Remote signal sent successfully.${NC}"
     
     echo -e "${YELLOW}🔐 Fetching credentials from AWS SSM...${NC}"
     # Exporting these so they are available to the process and any subprocesses
