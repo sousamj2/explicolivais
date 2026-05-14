@@ -108,13 +108,16 @@ class Config:
     TOKEN_URL = "https://oauth2.googleapis.com/token"
     SCOPE = "openid email profile"
 
-    # Mail (no-reply)
-    MAIL_SERVER = _get("MAIL_SERVER")
+    # Mail (no-reply) — primary config used for mjcrafts.pt (default domain)
+    MAIL_SERVER = _get("MC_MAIL_SERVER")
     MAIL_PORT = int(_get("MAIL_PORT", "465"))
     MAIL_USE_SSL = (_get("MAIL_USE_SSL", "True") == "True")
-    MAIL_USERNAME = _get("MAIL_USERNAME")
-    MAIL_PASSWORD = _get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = _get("MAIL_DEFAULT_SENDER")
+    MAIL_USERNAME = _get("MC_MAIL_DEFAULT_SENDER")
+    MAIL_PASSWORD = _get("MC_MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = _get("MC_MAIL_DEFAULT_SENDER")
+
+    # Email Lambda
+    EMAIL_LAMBDA_FUNCTION = _get("EMAIL_LAMBDA_FUNCTION", "send-email")
 
     # Optional secondary secret items
     SECURITY_PASSWORD_SALT = _get("SECURITY_PASSWORD_SALT")
@@ -144,12 +147,12 @@ class Config:
     MYSQL_DBNAME   = _get("EXPL_MYSQL_DBNAME") or "explicolivais"
     MYSQL_PORT     = int(_get("EXPL_MYSQL_PORT") or _get("MYSQL_PORT") or "3306")
     
-    # Domain-specific settings
+    # Alt domain mail config — used when visiting explicacoeslisboa.pt
     ALT_DOMAIN = _get("EXPL_ALT_DOMAIN")
-    ALT_MAIL_SERVER = _get("EXPL_ALT_MAIL_SERVER")
-    ALT_MAIL_SENDER = _get("EXPL_ALT_MAIL_DEFAULT_SENDER")
-    ALT_MAIL_PASSWORD = _get("EXPL_ALT_MAIL_PASSWORD")
-    ALT_MAIL_PORT = int(_get("EXPL_ALT_MAIL_PORT") or "465")
+    ALT_MAIL_SERVER = _get("EXPL_MAIL_SERVER")
+    ALT_MAIL_SENDER = _get("EXPL_MAIL_DEFAULT_SENDER")
+    ALT_MAIL_PASSWORD = _get("EXPL_MAIL_PASSWORD")
+    ALT_MAIL_PORT = int(_get("EXPL_MAIL_PORT") or "465")
     
     if not MYSQL_PASSWORD or not MYSQL_USER:
         print("[CONFIG] CRITICAL ERROR: explicolivais Database credentials (MYSQL_USER or MYSQL_PASSWORD) are missing. Please check AWS SSM or local .env.", flush=True)
