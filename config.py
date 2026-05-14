@@ -30,7 +30,17 @@ def _is_aws_host() -> bool:
 def _load_from_env() -> Dict[str, str]:
     # Local/dev: load .env if library available
     if load_dotenv:
-        load_dotenv()
+        # Search for .env in current directory and parent directory
+        dotenv_path = os.path.join(os.getcwd(), '.env')
+        if not os.path.exists(dotenv_path):
+            dotenv_path = os.path.join(os.getcwd(), '..', '.env')
+
+        if os.path.exists(dotenv_path):
+            print(f"[CONFIG] Loading .env from {os.path.abspath(dotenv_path)}", flush=True)
+            load_dotenv(dotenv_path, override=True)
+        else:
+            print("[CONFIG] .env file not found in current or parent directory", flush=True)
+            load_dotenv()  # Fallback to default search
     return dict(os.environ)
 
 def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
@@ -63,15 +73,20 @@ def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
     return params
 
 def _settings() -> Dict[str, str]:
+    # Always load .env as baseline (ports, admin email, local-only config)
+    print("[CONFIG] Loading baseline config from local .env", flush=True)
+    settings = _load_from_env()
+
     if _is_aws_host():
         try:
-            print("[CONFIG] Attempting to load explicolivais credentials from AWS SSM Parameter Store...", flush=True)
-            return _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
+            print("[CONFIG] Overlaying credentials from AWS SSM Parameter Store...", flush=True)
+            ssm_params = _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
+            settings.update(ssm_params)  # SSM values take priority over .env
+            print(f"[CONFIG] Loaded {len(ssm_params)} parameter(s) from AWS SSM", flush=True)
         except Exception as e:
-            print(f"[CONFIG] WARNING: AWS SSM Parameter Store is unavailable. Falling back to local .env variables. Error: {e}", flush=True)
-    
-    print("[CONFIG] Loading explicolivais credentials from local .env", flush=True)
-    return _load_from_env()
+            print(f"[CONFIG] WARNING: AWS SSM unavailable, using .env only. Error: {e}", flush=True)
+
+    return settings
 
 # Centralized lookup dictionary
 SETTINGS = _settings()
