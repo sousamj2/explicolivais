@@ -20,8 +20,8 @@ export APP_ENV=dev # Enable SSM loading
 # Remote Database and Credential Assurance
 if [[ "${APP_ENV}" == "dev" ]]; then
     echo -e "${YELLOW}📡 Signaling remote database on ${REMOTE_DB_IP}...${NC}"
-    # We MUST succeed in signaling the remote machine before we wait for the port
-    if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl start mcwebapp-db.service"; then
+    # We use 'restart' instead of 'start' to force it to re-check even if already active
+    if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"; then
         echo -e "${RED}   ✗ CRITICAL: Could not reach remote machine or start DB service.${NC}"
         echo -e "${RED}     Please verify IP ${REMOTE_DB_IP} and SSH keys.${NC}"
         exit 1
