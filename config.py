@@ -12,13 +12,6 @@ except ImportError:
 APP_NAME = os.getenv("APP_NAME", "explicolivais")
 APP_ENV = os.getenv("APP_ENV","dev")  # "production" or "development" or "testing"
 
-# Heuristic to decide environment if APP_ENV not set
-def _is_aws_host() -> bool:
-    if APP_ENV:
-        return APP_ENV.lower() == "dev"
-    sysname = platform.system()
-    nodename = platform.node()  # e.g., ip-xx-xx-xx-xx for EC2
-    return sysname == "Linux" and nodename.startswith("ip-") and ".compute.internal" in nodename
 
 def _load_from_env() -> Dict[str, str]:
     # Local/dev: load .env if library available
@@ -135,15 +128,33 @@ class Config:
     DEBUG = False
     TESTING = False
 
-class DevelopmentConfig(Config):
-    DEBUG = True
-
 class ProductionConfig(Config):
     DEBUG = False
+    TESTING = False
+    
+    # Production-grade Database connection pooling
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 10,
+        "pool_recycle": 3600,
+        "pool_pre_ping": True,
+    }
+
+    # Security headers and session cookies
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_HTTPONLY = True
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    DEVELOPMENT = True
+
 
 class TestingConfig(Config):
     TESTING = True
     DEBUG = True
+
 
 config = {
     "development": DevelopmentConfig,
