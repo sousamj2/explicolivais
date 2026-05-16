@@ -38,16 +38,11 @@ if [[ "${APP_ENV}" == "dev" ]]; then
             export "$key"="$value"
         done < <(python3 -c "import json, sys; data = json.loads(sys.stdin.read()); [print(f'{k}={v}') for k, v in data.items()]" <<< "$SECRET_JSON")
         echo -e "${GREEN}   ✓ Credentials fetched from GCP and exported.${NC}"
-    else
-        echo -e "${RED}   ✗ Failed to fetch credentials from GCP. Falling back to .env defaults.${NC}"
-    fi
-fi
         
         # Wait for the REMOTE MariaDB to be ready
         echo -e "${YELLOW}⏳ Waiting for remote MariaDB on ${REMOTE_DB_IP} to be ready...${NC}"
         for i in {1..30}; do
-            # Use the remote DB port (usually 3306 or 3307 depending on your setup)
-            # Based on your .env, the remote MariaDB on the other machine is at port 3307
+            # Use the remote DB port 3307
             if nc -z -w 1 "${REMOTE_DB_IP}" 3307; then
                  break
             fi
@@ -55,6 +50,8 @@ fi
             sleep 1
         done
         echo ""
+    else
+        echo -e "${RED}   ✗ Failed to fetch credentials from GCP. Falling back to .env defaults.${NC}"
     fi
 fi
 
