@@ -8,13 +8,6 @@ try:
 except ImportError:
     load_dotenv = None
 
-# Optional import for AWS SSM on EC2/production
-def _import_boto3():
-    try:
-        import boto3
-        return boto3
-    except ImportError:
-        return None
 
 APP_NAME = os.getenv("APP_NAME", "explicolivais")
 APP_ENV = os.getenv("APP_ENV","dev")  # "production" or "development" or "testing"
@@ -43,54 +36,14 @@ def _load_from_env() -> Dict[str, str]:
             load_dotenv()  # Fallback to default search
     return dict(os.environ)
 
-def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
-    boto3 = _import_boto3()
-    if not boto3:
-        raise RuntimeError("boto3 not installed; required to load from SSM on AWS")
-
-    ssm = boto3.client("ssm", region_name=os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "eu-south-2")))
-    params: Dict[str, str] = {}
-    next_token: Optional[str] = None
-
-    # Retrieve all parameters under a prefix. Use SecureString decryption.
-    while True:
-        kwargs = {
-            "Path": prefix,
-            "Recursive": True,
-            "WithDecryption": True,
-            "MaxResults": 10,
-        }
-        if next_token:
-            kwargs["NextToken"] = next_token
-        resp = ssm.get_parameters_by_path(**kwargs)
-        for p in resp.get("Parameters", []):
-            # Convert name '/app/KEY' -> 'KEY'
-            key = p["Name"].split("/")[-1]
-            params[key] = p["Value"]
-        next_token = resp.get("NextToken")
-        if not next_token:
-            break
-    return params
-
 def _settings() -> Dict[str, str]:
     # Always load .env as baseline
     print("[CONFIG] Loading baseline config from local .env", flush=True)
     settings = _load_from_env()
-
-    if _is_aws_host():
-        try:
-            print("[CONFIG] Overlaying credentials from AWS SSM Parameter Store...", flush=True)
-            ssm_params = _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
-            # Merge SSM params into settings, but ONLY if they are not empty
-            # This ensures we don't overwrite a valid .env value with an empty SSM one
-            for k, v in ssm_params.items():
-                if v:
-                    settings[k] = v
-            print(f"[CONFIG] Loaded {len(ssm_params)} parameter(s) from AWS SSM", flush=True)
-        except Exception as e:
-            print(f"[CONFIG] WARNING: AWS SSM unavailable, using .env only. Error: {e}", flush=True)
-
-    return settings
+    
+    # OS environment now contains both .env values and any GCP secrets
+    # exported by the shell script (runFlask.sh or start-services.sh).
+    return dict(os.environ)
 
 # Centralized lookup dictionary
 SETTINGS = _settings()
