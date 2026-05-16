@@ -73,7 +73,7 @@ def _load_from_ssm(prefix: str = f"/{APP_ENV}/") -> Dict[str, str]:
     return params
 
 def _settings() -> Dict[str, str]:
-    # Always load .env as baseline (ports, admin email, local-only config)
+    # Always load .env as baseline
     print("[CONFIG] Loading baseline config from local .env", flush=True)
     settings = _load_from_env()
 
@@ -81,7 +81,11 @@ def _settings() -> Dict[str, str]:
         try:
             print("[CONFIG] Overlaying credentials from AWS SSM Parameter Store...", flush=True)
             ssm_params = _load_from_ssm(prefix=os.getenv("SSM_PREFIX", f"/{APP_ENV}/"))
-            settings.update(ssm_params)  # SSM values take priority over .env
+            # Merge SSM params into settings, but ONLY if they are not empty
+            # This ensures we don't overwrite a valid .env value with an empty SSM one
+            for k, v in ssm_params.items():
+                if v:
+                    settings[k] = v
             print(f"[CONFIG] Loaded {len(ssm_params)} parameter(s) from AWS SSM", flush=True)
         except Exception as e:
             print(f"[CONFIG] WARNING: AWS SSM unavailable, using .env only. Error: {e}", flush=True)
@@ -131,8 +135,8 @@ class Config:
     MAIL_PASSWORD = _get("MC_MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = _get("MC_MAIL_DEFAULT_SENDER")
 
-    # Email Lambda
-    EMAIL_LAMBDA_FUNCTION = _get("EMAIL_LAMBDA_FUNCTION", "send-email")
+    # Google Cloud Mail Relay
+    GOOGLE_MAIL_RELAY_URL = _get("GOOGLE_MAIL_RELAY_URL", "https://mail-relay-783543567741.europe-southwest1.run.app")
 
     # Optional secondary secret items
     SECURITY_PASSWORD_SALT = _get("SECURITY_PASSWORD_SALT")
