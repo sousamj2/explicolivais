@@ -20,6 +20,7 @@
     max-width: 100%; 
     border: 1px solid #ddd; 
     border-radius: 8px; 
+    background-color: #fff; /* Ensure white background for transparent images */
     transition: filter 0.3s ease;  /* Smooth filter transition */
 }
 
@@ -244,14 +245,59 @@
 
 
 
-    /* Images are automatically inverted via .invert-on-dark class */
-    .quiz-image {
-        border-color: #314575;
-    }
-
     .result-quiz-image {
         border-color: #314575;
     }
+}
+
+/* Manual Dark Theme for Quiz */
+[data-theme="dark"] .overlay { 
+    background: rgba(10,18,35,.9); 
+    border: 1px solid #314575; 
+    color:#fff; 
+}
+[data-theme="dark"] .quiz-image.invert-on-dark,
+[data-theme="dark"] .result-quiz-image.invert-on-dark {
+    filter: invert(1) hue-rotate(180deg) saturate(0.9) brightness(1.05);
+}
+[data-theme="dark"] .overlay.title { 
+    background: rgba(255,214,0,.95); 
+    color:#000; 
+}
+[data-theme="dark"] .overlay.note { 
+    background: rgba(49,69,117,.85); 
+    color:#e6efff; 
+}
+[data-theme="dark"] .answers { 
+    background:#233357; 
+    border:1px solid #314575; 
+    color:#fff; 
+}
+[data-theme="dark"] .answers h3 { 
+    color: var(--yellow-header); 
+}
+[data-theme="dark"] .option {
+    background: #1b2a4a;
+    border-color: #314575;
+    color: #e6efff;
+}
+[data-theme="dark"] .option:hover {
+    background: #203157;
+    border-color: #4f8ff8;
+    box-shadow: 0 2px 8px rgba(79, 143, 248, 0.2);
+}
+[data-theme="dark"] .option-label {
+    color: #e6efff;
+}
+[data-theme="dark"] .option input[type="radio"],
+[data-theme="dark"] .option input[type="checkbox"] {
+    accent-color: #4f8ff8;
+}
+[data-theme="dark"] .quiz-image {
+    border-color: #314575;
+}
+[data-theme="dark"] .result-quiz-image {
+    border-color: #314575;
 }
 
 /* ===== Quiz Container Styles ===== */
@@ -497,6 +543,7 @@
     height: auto;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
+    background-color: #fff; /* Ensure white background for transparent images */
     transition: filter 0.3s ease;
 }
 
