@@ -1,5 +1,6 @@
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) body { background-color: #152238; color: #fff; }
+    :root:not([data-theme="light"]) a { color: #87ceeb; } /* Light blue for links */
   
     :root:not([data-theme="light"]) .title-box { background: var(--blue-title); color: #fff; }
   
@@ -26,6 +27,7 @@
 
 /* Manual Dark Theme */
 [data-theme="dark"] body { background-color: #152238; color: #fff; }
+[data-theme="dark"] a { color: #87ceeb; } /* Light blue for links */
 [data-theme="dark"] .title-box { background: var(--blue-title); color: #fff; }
 [data-theme="dark"] .menu { background: #233357; color: #fff; }
 [data-theme="dark"] .menu li:hover { background: #314575; }
