@@ -68,16 +68,17 @@ def create_app(config_name=None):
     def inject_copyright():
         from flask import request
         host = request.host
-        alt_domain = app.config.get("ALT_DOMAIN", "explicacoeslisboa.pt")
         
         # Determine display name based on domain
-        if alt_domain and alt_domain in host:
-            display_name = alt_domain.upper()
-        else:
+        if "mjcrafts.pt" in host:
             display_name = "MJCRAFTS.PT"
+            year = 2026
+        else:
+            display_name = "EXPLICACOESLISBOA.PT"
+            year = "2025-2026"
             
         return {
-            'current_year': 2026,
+            'current_year': year,
             'copyright_name': display_name
         }
     

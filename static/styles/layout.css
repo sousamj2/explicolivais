@@ -25,4 +25,9 @@
     padding: 40px 24px;
   }
   .main-content h2 { color: #2563eb; margin-top: 0; }
+
+footer {
+    margin-left: 16px;
+    margin-bottom: 16px;
+}
   
