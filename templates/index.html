@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/theme-switcher.css') }}">
 
     
     <!-- KaTeX for math rendering -->
@@ -71,6 +72,58 @@
     <p>  {{ copyright_name }} &copy; {{ current_year }} - Mário Sousa</p>
     </footer>
 
+    <div class="theme-switcher">
+        <button class="theme-btn" data-theme="light" data-icon="☀️" title="Light Mode"></button>
+        <button class="theme-btn" data-theme="dark" data-icon="🌙" title="Dark Mode"></button>
+        <button class="theme-btn active" data-theme="system" data-icon="💻" title="System"></button>
+    </div>
+
+    <script>
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        const root = document.documentElement;
+
+        // Apply theme on load
+        let savedTheme = 'system';
+        try {
+            savedTheme = localStorage.getItem('theme') || 'system';
+        } catch (e) {
+            console.warn('LocalStorage is not accessible:', e);
+        }
+        applyTheme(savedTheme);
+
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.getAttribute('data-theme');
+                applyTheme(theme);
+                try {
+                    localStorage.setItem('theme', theme);
+                } catch (e) {
+                    console.warn('LocalStorage is not accessible:', e);
+                }
+            });
+        });
+
+        function applyTheme(theme) {
+            themeBtns.forEach(b => b.classList.remove('active'));
+            
+            let activeBtn = document.querySelector(`.theme-btn[data-theme="${theme}"]`);
+            if (!activeBtn) {
+                // Fallback to system if the saved theme is invalid or button missing
+                theme = 'system';
+                activeBtn = document.querySelector(`.theme-btn[data-theme="system"]`);
+            }
+            
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            if (theme === 'system') {
+                root.removeAttribute('data-theme');
+            } else {
+                root.setAttribute('data-theme', theme);
+            }
+        }
+    </script>
 </body>
 
 </html>

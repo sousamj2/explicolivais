@@ -1,0 +1,63 @@
+.theme-switcher {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    background: #fff;
+    border-radius: 30px;
+    padding: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border: 1px solid rgba(60,60,60,0.09);
+    gap: 5px;
+}
+
+[data-theme="dark"] .theme-switcher {
+    background: #233357;
+    border-color: rgba(0,0,0,0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-switcher {
+        background: #233357;
+        border-color: rgba(0,0,0,0.3);
+    }
+}
+
+.theme-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 24px;
+}
+
+.theme-btn:hover {
+    background: rgba(128, 128, 128, 0.1);
+}
+
+.theme-btn.active {
+    background: var(--blue-title);
+    color: white;
+}
+
+[data-theme="dark"] .theme-btn.active {
+    background: var(--yellow-header);
+    color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-btn.active {
+        background: var(--yellow-header);
+        color: black;
+    }
+}
+
+.theme-btn::before {
+    content: attr(data-icon);
+}
