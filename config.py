@@ -24,6 +24,7 @@ def _load_from_env() -> Dict[str, str]:
         if os.path.exists(dotenv_path):
             print(f"[CONFIG] Loading .env from {os.path.abspath(dotenv_path)}", flush=True)
             load_dotenv(dotenv_path, override=True)
+            print(f"DEBUG: After load_dotenv, MAILSYSTEM is '{os.environ.get('MAILSYSTEM')}'", flush=True)
         else:
             print("[CONFIG] .env file not found in current or parent directory", flush=True)
             load_dotenv()  # Fallback to default search
