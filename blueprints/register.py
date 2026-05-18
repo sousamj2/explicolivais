@@ -10,7 +10,7 @@ from flask import (
     render_template_string,
 )
 from Funhelpers.registration_token import generate_token, confirm_token
-from Funhelpers.send_email import send_email
+from mailinteraction import send_email
 from markupsafe import Markup
 from DBhelpers import (
     insertNewBlacklistedEmail,
