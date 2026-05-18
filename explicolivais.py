@@ -95,6 +95,25 @@ def create_app(config_name=None):
 
 # Create the app
 app = create_app()
+
+@app.cli.command("send-email")
+def send_email_command():
+    """CLI command to send email from stdin JSON."""
+    import sys
+    import json
+    from mailinteraction import send_email
+    try:
+        data = json.load(sys.stdin)
+        send_email(
+            data['subject'], 
+            data['email_to'], 
+            data['html_message'], 
+            sender=data.get('sender')
+        )
+        print("Email sent successfully via CLI", flush=True)
+    except Exception as e:
+        print(f"Error sending email via CLI: {e}", file=sys.stderr, flush=True)
+        sys.exit(1)
 app.wsgi_app = ProxyFix(
     app.wsgi_app,
     x_for=1,      # Number of values to trust in X-Forwarded-For
