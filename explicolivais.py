@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 # from DBhelpers import *
 from blueprints import *
+from mailinteraction import bp_mail_relay
 # check_user_bp,logout_bp,oauth2callback_bp,pages_bp, profile_bp, signin_redirect_bp,signin_bp,signup_bp,updateDB_bp
 
 def create_app(config_name=None):
@@ -58,6 +59,7 @@ def create_app(config_name=None):
     app.register_blueprint(bp_updateDB)
     # app.register_blueprint(bp_updateDB314)
     app.register_blueprint(bp_register)
+    app.register_blueprint(bp_mail_relay)
     # app.register_blueprint(bp_register314)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(quiz_assets_bp)
