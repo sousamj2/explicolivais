@@ -42,8 +42,8 @@ if [[ "${APP_ENV}" == "dev" ]]; then
         # Wait for the REMOTE MariaDB to be ready
         echo -e "${YELLOW}⏳ Waiting for remote MariaDB on ${REMOTE_DB_IP} to be ready...${NC}"
         for i in {1..30}; do
-            # Use the remote DB port 3307
-            if nc -z -w 1 "${REMOTE_DB_IP}" 3307; then
+            # Use pymysql to do a real connection check, as 'nc' succeeds too early
+            if ../app-env/bin/python -c "import pymysql, os; pymysql.connect(host=os.getenv('MYSQL_HOST', '${REMOTE_DB_IP}'), port=int(os.getenv('MYSQL_PORT', 3307)), user=os.getenv('MYSQL_USER'), password=os.getenv('MYSQL_PASSWORD'))" 2>/dev/null; then
                  break
             fi
             echo -n "."

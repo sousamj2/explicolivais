@@ -26,7 +26,8 @@ fi
 
 # 4. Wait for the REMOTE MariaDB to be ready
 for i in {1..30}; do
-    if nc -z -w 1 "${REMOTE_DB_IP}" 3307; then
+    # Use pymysql to do a real connection check, as 'nc' succeeds too early
+    if ../app-env/bin/python -c "import pymysql, os; pymysql.connect(host=os.getenv('MYSQL_HOST', '${REMOTE_DB_IP}'), port=int(os.getenv('MYSQL_PORT', 3307)), user=os.getenv('MYSQL_USER'), password=os.getenv('MYSQL_PASSWORD'))" 2>/dev/null; then
          break
     fi
     sleep 1
