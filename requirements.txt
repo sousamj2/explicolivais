@@ -1,8 +1,6 @@
 beautifulsoup4
 bleach
 blinker
-boto3
-botocore
 bs4
 cachetools
 certifi
@@ -40,7 +38,6 @@ pytz
 requests
 requests-oauthlib
 rsa
-s3transfer
 six
 soupsieve
 suntime

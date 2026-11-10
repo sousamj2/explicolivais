@@ -3,13 +3,23 @@
 cd "$(dirname "$0")"
 
 # 1. Configuration
-REMOTE_DB_IP="10.0.10.243"
-PROJECT_ID="minecraft-server-july-12"
+# DEPLOY_TOPOLOGY: "single" (default, everything on one host) or "multi" (separate DB machine)
+DEPLOY_TOPOLOGY="${DEPLOY_TOPOLOGY:-single}"
+PROJECT_ID="${GCP_PROJECT_ID:-minecraft-server-july-12}"
 VENV_PATH=$(realpath ../app-env)
 
-# 2. Signaling remote database (EC2-2)
-# Ensure passwordless sudo is configured on the remote side
-ssh -i "/home/ec2-user/.ssh/ec2_internal" -o BatchMode=yes -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"
+# If multi-machine topology is explicitly chosen, configure remote DB details:
+REMOTE_DB_IP="${REMOTE_DB_IP:-10.0.10.243}"
+SSH_KEY="${REMOTE_DB_SSH_KEY:-$HOME/.ssh/id_rsa}"
+REMOTE_DB_USER="${REMOTE_DB_USER:-$USER}"
+
+# 2. Signaling remote database (only if multi-machine topology)
+if [[ "${DEPLOY_TOPOLOGY}" == "multi" ]]; then
+    echo "📡 Signaling remote database on ${REMOTE_DB_IP}..."
+    ssh -i "${SSH_KEY}" -o BatchMode=yes -o ConnectTimeout=5 "${REMOTE_DB_USER}@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"
+else
+    echo "📦 Topology set to 'single'. Running with local / Cloud SQL database."
+fi
 
 # 3. Fetch configuration from GCP Secret Manager
 SECRET_JSON=$(gcloud secrets versions access latest --secret="PASS_CONFIG" --project="${PROJECT_ID}" --quiet)
@@ -24,7 +34,15 @@ else
     exit 1
 fi
 
-# 4. Wait for the REMOTE MariaDB to be ready
+# 4. Wait for MariaDB to be ready
+if [[ "${DEPLOY_TOPOLOGY}" == "multi" ]]; then
+    TARGET_DB_HOST="${REMOTE_DB_IP}"
+else
+    TARGET_DB_HOST="${MYSQL_HOST:-127.0.0.1}"
+fi
+TARGET_DB_PORT="${MYSQL_PORT:-3307}"
+
+echo "⏳ Waiting for MariaDB on ${TARGET_DB_HOST}:${TARGET_DB_PORT} to be ready..."
 for i in {1..30}; do
     # Use pymysql to do a real connection check.
     # If we get Access Denied (1045), the server is alive and ready, so we count it as a success!
@@ -32,8 +50,8 @@ for i in {1..30}; do
 import pymysql, sys, os
 try:
     pymysql.connect(
-        host='${REMOTE_DB_IP}',
-        port=3307,
+        host='${TARGET_DB_HOST}',
+        port=int('${TARGET_DB_PORT}'),
         user=os.getenv('MYSQL_USER', 'dummy'),
         password=os.getenv('MYSQL_PASSWORD', 'dummy')
     )

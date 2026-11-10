@@ -12,6 +12,10 @@ except ImportError:
 APP_NAME = os.getenv("APP_NAME", "explicolivais")
 APP_ENV = os.getenv("APP_ENV","dev")  # "production" or "development" or "testing"
 
+# Deployment topology: "single" = everything on one machine (default)
+#                      "multi"  = app server + separate DB/mail relay machine(s)
+DEPLOY_TOPOLOGY = os.getenv("DEPLOY_TOPOLOGY", "single")
+
 
 def _load_from_env() -> Dict[str, str]:
     # Local/dev: load .env if library available
@@ -85,9 +89,12 @@ class Config:
     # Google Cloud Mail Relay
     GOOGLE_MAIL_RELAY_URL = _get("GOOGLE_MAIL_RELAY_URL", "https://mail-relay-783543567741.europe-southwest1.run.app")
     MAILSYSTEM = _get("MAILSYSTEM", "GCP")
-    LOCAL_MAIL_RELAY_HOST = _get("LOCAL_MAIL_RELAY_HOST")  # EC2-1 IP (set on EC2-2 only)
-    LOCAL_MAIL_RELAY_KEY = _get("LOCAL_MAIL_RELAY_KEY", "/home/ec2-user/.ssh/ec2_internal")
-    LOCAL_MAIL_RELAY_USER = _get("LOCAL_MAIL_RELAY_USER", "ec2-user")
+
+    # Multi-machine mail relay (only used when DEPLOY_TOPOLOGY=multi)
+    # Set LOCAL_MAIL_RELAY_HOST to the remote machine's IP to enable SSH-based relay
+    LOCAL_MAIL_RELAY_HOST = _get("LOCAL_MAIL_RELAY_HOST")
+    LOCAL_MAIL_RELAY_KEY = _get("LOCAL_MAIL_RELAY_KEY")
+    LOCAL_MAIL_RELAY_USER = _get("LOCAL_MAIL_RELAY_USER")
 
     # Optional secondary secret items
     SECURITY_PASSWORD_SALT = _get("SECURITY_PASSWORD_SALT")
@@ -110,7 +117,7 @@ class Config:
         6: [("08:00", "10:00"), ("10:00", "12:00"), ("13:00", "15:00")],
     }
 
-    # RDS Connection to MySQL
+    # Cloud SQL / MySQL Connection
     MYSQL_PASSWORD = _get("EXPL_MYSQL_PASSWORD") or _get("MYSQL_PASSWORD")
     MYSQL_HOST     = _get("EXPL_MYSQL_HOST") or _get("MYSQL_HOST")
     MYSQL_USER     = _get("EXPL_MYSQL_USER") or _get("MYSQL_USER") or "admin"
@@ -125,7 +132,7 @@ class Config:
     ALT_MAIL_PORT = int(_get("EXPL_MAIL_PORT") or "465")
     
     if not MYSQL_PASSWORD or not MYSQL_USER:
-        print("[CONFIG] CRITICAL ERROR: explicolivais Database credentials (MYSQL_USER or MYSQL_PASSWORD) are missing. Please check AWS SSM or local .env.", flush=True)
+        print("[CONFIG] CRITICAL ERROR: explicolivais Database credentials (MYSQL_USER or MYSQL_PASSWORD) are missing. Please check GCP Secret Manager (PASS_CONFIG) or local .env.", flush=True)
         import sys
         sys.exit(1)
 

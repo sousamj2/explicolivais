@@ -1,11 +1,18 @@
 #!/bin/bash
 # Configuration
-REMOTE_DB_IP="10.0.10.243"
-PROJECT_ID="minecraft-server-july-12"
+DEPLOY_TOPOLOGY="${DEPLOY_TOPOLOGY:-single}"
+REMOTE_DB_IP="${REMOTE_DB_IP:-10.0.10.243}"
+SSH_KEY="${REMOTE_DB_SSH_KEY:-$HOME/.ssh/id_rsa}"
+REMOTE_DB_USER="${REMOTE_DB_USER:-$USER}"
+PROJECT_ID="${GCP_PROJECT_ID:-minecraft-server-july-12}"
 ENV_FILE="/var/www/appmodules/explicolivais/.env.gcp"
 
-echo "📡 Signaling remote database on ${REMOTE_DB_IP}..."
-ssh -i "/home/ec2-user/.ssh/ec2_internal" -o BatchMode=yes -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"
+if [[ "${DEPLOY_TOPOLOGY}" == "multi" ]]; then
+    echo "📡 Signaling remote database on ${REMOTE_DB_IP}..."
+    ssh -i "${SSH_KEY}" -o BatchMode=yes -o ConnectTimeout=5 "${REMOTE_DB_USER}@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"
+else
+    echo "📦 Topology set to 'single'. Skipping remote DB SSH signal."
+fi
 
 echo "🔐 Fetching GCP Secrets..."
 SECRET_JSON=$(gcloud secrets versions access latest --secret="PASS_CONFIG" --project="${PROJECT_ID}" --quiet)

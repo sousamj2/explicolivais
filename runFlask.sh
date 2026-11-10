@@ -10,27 +10,35 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REMOTE_DB_IP="10.0.10.243" # Reverted to your manual setting
-SSH_KEY="/home/ec2-user/.ssh/ec2_internal"
-AWS_REGION="eu-south-2"
+# DEPLOY_TOPOLOGY: "single" (default, everything on one host) or "multi" (separate DB machine)
+DEPLOY_TOPOLOGY="${DEPLOY_TOPOLOGY:-single}"
+PROJECT_ID="${GCP_PROJECT_ID:-minecraft-server-july-12}"
+
+# If multi-machine topology is explicitly chosen, configure remote DB details:
+REMOTE_DB_IP="${REMOTE_DB_IP:-10.0.10.243}"
+SSH_KEY="${REMOTE_DB_SSH_KEY:-$HOME/.ssh/id_rsa}"
+REMOTE_DB_USER="${REMOTE_DB_USER:-$USER}"
 
 # Set environment
-export APP_ENV=dev # Enable SSM loading
+export APP_ENV=dev
+export DEPLOY_TOPOLOGY="${DEPLOY_TOPOLOGY}"
 VENV_PATH=$(realpath ../app-env)
 
 # Remote Database and Credential Assurance
 if [[ "${APP_ENV}" == "dev" ]]; then
-    echo -e "${YELLOW}📡 Signaling remote database on ${REMOTE_DB_IP}...${NC}"
-    # We use 'restart' instead of 'start' to force it to re-check even if already active
-    if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "ec2-user@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"; then
-        echo -e "${RED}   ✗ CRITICAL: Could not reach remote machine or start DB service.${NC}"
-        echo -e "${RED}     Please verify IP ${REMOTE_DB_IP} and SSH keys.${NC}"
-        exit 1
+    if [[ "${DEPLOY_TOPOLOGY}" == "multi" ]]; then
+        echo -e "${YELLOW}📡 Signaling remote database on ${REMOTE_DB_IP}...${NC}"
+        if ! ssh -i "${SSH_KEY}" -o ConnectTimeout=5 "${REMOTE_DB_USER}@${REMOTE_DB_IP}" "sudo systemctl restart mcwebapp-db.service"; then
+            echo -e "${RED}   ✗ CRITICAL: Could not reach remote machine or start DB service.${NC}"
+            echo -e "${RED}     Please verify IP ${REMOTE_DB_IP} and SSH keys.${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}   ✓ Remote signal sent successfully.${NC}"
+    else
+        echo -e "${GREEN}📦 Topology set to 'single' (local database / Cloud SQL). Skipping remote SSH signal.${NC}"
     fi
-    echo -e "${GREEN}   ✓ Remote signal sent successfully.${NC}"
     
     echo -e "${YELLOW}🔐 Fetching configuration from GCP Secret Manager (PASS_CONFIG)...${NC}"
-    PROJECT_ID="minecraft-server-july-12"
     SECRET_JSON=$(gcloud secrets versions access latest --secret="PASS_CONFIG" --project="${PROJECT_ID}" 2>/dev/null)
     
     if [ $? -eq 0 ] && [ -n "$SECRET_JSON" ]; then
@@ -40,17 +48,23 @@ if [[ "${APP_ENV}" == "dev" ]]; then
         done < <(python3 -c "import json, sys; data = json.loads(sys.stdin.read()); [print(f'{k}={v}') for k, v in data.items()]" <<< "$SECRET_JSON")
         echo -e "${GREEN}   ✓ Credentials fetched from GCP and exported.${NC}"
         
-        # Wait for the REMOTE MariaDB to be ready
-        echo -e "${YELLOW}⏳ Waiting for remote MariaDB on ${REMOTE_DB_IP} to be ready...${NC}"
+        # Determine target DB host for readiness check
+        if [[ "${DEPLOY_TOPOLOGY}" == "multi" ]]; then
+            TARGET_DB_HOST="${REMOTE_DB_IP}"
+        else
+            TARGET_DB_HOST="${MYSQL_HOST:-127.0.0.1}"
+        fi
+        TARGET_DB_PORT="${MYSQL_PORT:-3307}"
+
+        # Wait for MariaDB to be ready
+        echo -e "${YELLOW}⏳ Waiting for MariaDB on ${TARGET_DB_HOST}:${TARGET_DB_PORT} to be ready...${NC}"
         for i in {1..30}; do
-            # Use pymysql to do a real connection check.
-            # If we get Access Denied (1045), the server is alive and ready, so we count it as a success!
             if $VENV_PATH/bin/python -c "
 import pymysql, sys, os
 try:
     pymysql.connect(
-        host='${REMOTE_DB_IP}',
-        port=3307,
+        host='${TARGET_DB_HOST}',
+        port=int('${TARGET_DB_PORT}'),
         user=os.getenv('MYSQL_USER', 'dummy'),
         password=os.getenv('MYSQL_PASSWORD', 'dummy')
     )

@@ -7,8 +7,8 @@ import requests
 def _get_identity_token(url):
     """
     Get a Google ID token to authenticate the request to Cloud Run/Functions.
-    Tries to use gcloud CLI as a fallback since this is running on an EC2 instance
-    where gcloud might be already authenticated.
+    On GCE/Cloud Run the metadata server provides tokens via google.auth.
+    Falls back to gcloud CLI for local development.
     """
     try:
         # Try using gcloud command line if available (user confirmed this works in terminal)
@@ -55,10 +55,7 @@ def _sender_from_request():
 def send_email(subject: str, email_to: str, html_message: str, sender: str = None,
                server: str = None, port: int = None, password: str = None) -> None:
     """
-    Send an HTML email by invoking a Google Cloud Function relay.
-    
-    This is used to bypass IPv6 connectivity issues on AWS EC2 by offloading 
-    the SMTP connection to a GCP function that has IPv4 egress.
+    Send an HTML email by invoking a Google Cloud Function/Run relay.
     """
     sender = sender or _sender_from_request()
     relay_url = current_app.config.get('GOOGLE_MAIL_RELAY_URL')
